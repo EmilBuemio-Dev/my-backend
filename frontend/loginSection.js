@@ -21,18 +21,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const clientBtn = document.querySelector(".role-btn:nth-child(4)");
 
   adminBtn.addEventListener("click", () => {
-    window.location.href = "admin.html";
+    window.location.href = "/admin";
   });
 
   hrBtn.addEventListener("click", () => {
-    window.location.href = "hr_login.html";
+    window.location.href = "/hr";
   });
 
   employeeBtn.addEventListener("click", () => {
-    window.location.href = "employee_login.html";
+    window.location.href = "/employee";
   });
 
   clientBtn.addEventListener("click", () => {
-    window.location.href = "client_login.html";
+    window.location.href = "/client";
   });
 });
