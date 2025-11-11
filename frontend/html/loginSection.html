@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login Selection</title>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <style>
+    :root {
+      --clr-light: #f5f7fa;
+      --clr-primary: #131315;
+      --clr-white: #ffffff;
+      --clr-dark: #222222;
+      --clr-color-dark: #2e2e2e;
+      --clr-color-background: #f0f2f5;
+      --clr-black-variant: #555555;
+      --clr-info-dark: #7d8da1;
+      --clr-success: #1abc9c;
+      --clr-danger: #e74c3c;
+      --clr-warning: #f39c12;
+      --card-padding: 0.8rem;
+      --card-border-radius: 12px;
+      --card-box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(circle at 20% 50%, rgba(26, 188, 156, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(52, 152, 219, 0.15) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      bottom: -50%;
+      right: -50%;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, rgba(19, 19, 21, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+      animation: float 20s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(30px, -30px); }
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(19, 19, 21, 0.7);
+      backdrop-filter: blur(10px);
+      color: var(--clr-white);
+      padding: 1.2rem 2rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 100;
+    }
+
+    .left-section {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo {
+      width: 50px;
+      height: 50px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .logo:hover {
+      border-color: var(--clr-success);
+      transform: scale(1.05);
+    }
+
+    .system-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--clr-white);
+      letter-spacing: 1px;
+    }
+
+    .login-btn {
+      background: linear-gradient(135deg, var(--clr-primary) 0%, var(--clr-color-dark) 100%);
+      color: var(--clr-white);
+      border: none;
+      padding: 0.7rem 1.8rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1rem;
+      font-weight: 600;
+      box-shadow: 0 4px 15px rgba(19, 19, 21, 0.3);
+      position: relative;
+      z-index: 2;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(19, 19, 21, 0.4);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-content {
+      background: linear-gradient(135deg, var(--clr-white) 0%, #f8f9fa 100%);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 3rem 2.5rem;
+      width: 100%;
+      max-width: 450px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      animation: slideUp 0.4s ease;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-content h2 {
+      color: var(--clr-primary);
+      font-size: 1.8rem;
+      font-weight: 700;
+      text-align: left;
+      margin-bottom: 2rem;
+      position: relative;
+      padding-bottom: 1rem;
+    }
+
+    .modal-content h2::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 50px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--clr-primary) 0%, var(--clr-success) 100%);
+      border-radius: 2px;
+    }
+
+    .close {
+      position: absolute;
+      right: 1.5rem;
+      top: 1.5rem;
+      font-size: 1.8rem;
+      color: var(--clr-info-dark);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+    }
+
+    .close:hover {
+      color: var(--clr-danger);
+      background: rgba(231, 76, 60, 0.1);
+      transform: scale(1.1);
+    }
+
+    .role-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      margin-top: 0.5rem;
+    }
+
+    .role-btn {
+      padding: 1rem 1.5rem;
+      border: none;
+      border-radius: 12px;
+      color: var(--clr-white);
+      background: linear-gradient(135deg, var(--clr-primary) 0%, var(--clr-color-dark) 100%);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(19, 19, 21, 0.2);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+    }
+
+    .role-btn:hover {
+      background: linear-gradient(135deg, var(--clr-color-dark) 0%, var(--clr-primary) 100%);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(19, 19, 21, 0.3);
+    }
+
+    .role-btn span {
+      font-size: 1.2rem;
+    }
+
+    /* Login Form Styles */
+    .login-form {
+      display: none;
+    }
+
+    .login-form.show {
+      display: block;
+    }
+
+    .role-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .role-header button {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--clr-info-dark);
+      transition: all 0.3s ease;
+    }
+
+    .role-header button:hover {
+      color: var(--clr-primary);
+      transform: scale(1.1);
+    }
+
+    .role-header h3 {
+      color: var(--clr-primary);
+      font-size: 1.2rem;
+      margin: 0;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    input {
+      padding: 0.9rem 1rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--clr-primary);
+      box-shadow: 0 0 0 3px rgba(19, 19, 21, 0.1);
+    }
+
+    input:disabled {
+      background: #f5f5f5;
+      cursor: not-allowed;
+    }
+
+    .otp-row {
+      display: flex;
+      gap: 0.8rem;
+    }
+
+    .otp-row input {
+      flex: 1;
+    }
+
+    button[type="submit"],
+    button[type="button"] {
+      padding: 0.9rem 1.5rem;
+      background: linear-gradient(135deg, var(--clr-primary) 0%, var(--clr-color-dark) 100%);
+      color: var(--clr-white);
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(19, 19, 21, 0.2);
+    }
+
+    button[type="submit"]:hover,
+    button[type="button"]:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(19, 19, 21, 0.3);
+    }
+
+    .otp-row button[type="button"] {
+      flex: 0 1 120px;
+    }
+
+    .error {
+      color: var(--clr-danger);
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    .success {
+      color: var(--clr-success);
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .top-bar {
+        padding: 1rem 1.5rem;
+      }
+
+      .system-name {
+        font-size: 1.2rem;
+      }
+
+      .modal-content {
+        width: 90%;
+        padding: 2rem 1.5rem;
+      }
+
+      .modal-content h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .role-btn {
+        padding: 0.9rem 1.2rem;
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="top-bar">
+    <div class="left-section">
+      <img src="../../image/logo.png" alt="Logo" class="logo" />
+      <h1 class="system-name">MITHER3</h1>
+    </div>
+    <button class="login-btn" id="loginBtn">Log In</button>
+  </header>
+
+  <div class="modal" id="loginModal">
+    <div class="modal-content">
+      <span class="close" id="closeModal">&times;</span>
+
+      <!-- Role Selection View -->
+      <div id="roleSelection">
+        <h2>Log in</h2>
+        <div class="role-buttons">
+          <button class="role-btn" data-role="admin">
+            <span class="material-symbols-outlined">admin_panel_settings</span>
+            Admin Log In
+          </button>
+          <button class="role-btn" data-role="hr">
+            <span class="material-symbols-outlined">people_alt</span>
+            HR Log In
+          </button>
+          <button class="role-btn" data-role="employee">
+            <span class="material-symbols-outlined">person</span>
+            Employee Log In
+          </button>
+          <button class="role-btn" data-role="client">
+            <span class="material-symbols-outlined">business</span>
+            Client Log In
+          </button>
+        </div>
+      </div>
+
+      <!-- Admin Login Form -->
+      <div id="adminForm" class="login-form">
+        <div class="role-header">
+          <button type="button" id="backBtn">←</button>
+          <h3>Admin Login</h3>
+        </div>
+        <form id="loginFormAdmin">
+          <input type="email" id="email" placeholder="Email" required>
+          <input type="password" id="password" placeholder="Password" required>
+          <div class="otp-row">
+            <input type="text" id="otp" placeholder="Enter OTP" disabled required>
+            <button type="button" id="getOtpBtn">Get OTP</button>
+          </div>
+          <button type="submit">Login</button>
+        </form>
+        <p id="error" class="error"></p>
+        <p id="success" class="success"></p>
+      </div>
+
+      <!-- HR Login Form -->
+      <div id="hrForm" class="login-form">
+        <div class="role-header">
+          <button type="button" class="backBtn">←</button>
+          <h3>HR Login</h3>
+        </div>
+        <form id="loginFormHR">
+          <input type="email" placeholder="Email" required>
+          <input type="password" placeholder="Password" required>
+          <button type="submit">Login</button>
+        </form>
+        <p class="error"></p>
+      </div>
+
+      <!-- Employee Login Form -->
+      <div id="employeeForm" class="login-form">
+        <div class="role-header">
+          <button type="button" class="backBtn">←</button>
+          <h3>Employee Login</h3>
+        </div>
+        <form id="loginFormEmployee">
+          <input type="email" placeholder="Email" required>
+          <input type="password" placeholder="Password" required>
+          <button type="submit">Login</button>
+        </form>
+        <p class="error"></p>
+      </div>
+
+      <!-- Client Login Form -->
+      <div id="clientForm" class="login-form">
+        <div class="role-header">
+          <button type="button" class="backBtn">←</button>
+          <h3>Client Login</h3>
+        </div>
+        <form id="loginFormClient">
+          <input type="email" placeholder="Email" required>
+          <input type="password" placeholder="Password" required>
+          <button type="submit">Login</button>
+        </form>
+        <p class="error"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const loginBtn = document.getElementById("loginBtn");
+      const modal = document.getElementById("loginModal");
+      const closeModal = document.getElementById("closeModal");
+      const roleSelection = document.getElementById("roleSelection");
+      const roleButtons = document.querySelectorAll(".role-btn");
+      const backBtn = document.getElementById("backBtn");
+      const backBtns = document.querySelectorAll(".backBtn");
+
+      // Open modal
+      loginBtn.addEventListener("click", () => {
+        modal.classList.add("show");
+        showRoleSelection();
+      });
+
+      // Close modal
+      closeModal.addEventListener("click", () => {
+        modal.classList.remove("show");
+      });
+
+      window.addEventListener("click", (e) => {
+        if (e.target === modal) modal.classList.remove("show");
+      });
+
+      // Show role selection
+      function showRoleSelection() {
+        document.querySelectorAll(".login-form").forEach(f => f.classList.remove("show"));
+        roleSelection.style.display = "block";
+      }
+
+      // Show form for role
+      function showForm(role) {
+        roleSelection.style.display = "none";
+        document.querySelectorAll(".login-form").forEach(f => f.classList.remove("show"));
+        const formId = `${role}Form`;
+        document.getElementById(formId).classList.add("show");
+      }
+
+      // Role button listeners
+      roleButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+          const role = btn.dataset.role;
+          showForm(role);
+        });
+      });
+
+      // Back button listeners
+      backBtn.addEventListener("click", showRoleSelection);
+      backBtns.forEach(btn => {
+        btn.addEventListener("click", showRoleSelection);
+      });
+
+      // Admin Login API Configuration
+      const API_URL = "http://localhost:5000/api/users";
+      const adminForm = document.getElementById("loginFormAdmin");
+      const getOtpBtn = document.getElementById("getOtpBtn");
+      const otpInput = document.getElementById("otp");
+      const errorP = document.getElementById("error");
+      const successP = document.getElementById("success");
+
+      // 1) Request OTP
+      getOtpBtn.addEventListener("click", async () => {
+        errorP.textContent = "";
+        successP.textContent = "";
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        if (!email || !password) {
+          errorP.textContent = "Please enter email and password first.";
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API_URL}/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+          const data = await res.json();
+
+          if (!res.ok) {
+            errorP.textContent = data.msg || "Failed to send OTP.";
+            return;
+          }
+
+          otpInput.disabled = false;
+          otpInput.focus();
+          successP.textContent = "OTP sent to your email.";
+        } catch {
+          errorP.textContent = "Server error while requesting OTP.";
+        }
+      });
+
+      // 2) Submit with OTP to get token
+      adminForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        errorP.textContent = "";
+        successP.textContent = "";
+
+        const email = document.getElementById("email").value;
+        const otp = otpInput.value;
+
+        if (otpInput.disabled) {
+          errorP.textContent = "Please click 'Get OTP' first.";
+          return;
+        }
+
+        if (!otp) {
+          errorP.textContent = "Please enter the OTP.";
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API_URL}/verify-otp`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, otp }),
+          });
+          const data = await res.json();
+
+          if (!res.ok) {
+            errorP.textContent = data.msg || "OTP verification failed.";
+            return;
+          }
+
+          if (data.role !== "admin") {
+            errorP.textContent = "Only admins can log in.";
+            return;
+          }
+
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("name", data.name);
+          localStorage.setItem("role", data.role);
+          window.location.href = "dashboard.html";
+        } catch {
+          errorP.textContent = "Server error during login.";
+        }
+      });
+
+      // Other forms submission
+      document.querySelectorAll("form:not(#loginFormAdmin)").forEach(form => {
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          console.log("Form submitted:", form.id);
+          // Add your login logic here
+        });
+      });
+    });
+  </script>
+</body>
+</html>

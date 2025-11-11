@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Client Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <style>
+    :root {
+      --clr-light: #f5f7fa;
+      --clr-primary: #131315;
+      --clr-white: #ffffff;
+      --clr-dark: #222222;
+      --clr-color-dark: #2e2e2e;
+      --clr-color-background: #f0f2f5;
+      --clr-black-variant: #555555;
+      --clr-info-dark: #7d8da1;
+      --clr-success: #1abc9c;
+      --clr-danger: #e74c3c;
+      --clr-warning: #f39c12;
+      --card-padding: 1.5rem;
+      --card-border-radius: 12px;
+      --card-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      text-decoration: none;
+      border: 0;
+      list-style: none;
+      appearance: none;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--clr-color-background);
+      font-size: 0.9rem;
+      overflow-x: hidden;
+    }
+
+    .container {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar-fixed {
+      width: 250px;
+      background: var(--clr-white);
+      border-radius: var(--card-border-radius);
+      height: calc(100vh - 2rem);
+      position: sticky;
+      top: 1rem;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--card-box-shadow);
+    }
+
+    .logo {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--clr-light);
+    }
+
+    .logo h2 {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.3rem;
+      color: var(--clr-dark);
+      margin: 0;
+      font-weight: 700;
+    }
+
+    .logo img {
+      height: 32px;
+      width: 32px;
+      object-fit: contain;
+    }
+
+    .sidebar {
+      padding: 1rem 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .sidebar a {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.9rem 1.5rem;
+      color: var(--clr-info-dark);
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .sidebar a:hover {
+      background: var(--clr-light);
+      color: var(--clr-primary);
+    }
+
+    .sidebar a.active {
+      background: var(--clr-light);
+      color: var(--clr-primary);
+      border-left: 4px solid var(--clr-primary);
+    }
+
+    .sidebar a h3 {
+      font-weight: 500;
+      font-size: 0.9rem;
+      flex: 1;
+    }
+
+    .sidebar a.logout {
+      margin-top: auto;
+      color: var(--clr-danger);
+    }
+
+    .sidebar a.logout:hover {
+      background: #ffebee;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .client-main {
+      margin-left: 0;
+      flex: 1;
+      padding: 2rem;
+      width: 100%;
+    }
+
+    /* Profile Card */
+    .profile-card {
+      background: linear-gradient(135deg, var(--clr-primary) 0%, var(--clr-color-dark) 100%);
+      border-radius: var(--card-border-radius);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      color: white;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .profile-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .profile-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      object-fit: cover;
+      background: rgba(255, 255, 255, 0.1);
+      flex-shrink: 0;
+    }
+
+    .profile-info h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+
+    .profile-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .profile-detail-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      opacity: 0.95;
+    }
+
+    .profile-detail-item .material-symbols-outlined {
+      font-size: 18px;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid #e0e0e0;
+      padding-bottom: 0;
+    }
+
+    .tab-btn {
+      padding: 0.75rem 1.5rem;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--clr-info-dark);
+      transition: all 0.2s ease;
+      font-size: 0.95rem;
+      margin-bottom: -2px;
+    }
+
+    .tab-btn:hover {
+      color: var(--clr-primary);
+    }
+
+    .tab-btn.active {
+      color: var(--clr-primary);
+      border-bottom-color: var(--clr-primary);
+    }
+
+    /* Modal/Content Sections */
+    .modal {
+      display: none;
+      background: var(--clr-white);
+      border-radius: var(--card-border-radius);
+      padding: 2rem;
+      box-shadow: var(--card-box-shadow);
+    }
+
+    .modal.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: var(--clr-dark);
+    }
+
+    .form-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-edit {
+      padding: 0.6rem 1.5rem;
+      background: var(--clr-primary);
+      color: var(--clr-white);
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-edit:hover {
+      background: var(--clr-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-edit:active {
+      transform: translateY(0);
+    }
+
+    /* Forms */
+    .profile-form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .profile-form label {
+      font-weight: 600;
+      color: var(--clr-dark);
+      font-size: 0.875rem;
+    }
+
+    .profile-form input,
+    .profile-form select,
+    .profile-form textarea {
+      padding: 0.75rem 1rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      background-color: var(--clr-light);
+    }
+
+    .profile-form input:focus,
+    .profile-form select:focus,
+    .profile-form textarea:focus {
+      outline: none;
+      border-color: var(--clr-primary);
+      background: var(--clr-white);
+      box-shadow: 0 0 0 3px rgba(19, 19, 21, 0.1);
+    }
+
+    #branchForm input[readonly] {
+      background-color: #f9f9f9;
+      color: #666;
+      cursor: not-allowed;
+    }
+
+    #branchForm input.editable {
+      background-color: var(--clr-white);
+      border: 1px solid var(--clr-primary);
+      box-shadow: 0 0 4px rgba(19, 19, 21, 0.15);
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      align-items: center;
+    }
+
+    .filter-bar input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background-color: var(--clr-light);
+      transition: all 0.2s ease;
+    }
+
+    .filter-bar input:focus {
+      outline: none;
+      border-color: var(--clr-primary);
+      background: var(--clr-white);
+      box-shadow: 0 0 0 3px rgba(19, 19, 21, 0.1);
+    }
+
+    .filter-bar button {
+      padding: 0.75rem 1.5rem;
+      background: var(--clr-primary);
+      color: var(--clr-white);
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .filter-bar button:hover {
+      background: var(--clr-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .filter-bar button:active {
+      transform: translateY(0);
+    }
+
+    /* Table */
+    .guard-table-container {
+      overflow-x: auto;
+      border-radius: var(--card-border-radius);
+      border: 1px solid #e0e0e0;
+      box-shadow: var(--card-box-shadow);
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--clr-white);
+    }
+
+    th {
+      background: var(--clr-light);
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--clr-dark);
+      border-bottom: 2px solid #e0e0e0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid #e0e0e0;
+      font-size: 0.9rem;
+      color: var(--clr-black-variant);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background: var(--clr-light);
+      transition: all 0.2s ease;
+    }
+
+    .guard-profile-img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #e0e0e0;
+      transition: all 0.2s ease;
+    }
+
+    tbody tr:hover .guard-profile-img {
+      border-color: var(--clr-primary);
+    }
+
+    .view-guard {
+      padding: 0.5rem 1.25rem;
+      background: var(--clr-primary);
+      color: var(--clr-white);
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .view-guard:hover {
+      background: var(--clr-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .view-guard:active {
+      transform: translateY(0);
+    }
+
+    /* Detail Modal */
+    .detail-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      padding: 2rem;
+      overflow-y: auto;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(2px);
+    }
+
+    .detail-modal.active {
+      display: flex;
+    }
+
+    .detail-modal-content {
+      background: var(--clr-white);
+      border-radius: var(--card-border-radius);
+      width: 100%;
+      max-width: 1200px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      position: relative;
+      animation: slideUp 0.3s ease;
+    }
+
+    .modal-header {
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      background: var(--clr-white);
+      z-index: 10;
+    }
+
+    .modal-header h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--clr-dark);
+    }
+
+    .close-modal {
+      background: transparent;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--clr-info-dark);
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .close-modal:hover {
+      background: var(--clr-light);
+      color: var(--clr-dark);
+    }
+
+    .modal-body {
+      padding: 2rem;
+    }
+
+    .sub-modal {
+      display: none;
+    }
+
+    .sub-modal.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .sub-modal h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--clr-dark);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--clr-info-dark);
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    #monthlyAttendanceTable td.status-ontime {
+      color: var(--clr-success);
+      font-weight: 600;
+    }
+
+    #monthlyAttendanceTable td.status-late {
+      color: var(--clr-warning);
+      font-weight: 600;
+    }
+
+    #monthlyAttendanceTable td.status-absent {
+      color: var(--clr-danger);
+      font-weight: 600;
+    }
+
+    .view-ticket-btn {
+      padding: 0.4rem 1rem;
+      background: var(--clr-primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .view-ticket-btn:hover {
+      background: var(--clr-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Ticket Modal */
+    .ticket-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      padding: 2rem;
+      backdrop-filter: blur(2px);
+    }
+
+    .ticket-modal.active {
+      display: flex;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .ticket-modal-content {
+      background: var(--clr-white);
+      border-radius: var(--card-border-radius);
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      animation: slideUp 0.3s ease;
+      overflow: hidden;
+    }
+
+    .ticket-modal-header {
+      background: linear-gradient(135deg, var(--clr-primary) 0%, var(--clr-color-dark) 100%);
+      color: white;
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .ticket-modal-header h3 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .close-ticket-btn {
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: 0.2s ease;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .close-ticket-btn:hover {
+      opacity: 0.8;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+
+    .ticket-modal-body {
+      padding: 2rem;
+      color: var(--clr-dark);
+      line-height: 1.6;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .ticket-modal-body p {
+      margin: 0.75rem 0;
+    }
+
+    .ticket-modal-body strong {
+      color: var(--clr-dark);
+      font-weight: 600;
+    }
+
+    .ticket-modal-body hr {
+      margin: 1rem 0;
+      border: none;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* Scrollbar Styling */
+    .guard-table-container::-webkit-scrollbar,
+    .ticket-modal-body::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .guard-table-container::-webkit-scrollbar-track,
+    .ticket-modal-body::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    .guard-table-container::-webkit-scrollbar-thumb,
+    .ticket-modal-body::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+
+    .guard-table-container::-webkit-scrollbar-thumb:hover,
+    .ticket-modal-body::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar-fixed {
+        width: 70px;
+      }
+
+      .sidebar a h3 {
+        display: none;
+      }
+
+      .logo span {
+        display: none;
+      }
+
+      .client-main {
+        margin-left: 70px;
+        width: calc(100% - 70px);
+        padding: 1rem;
+      }
+
+      .profile-card {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .profile-details {
+        grid-template-columns: 1fr;
+      }
+
+      .detail-modal-content {
+        max-width: 95vw;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar-fixed">
+      <div class="logo">
+        <h2>
+          <img src="../../image/logo.png" alt="logo" />
+          <span class="Company">MITHER3</span>
+        </h2>
+      </div>
+
+      <nav class="sidebar">
+        <a href="client_portal.html">
+          <span class="material-symbols-outlined">grid_view</span>
+          <h3>Client Portal</h3>
+        </a>
+
+        <a href="#" class="active">
+          <span class="material-symbols-outlined">group</span>
+          <h3>Profile</h3>
+        </a>
+
+        <a id="logoutBtn" href="#" class="logout">
+          <span class="material-symbols-outlined">logout</span>
+          <h3>Logout</h3>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="client-main">
+      <!-- === Profile Card === -->
+      <section class="profile-card">
+        <img id="branchProfileImg" src="../../image/default-profile.png" alt="Branch Avatar" class="profile-avatar" />
+        <div class="profile-info">
+          <h2 id="branchNameCard">Branch Name</h2>
+          <div class="profile-details">
+            <div class="profile-detail-item">
+              <span class="material-symbols-outlined">mail</span>
+              <span id="branchEmailCard">Email: N/A</span>
+            </div>
+            <div class="profile-detail-item">
+              <span class="material-symbols-outlined">badge</span>
+              <span id="branchRoleCard">Role: N/A</span>
+            </div>
+            <div class="profile-detail-item">
+              <span class="material-symbols-outlined">id_card</span>
+              <span id="branchIdCard">ID Number: N/A</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- === Tabs Navigation === -->
+      <div class="tabs">
+        <button class="tab-btn active" data-target="#overviewModal">Overview</button>
+        <button class="tab-btn" data-target="#guardsModal">Guards List</button>
+      </div>
+
+      <!-- === Overview Section === -->
+      <section id="overviewModal" class="modal active">
+        <div class="form-header">
+          <h2>Branch Details</h2>
+          <button type="button" id="editBranch" class="btn-edit">Edit</button>
+        </div>
+
+        <form id="branchForm" class="profile-form">
+          <div class="form-group">
+            <label for="branchName">Branch Name</label>
+            <input type="text" id="branchName" placeholder="Enter branch name" />
+          </div>
+
+          <div class="form-group">
+            <label for="clientName">Client Name</label>
+            <input type="text" id="clientName" placeholder="Enter client name" />
+          </div>
+
+          <div class="form-group">
+            <label for="branchEmail">Email</label>
+            <input type="email" id="branchEmail" placeholder="Enter email" />
+          </div>
+
+          <div class="form-group">
+            <label for="branchContact">Contact Number</label>
+            <input type="text" id="branchContact" placeholder="Enter contact number" />
+          </div>
+
+          <div class="form-group">
+            <label for="branchContract">Contract</label>
+            <input type="text" id="branchContract" placeholder="Contract details" />
+          </div>
+
+          <div class="form-group">
+            <label for="branchDayShift">Day Shift</label>
+            <input type="text" id="branchDayShift" placeholder="Day shift schedule" />
+          </div>
+
+          <div class="form-group">
+            <label for="branchNightShift">Night Shift</label>
+            <input type="text" id="branchNightShift" placeholder="Night shift schedule" />
+          </div>
+
+          <div class="form-group">
+            <label for="branchExpDate">Expiration Date</label>
+            <input type="number" id="branchExpDate" placeholder="Expiration date" />
+          </div>
+        </form>
+      </section>
+
+      <!-- === Guards List Section === -->
+      <section id="guardsModal" class="modal">
+        <div class="form-header">
+          <h2>Guards Deployed</h2>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <input type="text" id="searchGuard" placeholder="Search guard by name..." />
+          <button id="searchBtn">Search</button>
+        </div>
+
+        <!-- Guards Table -->
+        <div class="guard-table-container">
+          <table id="guardsTable">
+            <thead>
+              <tr>
+                <th>Profile</th>
+                <th>Name</th>
+                <th>Badge No.</th>
+                <th>Shift</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="6" class="empty-state">
+                  <span class="material-symbols-outlined empty-state-icon">shield_person</span>
+                  <p>No guards found for this branch.</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- === Guard Details Modal === -->
+  <div id="guardDetailModal" class="detail-modal">
+    <div class="detail-modal-content">
+      <div class="modal-header">
+        <h3>Guard Details</h3>
+        <button class="close-modal" id="closeGuardDetail">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="tabs">
+          <button class="tab-btn active" data-target="#attendanceSection">Attendance History</button>
+          <button class="tab-btn" data-target="#concernsSection">Concern History</button>
+        </div>
+
+        <!-- Attendance -->
+        <div id="attendanceSection" class="sub-modal active">
+          <h3>Attendances</h3>
+          <table id="monthlyAttendanceTable">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Time In</th>
+                <th>Time Out</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="4" class="empty-state">
+                  <span class="material-symbols-outlined empty-state-icon">event_busy</span>
+                  <p>No attendance records available.</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Concerns -->
+        <div id="concernsSection" class="sub-modal">
+          <h3>Submitted Concerns</h3>
+          <table id="guardConcernsTable">
+            <thead>
+              <tr>
+                <th>Subject</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="3" class="empty-state">
+                  <span class="material-symbols-outlined empty-state-icon">report_problem</span>
+                  <p>No concerns submitted yet.</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ticket Detail Modal -->
+  <div id="ticketModal" class="ticket-modal">
+    <div class="ticket-modal-content">
+      <div class="ticket-modal-header">
+        <h3>Concern Details</h3>
+        <button id="closeTicketModal" class="close-ticket-btn">&times;</button>
+      </div>
+      <div class="ticket-modal-body">
+        <p><strong>Subject:</strong> <span id="ticketSubject"></span></p>
+        <p><strong>Status:</strong> <span id="ticketStatus"></span></p>
+        <p><strong>Date:</strong> <span id="ticketDate"></span></p>
+        <p><strong>Source:</strong> <span id="ticketSource"></span></p>
+        <p><strong>Rating:</strong> <span id="ticketRating"></span></p>
+        <hr>
+        <p><strong>Description:</strong></p>
+        <p id="ticketDescription" style="white-space: pre-wrap;"></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="../clientProfile.js"></script>
+</body>
+</html>

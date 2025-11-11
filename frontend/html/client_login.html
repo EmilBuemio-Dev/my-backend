@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MITHER3</title>
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+  <div class="login-container">
+    <h2>
+      <img src="../../image/logo.png" style="height:30px; vertical-align:middle; margin-right:2px; margin-bottom:5px;">
+      <span>MITHER3</span>
+    </h2>
+
+    <!-- HR Login Form -->
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="text" id="IdNumber" placeholder="ID Number" required>
+      <input type="password" id="password" placeholder="Password" required>
+
+      <div class="otp-row">
+        <input type="text" id="otp" placeholder="Enter OTP" disabled required>
+        <button type="button" id="getOtpBtn">Get OTP</button>
+      </div>
+
+      <button type="submit" id="loginBtn">Login</button>
+      <p id="error" class="error"></p>
+    </form>
+
+    <p class="register-text">
+      No account?
+      <a href="client_register.html" id="registerLink">Register here</a>
+    </p>
+  </div>
+
+  </div>
+
+  
+
+  <script src="../client_login.js"></script>
+</body>
+</html>

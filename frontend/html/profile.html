@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --clr-light: #f5f7fa;
+      --clr-primary: #131315;
+      --clr-white: #ffffff;
+      --clr-dark: #222222;
+      --clr-color-dark: #2e2e2e;
+      --clr-color-background: #f0f2f5;
+      --clr-black-variant: #555555;
+      --clr-info-dark: #7d8da1;
+      --clr-success: #1abc9c;
+      --clr-danger: #e74c3c;
+      --clr-warning: #f39c12;
+      --card-padding: 1.5rem;
+      --card-border-radius: 12px;
+      --card-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      text-decoration: none;
+      border: 0;
+      list-style: none;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--clr-color-background);
+      font-size: 0.9rem;
+      overflow-x: hidden;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 1.5rem;
+      width: 98%;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 1rem;
+      min-height: 100vh;
+    }
+
+    /* ==== SIDEBAR ==== */
+    aside {
+      background: var(--clr-white);
+      border-radius: var(--card-border-radius);
+      height: calc(100vh - 2rem);
+      position: sticky;
+      top: 1rem;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--card-box-shadow);
+    }
+
+    aside .top {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--clr-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    aside .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    aside .logo h2 {
+      font-size: 1.2rem;
+      color: var(--clr-dark);
+      margin: 0;
+    }
+
+    aside .close {
+      display: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: var(--clr-info-dark);
+    }
+
+    aside .sidebar {
+      padding: 1rem 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    aside .sidebar a {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.9rem 1.5rem;
+      color: var(--clr-info-dark);
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    aside .sidebar a:hover {
+      background: var(--clr-light);
+      color: var(--clr-primary);
+    }
+
+    aside .sidebar a.active {
+      background: var(--clr-light);
+      color: var(--clr-primary);
+      border-left: 4px solid var(--clr-primary);
+    }
+
+    aside .sidebar a h3 {
+      font-weight: 500;
+      font-size: 0.9rem;
+      flex: 1;
+    }
+
+    aside .sidebar a.logout {
+      margin-top: auto;
+      margin-bottom: 1rem;
+    }
+
+    aside .sidebar .badge {
+      background: var(--clr-danger);
+      color: white;
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    /* ==== PROFILE CONTAINER ==== */
+    .profile-container {
+      background: var(--clr-white);
+      border-radius: var(--card-border-radius);
+      box-shadow: var(--card-box-shadow);
+      padding: var(--card-padding);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .profile-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--clr-light);
+    }
+
+    .profile-photo {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid var(--clr-primary);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .basic-info {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .basic-info h3 {
+      grid-column: 1 / -1;
+      font-size: 1.2rem;
+      color: var(--clr-primary);
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .basic-info p {
+      font-size: 0.9rem;
+      color: var(--clr-dark);
+      margin: 0;
+    }
+
+    .basic-info p strong {
+      display: inline-block;
+      width: 110px;
+      font-weight: 600;
+      color: var(--clr-primary);
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .action-buttons button {
+      padding: 0.8rem 1.5rem;
+      background: var(--clr-primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .action-buttons button:hover {
+      background: #000;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    /* ==== TABS ==== */
+    .tabs {
+      display: flex;
+      gap: 0.8rem;
+      border-bottom: 2px solid var(--clr-light);
+      padding-bottom: 0;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      padding: 0.9rem 1.5rem;
+      background: var(--clr-light);
+      color: var(--clr-dark);
+      border: none;
+      border-radius: 8px 8px 0 0;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+
+    .tab:hover {
+      background: #e0e7f0;
+      color: var(--clr-primary);
+    }
+
+    .tab.active {
+      background: var(--clr-primary);
+      color: white;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    /* ==== TAB CONTENT ==== */
+    .tab-content {
+      display: none;
+      padding: 1.5rem 0;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .tab-content h4 {
+      font-size: 1.1rem;
+      color: var(--clr-primary);
+      margin: 1.5rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--clr-primary);
+      display: inline-block;
+      font-weight: 600;
+    }
+
+    .data-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .data-grid p {
+      font-size: 0.9rem;
+      color: var(--clr-dark);
+      margin: 0;
+    }
+
+    .data-grid p strong {
+      color: var(--clr-primary);
+      font-weight: 600;
+      display: inline-block;
+      width: 140px;
+    }
+
+    /* ==== TABLES ==== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      background: var(--clr-white);
+      border-radius: var(--card-border-radius);
+      overflow: hidden;
+    }
+
+    thead {
+      background: linear-gradient(135deg, var(--clr-primary) 0%, #2c2c2e 100%);
+      color: white;
+    }
+
+    th {
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.85rem;
+      letter-spacing: 0.3px;
+    }
+
+    td {
+      padding: 0.8rem 1rem;
+      border-bottom: 1px solid #e0e0e0;
+      color: var(--clr-black-variant);
+      font-size: 0.9rem;
+    }
+
+    tbody tr:hover {
+      background: var(--clr-light);
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .view-btn {
+      padding: 0.5rem 1rem;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+    }
+
+    .view-btn:hover {
+      background: #2980b9;
+      transform: translateY(-2px);
+    }
+
+    /* ==== ATTENDANCE WRAPPER ==== */
+    .attendance-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .attendance-history,
+    .attendance-rate-card {
+      background: var(--clr-white);
+      border-radius: var(--card-border-radius);
+      padding: var(--card-padding);
+      box-shadow: var(--card-box-shadow);
+    }
+
+    .attendance-history h3,
+    .attendance-rate-card h3 {
+      color: var(--clr-primary);
+      border-bottom: 2px solid var(--clr-primary);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .attendance-rate-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chart-container {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      margin: 1rem auto;
+      cursor: pointer;
+    }
+
+    .attendance-percentage {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--clr-primary);
+    }
+
+    /* ==== MODAL ==== */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(3px);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--clr-white);
+      border-radius: var(--card-border-radius);
+      padding: 2rem;
+      max-width: 900px;
+      width: 95%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      position: relative;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .modal-content h3 {
+      font-size: 1.3rem;
+      color: var(--clr-primary);
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid var(--clr-primary);
+      padding-bottom: 0.8rem;
+      font-weight: 600;
+    }
+
+    .close {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      font-size: 2rem;
+      color: var(--clr-info-dark);
+      cursor: pointer;
+      transition: color 0.2s ease;
+      background: none;
+      border: none;
+    }
+
+    .close:hover {
+      color: var(--clr-danger);
+    }
+
+    /* ==== RESPONSIVE ==== */
+    @media (max-width: 1024px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+
+      .profile-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .basic-info {
+        grid-template-columns: 1fr;
+      }
+
+      .attendance-wrapper {
+        grid-template-columns: 1fr;
+      }
+
+      .data-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        gap: 1rem;
+        padding: 0.5rem;
+      }
+
+      aside {
+        position: relative;
+        height: auto;
+      }
+
+      aside .close {
+        display: block;
+      }
+
+      aside .sidebar {
+        flex-direction: row;
+        overflow-x: auto;
+      }
+
+      aside .sidebar a {
+        padding: 0.5rem 1rem;
+        white-space: nowrap;
+      }
+
+      .profile-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .action-buttons {
+        width: 100%;
+        flex-direction: column;
+      }
+
+      .action-buttons button {
+        width: 100%;
+      }
+
+      .tabs {
+        gap: 0.5rem;
+      }
+
+      .tab {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+      }
+
+      table {
+        font-size: 0.8rem;
+      }
+
+      th, td {
+        padding: 0.6rem;
+      }
+    }
+
+    /* ==== COMPARE MODAL ==== */
+    #compareModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(3px);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    #compareModal.show {
+      display: flex;
+    }
+
+    #compareModal .modal-content {
+      background: var(--clr-white);
+      border-radius: var(--card-border-radius);
+      padding: 2rem;
+      max-width: 1100px;
+      width: 95%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+
+    #compareModal h3 {
+      font-size: 1.3rem;
+      color: var(--clr-primary);
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+    }
+
+    #compareModal .table-container {
+      overflow-x: auto;
+      max-height: 400px;
+      border-radius: var(--card-border-radius);
+      background: var(--clr-white);
+    }
+
+    #compareModal table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    #compareModal thead {
+      background: linear-gradient(135deg, var(--clr-primary) 0%, #2c2c2e 100%);
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    #compareModal th {
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    #compareModal td {
+      padding: 0.8rem 1rem;
+      border-bottom: 1px solid #e0e0e0;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    #compareModal tbody tr:hover {
+      background: var(--clr-light);
+    }
+
+    #compareModal .compare-action {
+      padding: 0.6rem 1.2rem;
+      background: var(--clr-primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+    }
+
+    #compareModal .compare-action:hover {
+      background: #000;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    /* ==== COMPARE VIEW ==== */
+    .compare-view {
+      position: fixed;
+      inset: 0;
+      background: var(--clr-color-background);
+      display: flex;
+      flex-direction: column;
+      z-index: 1001;
+      overflow-y: auto;
+    }
+
+    .compare-header {
+      background: var(--clr-primary);
+      color: white;
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .compare-header h3 {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 600;
+    }
+
+    .compare-header .close-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.8rem;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+
+    .compare-header .close-btn:hover {
+      color: var(--clr-warning);
+    }
+
+    .compare-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      padding: 2rem;
+      width: 90%;
+      max-width: 1400px;
+      margin: 0 auto;
+      flex: 1;
+    }
+
+    .compare-column {
+      background: var(--clr-white);
+      border-radius: var(--card-border-radius);
+      padding: 2rem;
+      box-shadow: var(--card-box-shadow);
+    }
+
+    .compare-column h4 {
+      font-size: 1.2rem;
+      color: var(--clr-primary);
+      margin-bottom: 1rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .compare-photo {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid var(--clr-primary);
+      margin: 1rem auto;
+      display: block;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .compare-column p {
+      font-size: 0.95rem;
+      margin: 0.8rem 0;
+      line-height: 1.6;
+    }
+
+    .compare-column p strong {
+      display: inline-block;
+      width: 100px;
+      font-weight: 600;
+      color: var(--clr-primary);
+    }
+
+    .compare-column h5 {
+      font-size: 1.1rem;
+      color: var(--clr-primary);
+      margin-top: 1.5rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+      border-bottom: 2px solid var(--clr-primary);
+      padding-bottom: 0.5rem;
+    }
+
+    .compare-column .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      background: var(--clr-white);
+    }
+
+    .compare-column .compare-table th,
+    .compare-column .compare-table td {
+      padding: 0.7rem;
+      border: 1px solid #e0e0e0;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    .compare-column .compare-table thead {
+      background: var(--clr-light);
+    }
+
+    .req-select {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: var(--clr-white);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 1.5rem;
+    }
+
+    .req-select:focus {
+      outline: none;
+      border-color: var(--clr-primary);
+      box-shadow: 0 0 6px rgba(19, 19, 21, 0.15);
+    }
+
+    @media (max-width: 1024px) {
+      .compare-content {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside>
+      <div class="top">
+        <div class="logo">
+          <img src="../../image/logo.png" style="height:30px; vertical-align:middle;">
+          <h2>MITHER3</h2>
+        </div>
+        <div class="close">
+          <span class="material-symbols-outlined">close</span>
+        </div>
+      </div>
+
+      <div class="sidebar">
+        <a href="dashboard.html">
+          <span class="material-symbols-outlined">grid_view</span>
+          <h3>Dashboard</h3>
+        </a>
+        <a href="archiveReq.html">
+          <span class="material-symbols-outlined">inventory_2</span>
+          <h3>Employee Registry</h3>
+        </a>
+        <a href="employeedashboard.html" class="active">
+          <span class="material-symbols-outlined">groups</span>
+          <h3>Employee</h3>
+        </a>
+        <a href="Feedback&Complaints.html">
+          <span class="material-symbols-outlined">chat</span>
+          <h3>Feedback/Complaints</h3>
+          <span class="badge">3</span>
+        </a>
+        <a href="account.html">
+          <span class="material-symbols-outlined">manage_accounts</span>
+          <h3>Accounts</h3>
+        </a>
+        <a href="accValidation.html">
+          <span class="material-symbols-outlined">business</span>
+          <h3>Accounts/Branch</h3>
+        </a>
+        <a id="logoutBtn" href="#" class="logout">
+          <span class="material-symbols-outlined">logout</span>
+          <h3>Logout</h3>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Profile Container -->
+    <div class="profile-container">
+      <!-- Profile Header -->
+      <div class="profile-header">
+        <img id="employeePhoto" src="../../image/logo.png" alt="Employee Photo" class="profile-photo">
+
+        <div class="basic-info">
+          <h3>Basic Information</h3>
+          <p><strong>PSL No.:</strong> <span id="pslNo" contenteditable="false"></span></p>
+          <p><strong>S.S.S. No.:</strong> <span id="sssNo" contenteditable="false"></span></p>
+          <p><strong>TIN No.:</strong> <span id="tinNo" contenteditable="false"></span></p>
+          <p><strong>Cell No.:</strong> <span id="cellNo" contenteditable="false"></span></p>
+          <p><strong>Shift:</strong> <span id="shift" contenteditable="false"></span></p>
+          <p><strong>Status:</strong> <span id="status" contenteditable="false"></span></p>
+          <p><strong>Expiry Date:</strong> <span id="expiryDate" contenteditable="false"></span></p>
+          <p><strong>Badge No.:</strong> <span id="badgeNo" contenteditable="false"></span></p>
+          <p><strong>Branch:</strong> <span id="branch" contenteditable="false"></span></p>
+          <p><strong>Salary:</strong> <span id="salary" contenteditable="false"></span></p>
+        </div>
+
+        <div class="action-buttons">
+          <button id="compareBtn">COMPARE</button>
+          <button id="editBtn">EDIT</button>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" data-target="overviewSection">Overview</button>
+        <button class="tab" data-target="credentialsSection">Credentials</button>
+        <button class="tab" data-target="attendanceSection">Attendance</button>
+      </div>
+
+      <!-- Tab Contents -->
+      <div class="tab-content active" id="overviewSection">
+        <h4>Personal Data</h4>
+        <div class="data-grid">
+          <p><strong>Full Name:</strong> <span id="fullName" contenteditable="false"></span></p>
+          <p><strong>Email:</strong> <span id="email" contenteditable="false"></span></p>
+          <p><strong>Date of Birth:</strong> <span id="dob" contenteditable="false"></span></p>
+          <p><strong>Present Address:</strong> <span id="presentAddress" contenteditable="false"></span></p>
+          <p><strong>Place of Birth:</strong> <span id="birthPlace" contenteditable="false"></span></p>
+          <p><strong>Prev Address:</strong> <span id="previousAddress" contenteditable="false"></span></p>
+          <p><strong>Citizenship:</strong> <span id="citizenship" contenteditable="false"></span></p>
+          <p><strong>Weight:</strong> <span id="weight" contenteditable="false"></span></p>
+          <p><strong>Language Spoken:</strong> <span id="language" contenteditable="false"></span></p>
+          <p><strong>Age:</strong> <span id="age" contenteditable="false"></span></p>
+          <p><strong>Height:</strong> <span id="height" contenteditable="false"></span></p>
+          <p><strong>Religion:</strong> <span id="religion" contenteditable="false"></span></p>
+          <p><strong>Civil Status:</strong> <span id="civilStatus" contenteditable="false"></span></p>
+          <p><strong>Color of Hair:</strong> <span id="hairColor" contenteditable="false"></span></p>
+          <p><strong>Color of Eyes:</strong> <span id="eyeColor" contenteditable="false"></span></p>
+        </div>
+
+        <h4>Educational Background</h4>
+        <table id="educationTable">
+          <thead>
+            <tr>
+              <th>School/University</th>
+              <th>Inclusive Date</th>
+              <th>Degree</th>
+              <th>Date Graduated</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="tab-content" id="credentialsSection">
+        <h4>Credentials</h4>
+        <div class="data-grid">
+          <p><strong>Barangay Clearance:</strong> <span id="barangayClearance"></span></p>
+          <p><strong>Police Clearance:</strong> <span id="policeClearance"></span></p>
+          <p><strong>DI Clearance:</strong> <span id="diClearance"></span></p>
+          <p><strong>NBI Clearance:</strong> <span id="nbiClearance"></span></p>
+          <p><strong>Personal History:</strong> <span id="personalHistory"></span></p>
+          <p><strong>Residence History:</strong> <span id="residenceHistory"></span></p>
+          <p><strong>Marital Status:</strong> <span id="maritalStatus"></span></p>
+          <p><strong>Physical Data:</strong> <span id="physicalData"></span></p>
+          <p><strong>Education Data:</strong> <span id="educationData"></span></p>
+          <p><strong>Character Reference:</strong> <span id="characterReference"></span></p>
+          <p><strong>Employment History:</strong> <span id="employmentHistory"></span></p>
+          <p><strong>Neighborhood Investigation:</strong> <span id="neighborhoodInvestigation"></span></p>
+          <p><strong>Military Record:</strong> <span id="militaryRecord"></span></p>
+        </div>
+      </div>
+
+      <div class="tab-content" id="attendanceSection">
+        <h4>Attendance Records</h4>
+        <div class="attendance-wrapper">
+          <div class="attendance-history">
+            <h3>Weekly Attendance History</h3>
+            <table id="attendanceTable">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Shift Time</th>
+                  <th>Time In</th>
+                  <th>Time Out</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colspan="5" style="text-align:center;">Loading attendance...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="attendance-rate-card">
+            <h3>Attendance Rate</h3>
+            <div class="chart-container">
+              <canvas id="attendanceChart" width="200" height="200"></canvas>
+              <div id="attendancePercentage" class="attendance-percentage">0%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Monthly Report Modal -->
+  <div id="monthlyReportModal" class="modal">
+    <div class="modal-content">
+      <button class="close" id="closeMonthlyModal">&times;</button>
+      <h3>Monthly Attendance History</h3>
+      <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
+        <button id="downloadMonthlyAttendance" style="padding:0.7rem 1.5rem; background:var(--clr-primary); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:600;">Download CSV</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table id="monthlyAttendanceTable" style="width:100%; border-collapse:collapse;">
+          <thead></thead>
+          <tbody>
+            <tr><td colspan="21" style="text-align:center;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="../profile.js"></script>
+</body>
+</html>

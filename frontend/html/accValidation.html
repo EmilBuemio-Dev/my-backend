@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Account Validation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <style>
+    :root {
+      --clr-light: #f5f7fa;
+      --clr-primary: #131315;
+      --clr-white: #ffffff;
+      --clr-dark: #222222;
+      --clr-color-dark: #2e2e2e;
+      --clr-color-background: #f0f2f5;
+      --clr-black-variant: #555555;
+      --clr-info-dark: #7d8da1;
+      --clr-success: #1abc9c;
+      --clr-danger: #e74c3c;
+      --clr-warning: #f39c12;
+      --card-padding: 1.5rem;
+      --card-border-radius: 12px;
+      --card-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      text-decoration: none;
+      border: 0;
+      list-style: none;
+      appearance: none;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--clr-color-background);
+      font-size: 0.9rem;
+      overflow-x: hidden;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 1.5rem;
+      width: 98%;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 1rem;
+      min-height: 100vh;
+    }
+
+    /* ===== Sidebar ===== */
+    aside {
+      background: var(--clr-white);
+      border-radius: var(--card-border-radius);
+      height: calc(100vh - 2rem);
+      position: sticky;
+      top: 1rem;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--card-box-shadow);
+    }
+
+    aside .top {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--clr-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    aside .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    aside .logo h2 {
+      font-size: 1.2rem;
+      color: var(--clr-dark);
+      margin: 0;
+    }
+
+    aside .close {
+      display: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: var(--clr-info-dark);
+    }
+
+    aside .sidebar {
+      padding: 1rem 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    aside .sidebar a {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.9rem 1.5rem;
+      color: var(--clr-info-dark);
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    aside .sidebar a:hover {
+      background: var(--clr-light);
+      color: var(--clr-primary);
+    }
+
+    aside .sidebar a.active {
+      background: var(--clr-light);
+      color: var(--clr-primary);
+      border-left: 4px solid var(--clr-primary);
+    }
+
+    aside .sidebar a h3 {
+      font-weight: 500;
+      font-size: 0.9rem;
+      flex: 1;
+    }
+
+    aside .sidebar a.logout {
+      margin-top: auto;
+      margin-bottom: 1rem;
+    }
+
+    aside .sidebar .badge {
+      background: var(--clr-danger);
+      color: white;
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    /* ===== Main Content ===== */
+    .main-sections {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    main {
+      background: var(--clr-white);
+      padding: var(--card-padding);
+      border-radius: var(--card-border-radius);
+      box-shadow: var(--card-box-shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    main h2 {
+      color: var(--clr-dark);
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .branch-section,
+    .employee-section {
+      flex: 1;
+      min-height: auto;
+    }
+
+    /* ===== Branch Controls ===== */
+    .branch-controls {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .branch-controls input {
+      flex: 1;
+      min-width: 200px;
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+
+    .branch-controls input:focus {
+      outline: none;
+      border-color: var(--clr-primary);
+      box-shadow: 0 0 6px rgba(19, 19, 21, 0.15);
+    }
+
+    .edit-btn {
+      padding: 0.7rem 1.2rem;
+      background: var(--clr-primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .edit-btn:hover {
+      background: #000;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* ===== Table Styles ===== */
+    .table-container {
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: 500px;
+      border-radius: 8px;
+      background: var(--clr-white);
+    }
+
+    .table-container table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: var(--clr-white);
+    }
+
+    .table-container thead {
+      background-color: var(--clr-light);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .table-container th {
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: var(--clr-dark);
+      font-size: 0.85rem;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .table-container td {
+      padding: 1rem;
+      border-bottom: 1px solid #e0e0e0;
+      color: var(--clr-black-variant);
+    }
+
+    .table-container tbody tr:hover {
+      background-color: var(--clr-light);
+      transition: background 0.2s ease;
+    }
+
+    .table-container tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* ===== Profile Picture ===== */
+    .profile-circle {
+      width: 2.8rem;
+      height: 2.8rem;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #ddd;
+    }
+
+    /* ===== Table Buttons ===== */
+    .table-container button {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      margin-right: 0.5rem;
+    }
+
+    .delete-btn {
+      background: var(--clr-danger);
+      color: white;
+    }
+
+    .delete-btn:hover {
+      background: #c0392b;
+      transform: translateY(-2px);
+    }
+
+    .view-btn {
+      background: #3498db;
+      color: white;
+    }
+
+    .view-btn:hover {
+      background: #2980b9;
+      transform: translateY(-2px);
+    }
+
+    .approve-btn {
+      background: var(--clr-success);
+      color: white;
+    }
+
+    .approve-btn:hover {
+      background: #16a085;
+      transform: translateY(-2px);
+    }
+
+    .remove-btn {
+      background: var(--clr-danger);
+      color: white;
+    }
+
+    .remove-btn:hover {
+      background: #c0392b;
+      transform: translateY(-2px);
+    }
+
+    .remove-branch-btn {
+      background: var(--clr-danger);
+      color: white;
+    }
+
+    .remove-branch-btn:hover {
+      background: #c0392b;
+      transform: translateY(-2px);
+    }
+
+    /* ===== Modals ===== */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(2px);
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--clr-white);
+      padding: 2rem;
+      border-radius: var(--card-border-radius);
+      max-width: 600px;
+      width: 90%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      position: relative;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .branch-modal {
+      max-width: 900px;
+    }
+
+    .modal-content h3 {
+      font-size: 1.3rem;
+      color: var(--clr-dark);
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid var(--clr-light);
+      padding-bottom: 0.8rem;
+    }
+
+    .modal-content h4 {
+      font-size: 1.1rem;
+      color: var(--clr-dark);
+      margin-top: 1.2rem;
+      margin-bottom: 0.8rem;
+      font-weight: 600;
+    }
+
+    .modal-content p {
+      margin: 0.5rem 0;
+      line-height: 1.6;
+      color: var(--clr-black-variant);
+    }
+
+    .close {
+      position: absolute;
+      top: 1rem;
+      right: 1.5rem;
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--clr-info-dark);
+      cursor: pointer;
+      transition: color 0.2s ease;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+
+    .close:hover {
+      color: var(--clr-danger);
+    }
+
+    /* ===== Form Styles ===== */
+    .branch-form {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .branch-form input {
+      flex: 1;
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+
+    .branch-form input:focus {
+      outline: none;
+      border-color: var(--clr-primary);
+      box-shadow: 0 0 6px rgba(19, 19, 21, 0.15);
+    }
+
+    #requirementForm {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    #requirementForm label {
+      font-weight: 600;
+      color: var(--clr-dark);
+      font-size: 0.9rem;
+    }
+
+    #requirementForm input,
+    #requirementForm select {
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+
+    #requirementForm input:focus,
+    #requirementForm select:focus {
+      outline: none;
+      border-color: var(--clr-primary);
+      box-shadow: 0 0 6px rgba(19, 19, 21, 0.15);
+    }
+
+    #requirementForm button[type="submit"] {
+      padding: 0.8rem 1.5rem;
+      background: var(--clr-primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      align-self: flex-start;
+      margin-top: 0.5rem;
+    }
+
+    #requirementForm button[type="submit"]:hover {
+      background: #000;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .salary-input,
+    .exp-input {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    .salary-input:focus,
+    .exp-input:focus {
+      outline: none;
+      border-color: var(--clr-success);
+      box-shadow: 0 0 6px rgba(26, 188, 156, 0.2);
+    }
+
+    /* ===== Details Container ===== */
+    #detailsContainer {
+      line-height: 1.8;
+    }
+
+    .edu-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+
+    .edu-table th,
+    .edu-table td {
+      border: 1px solid #ddd;
+      padding: 0.8rem;
+      text-align: left;
+    }
+
+    .edu-table th {
+      background-color: var(--clr-light);
+      font-weight: 600;
+      color: var(--clr-dark);
+    }
+
+    .edu-table tbody tr:hover {
+      background-color: var(--clr-light);
+    }
+
+    /* ===== Client Profile ===== */
+    .client-profile {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .profile-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 1.5rem 0;
+      border-bottom: 1px solid var(--clr-light);
+    }
+
+    .profile-circle-large {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--clr-light);
+      margin-bottom: 1rem;
+    }
+
+    .profile-header h3 {
+      font-size: 1.3rem;
+      color: var(--clr-dark);
+      margin: 0;
+    }
+
+    .profile-header p {
+      color: var(--clr-info-dark);
+      font-size: 0.9rem;
+      margin: 0.5rem 0 0 0;
+    }
+
+    .profile-info p {
+      display: flex;
+      justify-content: space-between;
+      margin: 0.8rem 0;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .profile-info strong {
+      color: var(--clr-dark);
+      font-weight: 600;
+    }
+
+    .copy-btn {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.7rem 1.5rem;
+      background: var(--clr-success);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .copy-btn:hover {
+      background: #16a085;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(26, 188, 156, 0.2);
+    }
+
+    .view-file-btn {
+      display: inline-block;
+      padding: 0.6rem 1.2rem;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      margin-top: 0.5rem;
+    }
+
+    .view-file-btn:hover {
+      background: #2980b9;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 1024px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+
+      .main-sections {
+        gap: 1.5rem;
+      }
+
+      .branch-section,
+      .employee-section {
+        flex: none;
+      }
+    }
+
+    @media (max-width: 768px) {
+      aside {
+        position: relative;
+        height: auto;
+      }
+
+      aside .close {
+        display: block;
+      }
+
+      aside .sidebar {
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 0.5rem;
+      }
+
+      aside .sidebar a {
+        padding: 0.5rem 1rem;
+        white-space: nowrap;
+      }
+
+      .branch-controls {
+        flex-direction: column;
+      }
+
+      .branch-controls input,
+      .edit-btn {
+        width: 100%;
+      }
+
+      .modal-content {
+        width: 95%;
+      }
+
+      .table-container {
+        font-size: 0.8rem;
+      }
+
+      .table-container th,
+      .table-container td {
+        padding: 0.7rem;
+      }
+
+      .table-container button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 0.5rem;
+        gap: 1rem;
+      }
+
+      main {
+        padding: 1rem;
+      }
+
+      .table-container {
+        max-height: 300px;
+      }
+
+      .modal-content {
+        padding: 1.5rem 1rem;
+      }
+
+      .modal-content h3 {
+        font-size: 1.1rem;
+      }
+
+      #requirementForm button[type="submit"] {
+        width: 100%;
+        align-self: stretch;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- ===== Sidebar ===== -->
+    <aside>
+      <div class="top">
+        <div class="logo">
+          <img src="../../image/logo.png" style="height:30px; vertical-align:middle;">
+          <h2>MITHER3</h2>
+        </div>
+        <div class="close"><span class="material-symbols-outlined">close</span></div>
+      </div>
+
+      <div class="sidebar">
+        <a href="dashboard.html">
+          <span class="material-symbols-outlined">grid_view</span>
+          <h3>Dashboard</h3>
+        </a>
+        <a href="archiveReq.html">
+          <span class="material-symbols-outlined">inventory_2</span>
+          <h3>Employee Registry</h3>
+        </a>
+        <a href="employeedashboard.html">
+          <span class="material-symbols-outlined">groups</span>
+          <h3>Employee</h3>
+        </a>
+        <a href="Feedback&Complaints.html">
+          <span class="material-symbols-outlined">chat</span>
+          <h3>Feedback/Complaints</h3>
+          <span class="badge">3</span>
+        </a>
+        <a href="account.html">
+          <span class="material-symbols-outlined">manage_accounts</span>
+          <h3>Accounts</h3>
+        </a>
+        <li id="branchModule">
+          <a href="accValidation.html" class="active">
+            <span class="material-symbols-outlined">business</span>
+            <h3>Accounts/Branch</h3>
+          </a>
+        </li>
+        <a href="monthlyDisposition.html">
+          <span class="material-symbols-outlined">description</span>
+          <h3>Monthly Disposition Report</h3>
+        </a>
+        <a id="logoutBtn" href="#" class="logout">
+          <span class="material-symbols-outlined">logout</span>
+          <h3>Logout</h3>
+        </a>
+      </div>
+    </aside>
+
+    <!-- ===== Main Sections ===== -->
+    <div class="main-sections">
+      <!-- Client Management -->
+      <main class="branch-section">
+        <h2>Client Management</h2>
+        <div class="branch-controls">
+          <input type="text" id="clientSearchInput" placeholder="Search clients by name, branch, or ID">
+          <button id="editBtn" class="edit-btn">Edit</button>
+          <button id="createRequirementBtn" class="edit-btn">Create Requirement</button>
+          <button id="manageBranchesBtn" class="edit-btn">Manage Branches</button>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Profile</th>
+                <th>Name</th>
+                <th>Branch</th>
+                <th>Salary</th>
+                <th>Exp. Date</th>
+                <th>ClientID</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="branchList"></tbody>
+          </table>
+        </div>
+      </main>
+
+      <!-- Account Management -->
+      <main class="employee-section">
+        <h2>Account Validation</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Branch</th>
+                <th>ClientID/BadgeNO.</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="employeeTableBody"></tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ===== Branches Management Modal ===== -->
+  <div id="branchesModal" class="modal">
+    <div class="modal-content branch-modal">
+      <button class="close" id="closeBranchesModal">&times;</button>
+      <h3>Branches Management</h3>
+
+      <div class="branch-form">
+        <input type="text" id="newBranchName" placeholder="Enter new branch name">
+        <button id="addBranchBtn" class="edit-btn">Add Branch</button>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Branch Name</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="branchesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Requirements Modal ===== -->
+  <div id="branchSelectionModal" class="modal">
+    <div class="modal-content branch-modal">
+      <button class="close" id="closeBranchModal">&times;</button>
+      <h3>Requirements</h3>
+      <button id="addRequirementBtn" class="edit-btn" style="margin-bottom: 1rem;">Add Requirement</button>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Branch Name</th>
+              <th>Client Name</th>
+              <th>Salary</th>
+              <th>Height</th>
+              <th>Weight</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="branchTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Create Requirement Modal ===== -->
+  <div id="requirementModal" class="modal">
+    <div class="modal-content">
+      <button class="close" id="closeRequirementModal">&times;</button>
+      <h3>Create Requirement for Branch</h3>
+      <form id="requirementForm">
+        <label for="reqBranch">Branch Name</label>
+        <select id="reqBranch" required>
+          <option value="">-- Select Branch --</option>
+        </select>
+
+        <label for="reqClientName">Client Name</label>
+        <input type="text" id="reqClientName" readonly required>
+
+        <label for="reqSalary">Salary</label>
+        <input type="number" id="reqSalary" readonly required>
+
+        <label for="reqHeight">Height (cm)</label>
+        <input type="number" id="reqHeight" min="0" required>
+
+        <label for="reqWeight">Weight (kg)</label>
+        <input type="number" id="reqWeight" min="0" required>
+
+        <button type="submit" class="edit-btn">Save Requirement</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Password Modal ===== -->
+  <div id="passwordModal" class="modal">
+    <div class="modal-content">
+      <button class="close" id="closeModalBtn">&times;</button>
+      <p id="passwordMessage"></p>
+      <button id="copyPasswordBtn" class="copy-btn">Copy Password</button>
+    </div>
+  </div>
+
+  <!-- ===== Employee Account Details Modal ===== -->
+  <div id="viewModal" class="modal">
+    <div class="modal-content">
+      <button class="close" id="closeViewModal">&times;</button>
+      <h3>Account Details</h3>
+      <div id="detailsContainer"></div>
+    </div>
+  </div>
+
+  <!-- ===== Client Profile Modal ===== -->
+  <div id="clientProfileModal" class="modal">
+    <div class="modal-content">
+      <button class="close" id="closeClientModal">&times;</button>
+      <div class="client-profile">
+        <div class="profile-header">
+          <img id="clientProfileImg" src="../../image/default-profile.png" class="profile-circle-large">
+          <h3 id="clientProfileName"></h3>
+          <p id="clientProfileBranch"></p>
+        </div>
+        <div class="profile-info">
+          <p><strong>Client ID:</strong> <span id="clientProfileID"></span></p>
+          <p><strong>Email:</strong> <span id="clientProfileEmail"></span></p>
+          <p><strong>Contract:</strong> <span id="clientProfileContract"></span></p>
+          <p><strong>Guard Shift:</strong> <span id="clientProfileShift"></span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../accValidation.js"></script>
+</body>
+</html>

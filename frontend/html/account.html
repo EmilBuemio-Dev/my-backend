@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Account Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <style>
+    :root {
+      --clr-light: #f5f7fa;
+      --clr-primary: #131315;
+      --clr-white: #ffffff;
+      --clr-dark: #222222;
+      --clr-color-dark: #2e2e2e;
+      --clr-color-background: #f0f2f5;
+      --clr-black-variant: #555555;
+      --clr-info-dark: #7d8da1;
+      --clr-success: #1abc9c;
+      --clr-danger: #e74c3c;
+      --clr-warning: #f39c12;
+      --card-padding: 1.5rem;
+      --card-border-radius: 12px;
+      --card-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      text-decoration: none;
+      border: 0;
+      list-style: none;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--clr-color-background);
+      font-size: 0.9rem;
+      overflow-x: hidden;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 1.5rem;
+      width: 98%;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 1rem;
+      min-height: 100vh;
+    }
+
+    /* ==== SIDEBAR ==== */
+    aside {
+      background: var(--clr-white);
+      border-radius: var(--card-border-radius);
+      height: calc(100vh - 2rem);
+      position: sticky;
+      top: 1rem;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--card-box-shadow);
+    }
+
+    aside .top {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--clr-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    aside .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    aside .logo h2 {
+      font-size: 1.2rem;
+      color: var(--clr-dark);
+      margin: 0;
+    }
+
+    aside .close {
+      display: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: var(--clr-info-dark);
+    }
+
+    aside .sidebar {
+      padding: 1rem 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    aside .sidebar a {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.9rem 1.5rem;
+      color: var(--clr-info-dark);
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    aside .sidebar a:hover {
+      background: var(--clr-light);
+      color: var(--clr-primary);
+    }
+
+    aside .sidebar a.active {
+      background: var(--clr-light);
+      color: var(--clr-primary);
+      border-left: 4px solid var(--clr-primary);
+    }
+
+    aside .sidebar a h3 {
+      font-weight: 500;
+      font-size: 0.9rem;
+      flex: 1;
+    }
+
+    aside .sidebar a.logout {
+      margin-top: auto;
+      margin-bottom: 1rem;
+    }
+
+    aside .sidebar .badge {
+      background: var(--clr-danger);
+      color: white;
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    /* ==== MAIN CONTENT ==== */
+    main {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    main h1 {
+      color: var(--clr-dark);
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .account-section {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 1.5rem;
+    }
+
+    /* ==== FORM BOX ==== */
+    .account-form {
+      background: var(--clr-white);
+      padding: var(--card-padding);
+      border-radius: var(--card-border-radius);
+      box-shadow: var(--card-box-shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .account-form h2 {
+      color: var(--clr-dark);
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .account-form input,
+    .account-form select {
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      background: var(--clr-white);
+      color: var(--clr-dark);
+    }
+
+    .account-form input:focus,
+    .account-form select:focus {
+      outline: none;
+      border-color: var(--clr-primary);
+      box-shadow: 0 0 6px rgba(19, 19, 21, 0.15);
+    }
+
+    .account-form button {
+      padding: 0.8rem 1.5rem;
+      background: var(--clr-primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      margin-top: 0.5rem;
+    }
+
+    .account-form button:hover {
+      background: #000;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* ==== USERS LIST ==== */
+    .users-list {
+      background: var(--clr-white);
+      padding: var(--card-padding);
+      border-radius: var(--card-border-radius);
+      box-shadow: var(--card-box-shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .users-list h2 {
+      color: var(--clr-dark);
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: 550px;
+      border-radius: 8px;
+    }
+
+    #usersTable {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--clr-white);
+    }
+
+    #usersTable thead {
+      background: linear-gradient(135deg, var(--clr-primary) 0%, #2c2c2e 100%);
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    #usersTable th {
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.85rem;
+      letter-spacing: 0.3px;
+    }
+
+    #usersTable td {
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid #e0e0e0;
+      color: var(--clr-black-variant);
+      font-size: 0.9rem;
+    }
+
+    #usersTable tbody tr {
+      transition: background 0.2s ease;
+    }
+
+    #usersTable tbody tr:hover {
+      background: var(--clr-light);
+    }
+
+    #usersTable tbody tr:nth-child(even) {
+      background: #fafafa;
+    }
+
+    #usersTable button {
+      background: var(--clr-danger);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+    }
+
+    #usersTable button:hover {
+      background: #c0392b;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(227, 76, 60, 0.2);
+    }
+
+    /* ==== RESPONSIVE ==== */
+    @media (max-width: 1024px) {
+      .account-section {
+        grid-template-columns: 1fr;
+      }
+
+      .table-container {
+        max-height: 400px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      aside {
+        position: relative;
+        height: auto;
+      }
+
+      aside .close {
+        display: block;
+      }
+
+      aside .sidebar {
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 0.5rem;
+      }
+
+      aside .sidebar a {
+        padding: 0.5rem 1rem;
+        white-space: nowrap;
+      }
+
+      main h1 {
+        font-size: 1.5rem;
+      }
+
+      .account-form {
+        padding: 1.2rem;
+      }
+
+      .users-list {
+        padding: 1.2rem;
+      }
+
+      #usersTable {
+        font-size: 0.8rem;
+      }
+
+      #usersTable th,
+      #usersTable td {
+        padding: 0.6rem 0.8rem;
+      }
+
+      #usersTable button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 0.5rem;
+        gap: 0.8rem;
+      }
+
+      main h1 {
+        font-size: 1.3rem;
+      }
+
+      .account-form,
+      .users-list {
+        padding: 1rem;
+      }
+
+      .table-container {
+        max-height: 300px;
+        overflow-x: auto;
+      }
+
+      #usersTable {
+        font-size: 0.75rem;
+        min-width: 500px;
+      }
+
+      #usersTable th,
+      #usersTable td {
+        padding: 0.5rem;
+      }
+
+      .account-form input,
+      .account-form select,
+      .account-form button {
+        padding: 0.6rem;
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside>
+      <div class="top">
+        <div class="logo">
+          <img src="../../image/logo.png" style="height:30px; vertical-align:middle;">
+          <h2>MITHER3</h2>
+        </div>
+        <div class="close">
+          <span class="material-symbols-outlined">close</span>
+        </div>
+      </div>
+
+      <div class="sidebar">
+        <a href="dashboard.html">
+          <span class="material-symbols-outlined">grid_view</span>
+          <h3>Dashboard</h3>
+        </a>
+        <a href="archiveReq.html">
+          <span class="material-symbols-outlined">inventory_2</span>
+          <h3>Employee Registry</h3>
+        </a>
+        <a href="employeedashboard.html">
+          <span class="material-symbols-outlined">groups</span>
+          <h3>Employee</h3>
+        </a>
+        <a href="Feedback&Complaints.html">
+          <span class="material-symbols-outlined">chat</span>
+          <h3>Feedback/Complaints</h3>
+          <span class="badge">3</span>
+        </a>
+        <a href="account.html" class="active">
+          <span class="material-symbols-outlined">manage_accounts</span>
+          <h3>Accounts</h3>
+        </a>
+        <a href="accValidation.html">
+          <span class="material-symbols-outlined">business</span>
+          <h3>Accounts/Branch</h3>
+        </a>
+        <a href="monthlyDisposition.html">
+          <span class="material-symbols-outlined">description</span>
+          <h3>Monthly Disposition Report</h3>
+        </a>
+        <a id="logoutBtn" href="#" class="logout">
+          <span class="material-symbols-outlined">logout</span>
+          <h3>Logout</h3>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main>
+      <h1>Account Management</h1>
+
+      <div class="account-section">
+        <form id="registerForm" class="account-form">
+          <h2>Create Account</h2>
+          <input type="text" id="name" placeholder="Name" required>
+          <input type="email" id="email" placeholder="Email" required>
+          <input type="password" id="password" placeholder="Password" required>
+          
+          <select id="role" required>
+            <option value="">Select Role</option>
+            <option value="employee">Employee</option>
+            <option value="hr">HR</option>
+            <option value="client">Client</option>
+          </select>
+
+          <select id="branch" disabled>
+            <option value="">Select Branch (Employee/Client only)</option>
+          </select>
+
+          <input type="text" id="badgeNumber" placeholder="Badge Number (Employee only)" maxlength="8" pattern="\d{1,9}">
+          <input type="text" id="hrIdNumber" placeholder="HR ID (HR only)" maxlength="8" pattern="\d{1,9}">
+          <input type="text" id="clientIdNumber" placeholder="Client ID (Client only)" maxlength="8" pattern="\d{1,9}">
+
+          <button type="submit">Register</button>
+        </form>
+
+        <div class="users-list">
+          <h2>All Users</h2>
+          <div class="table-container">
+            <table id="usersTable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Special ID</th>
+                  <th>Branch</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../account.js"></script>
+</body>
+</html>

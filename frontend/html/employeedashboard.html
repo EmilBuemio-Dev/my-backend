@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Employee Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/employeedashboard.css">
+</head>
+<body>
+<div class="container">
+
+  <!-- Sidebar -->
+  <aside>
+    <div class="top">
+      <div class="logo">
+        <h2><span class="Company">MITHER3</span></h2>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <a href="dashboard.html">
+        <span class="material-symbols-outlined">grid_view</span>
+        <h3>Dashboard</h3>
+      </a>
+      <a href="archiveReq.html">
+        <span class="material-symbols-outlined">inventory_2</span>
+        <h3>Employee Registry</h3>
+      </a>
+      <a href="#" class="active">
+        <span class="material-symbols-outlined">groups</span>
+        <h3>Employee</h3>
+      </a>
+      <a href="Feedback&Complaints.html">
+        <span class="material-symbols-outlined">chat</span>
+        <h3>Feedback/Complaints</h3>
+        <span class="badge" id="complaintsBadge">0</span>
+      </a>
+      <a href="account.html">
+        <span class="material-symbols-outlined">manage_accounts</span>
+        <h3>Accounts</h3>
+      </a>
+      <a href="accValidation.html">
+        <span class="material-symbols-outlined">business</span>
+        <h3>Accounts/Branch</h3>
+      </a>
+      <a href="monthlyDisposition.html">
+            <span class="material-symbols-outlined">description</span>
+            <h3>Monthly Disposition Report</h3>
+        </a>
+      <a id="logoutBtn" href="#" class="logout"> 
+        <span class="material-symbols-outlined">logout</span>
+        <h3>Logout</h3>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main>
+    <h1>Employee Dashboard</h1>
+
+    <!-- Top Grid: Calendar & Total Employees -->
+    <div class="top-grid">
+      <!-- Attendance Calendar -->
+      <div class="card calendar-card">
+        <div class="card-header">
+          <h2>Attendance Calendar</h2>
+        </div>
+        <div class="calendar-controls">
+          <button id="prevMonth" class="calendar-nav">
+            <span class="material-symbols-outlined">chevron_left</span>
+          </button>
+          <div id="monthYear" class="month-display"></div>
+          <button id="nextMonth" class="calendar-nav">
+            <span class="material-symbols-outlined">chevron_right</span>
+          </button>
+        </div>
+        <div class="calendar" id="calendar"></div>
+      </div>
+
+      <!-- Total Employees Card -->
+      <a href="totalEmployees.html" class="card total-employees-card">
+        <span class="material-symbols-outlined card-icon">groups</span>
+        <div class="card-content">
+          <h3>Total Employees</h3>
+          <h1 id="totalEmployees">0</h1>
+          <div class="progress-circle">
+            <svg width="80" height="80">
+              <circle id="employeeCircle" r="30" cy="40" cx="40"></circle>
+            </svg>
+            <div class="circle-percent" id="employeePercent">0%</div>
+          </div>
+          <small>Updated Today</small>
+        </div>
+      </a>
+    </div>
+
+    <!-- Shift Info Cards -->
+    <div class="shift-grid">
+      <div class="card shift-card">
+        <span class="material-symbols-outlined shift-icon">schedule</span>
+        <div class="shift-info">
+          <p>Shift in Progress</p>
+          <strong id="currentShift">-</strong>
+        </div>
+      </div>
+      <div class="card shift-card">
+        <span class="material-symbols-outlined shift-icon">history</span>
+        <div class="shift-info">
+          <p>Last Shift</p>
+          <strong id="lastShift">-</strong>
+        </div>
+      </div>
+      <div class="card shift-card">
+        <span class="material-symbols-outlined shift-icon">upcoming</span>
+        <div class="shift-info">
+          <p>Next Shift</p>
+          <strong id="nextShift">-</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Attendance Section -->
+    <div class="card attendance-section">
+      <div class="section-header">
+        <h2>
+          <span class="material-symbols-outlined">fact_check</span>
+          Attendance Records
+        </h2>
+        <button id="notifBtn" class="notif-btn">
+          <span class="material-symbols-outlined">notifications</span>
+          <span id="notifDot" class="notif-dot"></span>
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table class="status-table">
+          <thead>
+            <tr>
+              <th>Guards on Duty</th>
+              <th>Time Log Photo</th>
+              <th>Time-In</th>
+              <th>Time-Out</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="attendanceBody">
+            <tr>
+              <td colspan="6" class="no-data">Loading attendance records...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Notification Modal -->
+  <div id="notifModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Attendance Alerts</h3>
+        <span class="close-btn" onclick="closeNotifModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <ul id="notifList" class="notif-list">
+          <li>No new alerts</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shift Details Modal -->
+  <div id="shiftModal" class="modal">
+    <div class="modal-content large">
+      <div class="modal-header">
+        <h3>Shift Details</h3>
+        <span class="close-btn" onclick="closeShiftModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <table class="shift-table" id="shiftDetailsTable">
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="../employeedashboard.js"></script>
+<script src="../auth.js"></script>
+</body>
+</html>

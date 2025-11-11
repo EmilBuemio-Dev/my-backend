@@ -1,0 +1,282 @@
+*{
+    box-sizing: border-box;
+}
+body {
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #f0f2f5;
+}
+
+.login-container {
+  background: white;
+  padding: 2rem;
+  border: 2px solid #131315;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  width: 340px;
+  text-align: center;
+}
+
+.login-container h2 {
+  margin-bottom: 1rem;
+  color: #222;
+  text-align: center;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin: 0.5rem 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 1rem;
+  background: #131315;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #333;
+}
+
+.error {
+  margin-top: 1rem;
+  color: red;
+}
+
+.otp-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch; 
+  margin-top: 10px;
+}
+
+.otp-row input,
+.otp-row button {
+  height: 40px;          
+  margin: 0;             
+  padding: 0 10px;       
+  box-sizing: border-box; 
+  font-size: 14px;      
+}
+
+.otp-row input {
+  flex: 1; 
+}
+
+.otp-row button {
+  width: 80px;  
+  cursor: pointer;
+}
+
+
+.register-link {
+  color: #007bff;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.register-link:hover {
+  text-decoration: underline;
+  color: #0056b3;
+}
+
+
+.register-text {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.register-text a {
+  color: #007bff;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.register-text a:hover {
+  color: #0056b3;
+}
+
+
+/* ===== Register Modal ===== */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: white;
+  border-radius: 10px;
+  padding: 2rem;
+  width: 700px; /* wider modal */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  position: relative;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content h2 {
+  margin-bottom: 1rem;
+  text-align: left;
+  color: #131315;
+  font-weight: 600;
+  border-bottom: 2px solid #131315;
+  padding-bottom: 0.5rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 20px;
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.form-step {
+  display: none;
+}
+
+.form-step.active {
+  display: block;
+}
+
+.btn-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 1rem;
+}
+
+#nextBtn,
+#prevBtn,
+#registerBtn {
+  flex: 1;
+  background: #131315;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+#nextBtn:hover,
+#prevBtn:hover,
+#registerBtn:hover {
+  background: #333;
+}
+
+.close {
+  position: absolute;
+  right: 1rem;
+  top: 0.8rem;
+  font-size: 1.4rem;
+  color: #131315;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.close:hover {
+  color: red;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.input-group {
+  position: relative;
+  margin: 0.5rem 0;
+}
+
+.input-group label {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  color: #666;
+  font-size: 0.9rem;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  background: white;
+  padding: 0 4px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 10px 10px 10px 110px; /* space for label text */
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+
+/* ===== Change Password Modal ===== */
+#changePasswordModal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+  z-index: 3000;
+}
+
+#changePasswordModal .modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 320px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  animation: fadeIn 0.3s ease;
+}
+
+#changePasswordModal input {
+  width: 100%;
+  padding: 10px;
+  margin: 0.5rem 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+#changePasswordModal button {
+  width: 100%;
+  padding: 10px;
+  background: #131315;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+#changePasswordModal button:hover {
+  background: #333;
+}

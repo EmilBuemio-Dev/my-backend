@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Guard Duty Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <style>
+    :root {
+      --clr-light: #f5f7fa;
+      --clr-primary: #131315;
+      --clr-white: #ffffff;
+      --clr-dark: #222222;
+      --clr-color-dark: #2e2e2e;
+      --clr-color-background: #f0f2f5;
+      --clr-black-variant: #555555;
+      --clr-info-dark: #7d8da1;
+      --clr-success: #1abc9c;
+      --clr-danger: #e74c3c;
+      --clr-warning: #f39c12;
+      --card-padding: 1.5rem;
+      --card-border-radius: 12px;
+      --card-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      text-decoration: none;
+      border: 0;
+      list-style: none;
+      appearance: none;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--clr-color-background);
+      font-size: 0.9rem;
+      overflow-x: hidden;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 250px 1fr 1fr;
+      gap: 1.5rem;
+      width: 98%;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 1rem;
+      min-height: 100vh;
+    }
+
+    /* ==== SIDEBAR ==== */
+    aside.sidebar-fixed {
+      background: var(--clr-white);
+      border-radius: var(--card-border-radius);
+      height: calc(100vh - 2rem);
+      position: sticky;
+      top: 1rem;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--card-box-shadow);
+    }
+
+    aside .top {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--clr-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    aside .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    aside .logo h2 {
+      font-size: 1.2rem;
+      color: var(--clr-dark);
+      margin: 0;
+    }
+
+    aside .sidebar {
+      padding: 1rem 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    aside .sidebar a {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.9rem 1.5rem;
+      color: var(--clr-info-dark);
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    aside .sidebar a:hover {
+      background: var(--clr-light);
+      color: var(--clr-primary);
+    }
+
+    aside .sidebar a.active {
+      background: var(--clr-light);
+      color: var(--clr-primary);
+      border-left: 4px solid var(--clr-primary);
+    }
+
+    aside .sidebar a h3 {
+      font-weight: 500;
+      font-size: 0.9rem;
+      flex: 1;
+    }
+
+    aside .sidebar a.logout {
+      margin-top: auto;
+      margin-bottom: 1rem;
+    }
+
+    /* ==== MAIN CONTENT ==== */
+    main {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .duty-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .section,
+    .section1 {
+      background: var(--clr-white);
+      border-radius: var(--card-border-radius);
+      padding: var(--card-padding);
+      box-shadow: var(--card-box-shadow);
+    }
+
+    .section h2,
+    .section1 h2 {
+      color: var(--clr-dark);
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .section form,
+    .section1 form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .section label,
+    .section1 label {
+      display: block;
+      font-weight: 600;
+      color: var(--clr-dark);
+      font-size: 0.95rem;
+    }
+
+    .section input[type="time"],
+    .section1 input[type="time"] {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+
+    .section input[type="time"]:focus,
+    .section1 input[type="time"]:focus {
+      outline: none;
+      border-color: var(--clr-primary);
+      box-shadow: 0 0 6px rgba(19, 19, 21, 0.15);
+    }
+
+    .camera-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .camera-container button,
+    .section button,
+    .section1 button {
+      padding: 0.8rem 1.5rem;
+      background: var(--clr-primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+
+    .camera-container button:hover,
+    .section button:hover,
+    .section1 button:hover {
+      background: #000;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .result {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: var(--clr-light);
+      border-radius: 8px;
+      border-left: 4px solid var(--clr-success);
+      font-size: 0.95rem;
+      color: var(--clr-dark);
+    }
+
+    /* ==== RIGHT PANEL ==== */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .form-container {
+      background: var(--clr-white);
+      padding: var(--card-padding);
+      border-radius: var(--card-border-radius);
+      box-shadow: var(--card-box-shadow);
+    }
+
+    .form-container h2 {
+      color: var(--clr-dark);
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .form-container form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .form-container select,
+    .form-container textarea {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      transition: all 0.2s ease;
+    }
+
+    .form-container select:focus,
+    .form-container textarea:focus {
+      outline: none;
+      border-color: var(--clr-primary);
+      box-shadow: 0 0 6px rgba(19, 19, 21, 0.15);
+    }
+
+    .form-container textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .form-container button {
+      padding: 0.8rem 1.5rem;
+      background: var(--clr-primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+
+    .form-container button:hover {
+      background: #000;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .applicants-section {
+      background: var(--clr-white);
+      padding: var(--card-padding);
+      border-radius: var(--card-border-radius);
+      box-shadow: var(--card-box-shadow);
+    }
+
+    .applicants-section h2 {
+      color: var(--clr-dark);
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    /* ==== TABLE ==== */
+    .table-container {
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: 400px;
+      border-radius: 8px;
+    }
+
+    .table-container table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--clr-white);
+    }
+
+    .table-container thead {
+      background: linear-gradient(135deg, var(--clr-primary) 0%, #2c2c2e 100%);
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .table-container th {
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.85rem;
+      letter-spacing: 0.3px;
+    }
+
+    .table-container td {
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid #e0e0e0;
+      color: var(--clr-black-variant);
+      font-size: 0.9rem;
+    }
+
+    .table-container tbody tr:hover {
+      background: var(--clr-light);
+    }
+
+    .table-container tr:last-child td {
+      border-bottom: none;
+    }
+
+    .view-record {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: var(--clr-primary);
+      color: white;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .view-record:hover {
+      background: #000;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    /* ==== MODAL ==== */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(3px);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--clr-white);
+      border-radius: var(--card-border-radius);
+      padding: 2rem;
+      max-width: 500px;
+      width: 95%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      position: relative;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .modal-content h3 {
+      font-size: 1.3rem;
+      color: var(--clr-dark);
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+      border-bottom: 2px solid var(--clr-primary);
+      padding-bottom: 0.8rem;
+    }
+
+    .modal-content video,
+    .modal-content canvas {
+      width: 100%;
+      border-radius: 8px;
+      border: 2px solid var(--clr-primary);
+      margin-bottom: 1rem;
+    }
+
+    .modal .close {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      font-size: 1.8rem;
+      color: var(--clr-info-dark);
+      cursor: pointer;
+      transition: color 0.2s ease;
+      background: none;
+      border: none;
+    }
+
+    .modal .close:hover {
+      color: var(--clr-danger);
+    }
+
+    .camera-buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .camera-buttons button {
+      flex: 1;
+      min-width: 120px;
+      padding: 0.7rem 1.2rem;
+      background: var(--clr-primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .camera-buttons button:hover {
+      background: #000;
+      transform: translateY(-2px);
+    }
+
+    #leaveModal .modal-content {
+      max-width: 600px;
+    }
+
+    #leaveModal form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    #leaveModal label {
+      font-weight: 600;
+      color: var(--clr-dark);
+      font-size: 0.95rem;
+    }
+
+    #leaveModal input,
+    #leaveModal textarea {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      transition: all 0.2s ease;
+    }
+
+    #leaveModal input:focus,
+    #leaveModal textarea:focus {
+      outline: none;
+      border-color: var(--clr-primary);
+      box-shadow: 0 0 6px rgba(19, 19, 21, 0.15);
+    }
+
+    #leaveModal textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    #leaveModal button {
+      padding: 0.8rem 1.5rem;
+      background: var(--clr-primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      margin-top: 1rem;
+    }
+
+    #leaveModal button:hover {
+      background: #000;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* ==== RESPONSIVE ==== */
+    @media (max-width: 1200px) {
+      .container {
+        grid-template-columns: 250px 1fr;
+      }
+
+      .right-panel {
+        grid-column: 2 / 3;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 0.5rem;
+      }
+
+      aside.sidebar-fixed {
+        position: relative;
+        height: auto;
+      }
+
+      aside .sidebar {
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 0.5rem;
+      }
+
+      aside .sidebar a {
+        padding: 0.5rem 1rem;
+        white-space: nowrap;
+      }
+
+      main, .right-panel {
+        grid-column: span 1;
+      }
+
+      .duty-container {
+        gap: 1rem;
+      }
+
+      .section, .section1, .form-container, .applicants-section {
+        padding: 1.2rem;
+      }
+
+      .table-container {
+        max-height: 300px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 0.5rem;
+        gap: 0.8rem;
+      }
+
+      .section, .section1, .form-container, .applicants-section {
+        padding: 1rem;
+      }
+
+      .modal-content {
+        padding: 1.5rem;
+      }
+
+      .camera-buttons {
+        gap: 0.5rem;
+      }
+
+      .camera-buttons button {
+        min-width: 100px;
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar-fixed">
+      <div class="top">
+        <div class="logo">
+          <img src="../../image/logo.png" style="height:30px; vertical-align:middle;">
+          <h2>MITHER3</h2>
+        </div>
+      </div>
+
+      <div class="sidebar">
+        <a href="#" class="active">
+          <span class="material-symbols-outlined">grid_view</span>
+          <h3>Employee Portal</h3>
+        </a>
+        <a href="employeeProfile.html">
+          <span class="material-symbols-outlined">group</span>
+          <h3>Profile</h3>
+        </a>
+        <a id="logoutBtn" href="#" class="logout">
+          <span class="material-symbols-outlined">logout</span>
+          <h3>Logout</h3>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Middle Column: Guard Duty -->
+    <main>
+      <div class="duty-container">
+        <!-- Check-In -->
+        <div class="section">
+          <h2>Guard Time-In</h2>
+          <form id="checkinForm">
+            <label for="checkinTime">Check-in Time:</label>
+            <input type="time" id="checkinTime" name="checkinTime" readonly />
+
+            <div class="camera-container">
+              <button type="button" id="openCameraBtn">📸 Take Photo</button>
+              <input type="hidden" id="capturedImage" name="capturedImage" />
+            </div>
+
+            <button type="submit">Submit Time-In</button>
+          </form>
+          <div id="checkinResult" class="result" style="display:none;"></div>
+        </div>
+
+        <!-- Camera Modal -->
+        <div id="cameraModal" class="modal">
+          <div class="modal-content">
+            <button class="close" id="closeCameraModal">&times;</button>
+            <h3>Capture Photo</h3>
+            <video id="camera" autoplay playsinline></video>
+            <canvas id="snapshot" style="display:none;"></canvas>
+
+            <div class="camera-buttons">
+              <button type="button" id="captureBtn">📸 Capture</button>
+              <button type="button" id="retakeBtn" style="display:none;">🔄 Retake</button>
+              <button type="button" id="usePhotoBtn" style="display:none;">✅ Use Photo</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Check-Out -->
+        <div class="section1">
+          <h2>Guard Time-Out</h2>
+          <form id="checkoutForm">
+            <label for="checkoutTime">Check-out Time:</label>
+            <input type="time" id="checkoutTime" name="checkoutTime" readonly />
+            <button type="submit">Submit Time-Out</button>
+          </form>
+          <div id="checkoutResult" class="result" style="display:none;"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Right Panel -->
+    <div class="right-panel">
+      <!-- Ticket Submission Section -->
+      <section class="form-container">
+        <h2>Submit Ticket</h2>
+        <form id="ticketForm">
+          <input type="hidden" id="name" required />
+
+          <label for="subject">Select Type:</label>
+          <select id="subject" required>
+            <option value="" disabled selected>Select type</option>
+            <option value="concern">Concern</option>
+            <option value="leave">Leave Request</option>
+          </select>
+
+          <label for="concern">Description:</label>
+          <textarea id="concern" placeholder="Describe your concern" required></textarea>
+
+          <button type="submit">Submit</button>
+        </form>
+      </section>
+
+      <!-- Leave Request Modal -->
+      <div id="leaveModal" class="modal">
+        <div class="modal-content">
+          <button class="close" id="closeLeaveModal">&times;</button>
+          <h3>Leave Request Form</h3>
+          <form id="leaveForm">
+            <label>Name</label>
+            <input type="text" id="leaveName" required />
+            <label>Place of Duty</label>
+            <input type="text" id="leavePlace" required />
+            <label>Leave Type</label>
+            <input type="text" id="leaveType" required />
+            <label>Date of Effectivity</label>
+            <input type="date" id="leaveDate" required />
+            <label>Reason for Application</label>
+            <textarea id="leaveReason" required></textarea>
+            <label>Address While on Leave</label>
+            <input type="text" id="leaveAddress" required />
+            <label>Contact Number</label>
+            <input type="text" id="leaveContact" required />
+            <button type="submit">Submit Leave Request</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Submitted Tickets Section -->
+      <section class="applicants-section">
+        <h2>Your Submitted Tickets</h2>
+        <div class="table-container">
+          <table id="ticketsTable">
+            <thead>
+              <tr>
+                <th>Subject</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- dynamic rows here -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="../auth.js"></script>
+  <script src="../guardduty.js"></script>
+</body>
+</html>

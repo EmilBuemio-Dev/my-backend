@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Employee Registry</title>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/archiveReq.css" />
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside>
+      <div class="top">
+        <div class="logo">
+          <h2><span class="Company">MITHER3</span></h2>
+        </div>
+      </div>
+      <div class="sidebar">
+        <a href="dashboard.html">
+          <span class="material-symbols-outlined">grid_view</span>
+          <h3>Dashboard</h3>
+        </a>
+        <a href="#" class="active">
+          <span class="material-symbols-outlined">inventory_2</span>
+          <h3>Employee Registry</h3>
+        </a>
+        <a href="employeedashboard.html">
+          <span class="material-symbols-outlined">groups</span>
+          <h3>Employee</h3>
+        </a>
+        <a href="Feedback&Complaints.html">
+          <span class="material-symbols-outlined">chat</span>
+          <h3>Feedback/Complaints</h3>
+          <span class="badge" id="complaintsBadge">0</span>
+        </a>
+        <a href="account.html">
+          <span class="material-symbols-outlined">manage_accounts</span>
+          <h3>Accounts</h3>
+        </a>
+        <a href="accValidation.html">
+          <span class="material-symbols-outlined">business</span>
+          <h3>Accounts/Branch</h3>
+        </a>
+        <a href="monthlyDisposition.html">
+            <span class="material-symbols-outlined">description</span>
+            <h3>Monthly Disposition Report</h3>
+        </a>
+        <a id="logoutBtn" href="#" class="logout">
+          <span class="material-symbols-outlined">logout</span>
+          <h3>Logout</h3>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <h1>Register an account</h1>
+      
+      <section class="applicants-section">
+        <div class="section-header">
+          <h2>Employee Information and Credentials Pending For Approval</h2>
+          <button class="create-btn" onclick="openArchiveModal()">
+            <span class="material-symbols-outlined">add_circle</span>
+            Create New Employee Record
+          </button>
+        </div>
+
+        <div class="exam-table-container">
+          <table class="exam-table" id="archiveTable">
+            <thead>
+              <tr>
+                <th>Employee Name</th>
+                <th>Position</th>
+                <th>Status</th>
+                <th>Date Requested</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="archiveTableBody">
+              <tr>
+                <td colspan="5" class="no-data">Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Archive Modal -->
+      <div id="archiveModal" class="modal">
+        <div class="modal-content formal-modal large">
+          <div class="modal-header">
+            <h3>New Employee Record</h3>
+            <span class="close-btn" onclick="closeArchiveModal()">&times;</span>
+          </div>
+
+          <form id="multiStepForm">
+            <!-- STEP 1 -->
+<!-- STEP 1 -->
+<div class="step active" id="step1">
+  <div class="form-section">
+    <div class="input-group">
+      <label for="familyName">Family Name</label>
+      <input type="text" id="familyName" name="familyName" placeholder="Enter family name" required />
+    </div>
+
+    <div class="input-group">
+      <label for="firstName">First Name</label>
+      <input type="text" id="firstName" name="firstName" placeholder="Enter first name" required />
+    </div>
+
+    <div class="input-group">
+      <label for="middleName">Middle Name</label>
+      <input type="text" id="middleName" name="middleName" placeholder="Enter middle name" required />
+    </div>
+
+    <div class="input-group">
+      <label for="badgeNo">Badge No.</label>
+      <input type="text" id="badgeNo" name="badgeNo" placeholder="Enter badge number" required />
+    </div>
+
+    <div class="input-group">
+      <label for="position">Position</label>
+      <input type="text" id="position" name="position" value="Guard" readonly />
+    </div>
+  </div>
+
+
+              <div class="form-section">
+                <h3>Clearances</h3>
+                <div class="file-grid">
+                  <div class="file-input-group">
+                    <label>Barangay Clearance</label>
+                    <input type="file" id="barangay" name="barangayClearance" accept=".pdf"/>
+                  </div>
+                  <div class="file-input-group">
+                    <label>Police Clearance</label>
+                    <input type="file" id="police" name="policeClearance" accept=".pdf"/>
+                  </div>
+                  <div class="file-input-group">
+                    <label>DI Clearance</label>
+                    <input type="file" id="di" name="diClearance" accept=".pdf"/>
+                  </div>
+                  <div class="file-input-group">
+                    <label>NBI Clearance</label>
+                    <input type="file" id="nbi" name="nbiClearance" accept=".pdf"/>
+                  </div>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+              </div>
+            </div>
+
+            <!-- STEP 2 -->
+            <div class="step" id="step2">
+              <div class="form-section">
+                <h3>Background Documents</h3>
+                <div class="file-grid">
+                  <div class="file-input-group">
+                    <label>Personal & Family History</label>
+                    <input type="file" id="personal" name="personalHistory" accept=".pdf"/>
+                  </div>
+                  <div class="file-input-group">
+                    <label>Residence History</label>
+                    <input type="file" id="residence" name="residenceHistory" accept=".pdf"/>
+                  </div>
+                  <div class="file-input-group">
+                    <label>Marital Status</label>
+                    <input type="file" id="marital" name="maritalStatus" accept=".pdf"/>
+                  </div>
+                  <div class="file-input-group">
+                    <label>Physical & Mental Data</label>
+                    <input type="file" id="physical" name="physicalData" accept=".pdf"/>
+                  </div>
+                  <div class="file-input-group">
+                    <label>Educational Data</label>
+                    <input type="file" id="education" name="educationData" accept=".pdf"/>
+                  </div>
+                  <div class="file-input-group">
+                    <label>Character Reference</label>
+                    <input type="file" id="reference" name="characterReference" accept=".pdf"/>
+                  </div>
+                  <div class="file-input-group">
+                    <label>Employment History</label>
+                    <input type="file" id="employment" name="employmentHistory" accept=".pdf"/>
+                  </div>
+                  <div class="file-input-group">
+                    <label>Neighborhood Investigation</label>
+                    <input type="file" id="neighborhood" name="neighborhoodInvestigation" accept=".pdf"/>
+                  </div>
+                  <div class="file-input-group">
+                    <label>Military Record</label>
+                    <input type="file" id="military" name="militaryRecord" accept=".pdf"/>
+                  </div>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="prevStep()">Go Back</button>
+                <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+              </div>
+            </div>
+
+            <!-- STEP 3 -->
+            <div class="step" id="step3">
+              <div class="form-section">
+                <h3>Verification & Preview</h3>
+                <p style="margin-bottom: 1rem; color: #666;">Below are the uploaded credentials. Missing files will be marked ❌</p>
+                <div id="verificationContainer" class="verification-list"></div>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="prevStep()">Go Back</button>
+                <button type="submit" class="btn btn-success">Finalize Records</button>
+              </div>
+            </div>
+          </form>
+          <div id="submissionStatus" class="submission-status"></div>
+        </div>
+      </div>
+
+      <!-- Details Modal -->
+      <div id="detailsModal" class="modal">
+        <div class="modal-content formal-modal">
+          <div class="modal-header">
+            <h3>Employee Information Details</h3>
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+          </div>
+          <div class="modal-body" id="modalBody"></div>
+          <div class="modal-footer">
+            <button class="btn btn-success" onclick="openApproveModal()">Approve</button>
+          </div>
+        </div>
+      </div>
+
+ <!-- Approve Modal -->
+<div id="approveModal" class="modal">
+  <div class="modal-content formal-modal large">
+    <div class="modal-header">
+      <h3>New Guard Record</h3>
+      <span class="close-btn" onclick="closeApproveModal()">&times;</span>
+    </div>
+
+    <form id="approveForm">
+      <div class="profile-upload">
+        <div id="profilePreview" class="default-avatar material-symbols-outlined">
+          person
+        </div>
+        <input type="file" name="employeeProfile" id="profileImageInput" accept="image/*">
+        <label for="profileImageInput" class="upload-label">Choose Photo</label>
+      </div>
+
+      <!-- BASIC INFORMATION -->
+      <div class="form-section">
+        <h3>Basic Information</h3>
+        <div class="form-grid two-column">
+          <label>Family Name:</label>
+          <input type="text" id="approveFamilyName" name="familyName" required>
+
+          <label>First Name:</label>
+          <input type="text" id="approveFirstName" name="firstName" required>
+
+          <label>Middle Name:</label>
+          <input type="text" id="approveMiddleName" name="middleName">
+
+          <label>Tel. Number:</label>
+          <input type="tel" name="telNumber" id="approveTelNumber" placeholder="N/A">
+
+          <label>PSL No.:</label><input type="text" name="pslNo" readonly>
+          <label>S.S.S. No.:</label><input type="text" name="sssNo" readonly>
+          <label>TIN No.:</label><input type="text" name="tinNo" readonly>
+          <label>Cel No.:</label><input type="tel" name="celNo" readonly>
+          <label>Status:</label><input type="text" name="status" disabled>
+          <label>Badge No.:</label><input type="text" name="badgeNo" id="approvedBadgeNo" readonly>
+          <label>Branch:</label>
+          <select name="branch" id="branchSelect" required></select>
+          <label for="shift">Shift:</label>
+          <select name="shift" required></select>
+          <label>Expiry Date:</label><input type="text" name="expiryDate" disabled>
+          <label>Salary:</label><input type="number" name="salary" min="1" disabled>
+          <input type="hidden" name="role" value="employee">
+        </div>
+      </div>
+
+      <!-- PERSONAL DATA -->
+      <div class="form-section">
+        <h3>Personal Data</h3>
+        <div class="form-grid two-column">
+          <label>Email:</label><input type="email" name="email" id="approveEmail" required>
+          <label>Date of Birth:</label><input type="date" name="dateOfBirth" readonly>
+          <label>Present Address:</label><input type="text" name="presentAddress" readonly>
+          <label>Place of Birth:</label><input type="text" name="placeOfBirth" readonly>
+          <label>Previous Address:</label><input type="text" name="prevAddress" readonly>
+          <label>Citizenship:</label><input type="text" name="citizenship" readonly>
+          <label>Complexion:</label><input type="text" name="complexion" placeholder="N/A">
+          <label>Weight (kg):</label><input type="number" name="weight" readonly>
+          <label>Language Spoken:</label><input type="text" name="languageSpoken" readonly>
+          <label>Age:</label><input type="number" name="age" readonly>
+          <label>Height (cm):</label><input type="number" name="height" readonly>
+          <label>Religion:</label><input type="text" name="religion" readonly>
+          <label>Civil Status:</label><input type="text" name="civilStatus" readonly>
+          <label>Color of Hair:</label><input type="text" name="colorOfHair" readonly>
+          <label>Color of Eyes:</label><input type="text" name="colorOfEyes" readonly>
+          <label>Distinguishing Mark:</label><input type="text" name="distinguishingMark" placeholder="N/A">
+          <label>Father's Name:</label><input type="text" name="fatherName" placeholder="N/A">
+          <label>Mother's Name:</label><input type="text" name="motherName" placeholder="N/A">
+          <label>Spouse's Name:</label><input type="text" name="spouseName" placeholder="N/A">
+          <label>Children's Name:</label><input type="text" name="childrenName" placeholder="N/A">
+          <label>Occupation:</label><input type="text" name="occupation" placeholder="N/A">
+        </div>
+
+        <!-- Emergency Contact -->
+        <h4>Person to contact in case of emergency:</h4>
+        <div class="form-grid two-column">
+          <label>Name:</label><input type="text" name="emergencyName" placeholder="N/A">
+          <label>Relationship:</label><input type="text" name="emergencyRelationship" placeholder="N/A">
+          <label>Address:</label><input type="text" name="emergencyAddress" placeholder="N/A">
+          <label>Tel. Number:</label><input type="tel" name="emergencyTel" placeholder="N/A">
+        </div>
+      </div>
+
+      <!-- EDUCATIONAL BACKGROUND -->
+      <div class="form-section">
+        <h3>Educational Background</h3>
+        <table class="education-table" id="educationTable">
+          <thead>
+            <tr>
+              <th>School/University</th>
+              <th>Inclusive Date</th>
+              <th>Degree</th>
+              <th>Date Grad'td</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input type="text" name="school[]" required readonly value="N/A"></td>
+              <td><input type="text" name="inclusiveDate[]" required readonly value="N/A"></td>
+              <td><input type="text" name="degree[]" required readonly value="N/A"></td>
+              <td><input type="text" name="dateGraduated[]" required readonly value="N/A"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- FIREARMS ISSUED SECTION -->
+<div class="form-section">
+  <h3>FIREARMS ISSUED (BASED ON DDO)</h3>
+  <table class="firearms-table" id="firearmsTable">
+    <thead>
+      <tr>
+        <th>KIND</th>
+        <th>MAKE</th>
+        <th>SN</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><input type="text" name="firearmKind[]" value="N/A"></td>
+        <td><input type="text" name="firearmMake[]" value="N/A"></td>
+        <td><input type="text" name="firearmSN[]" value="N/A"></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-success">Submit</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+    </main>
+  </div>
+
+  <script src="../archiveReq.js"></script>
+  <script src="../auth.js"></script>
+</body>
+</html>

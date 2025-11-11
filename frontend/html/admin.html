@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MITHER3</title>
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+  <div class="login-container">
+    <h2><img src="../../image/logo.png" style="height:30px; vertical-align:middle; margin-right:2spx; margin-bottom: 5px;"><span>MITHER3</span></h2>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <div class="otp-row">
+        <input type="text" id="otp" placeholder="Enter OTP" disabled required>
+        <button type="button" id="getOtpBtn">Get OTP</button>
+      </div>
+      <button type="submit">Login</button>
+    </form>
+    <p id="error" class="error"></p>
+  </div>
+
+  <script src="../admin.js"></script>
+</body>
+</html>

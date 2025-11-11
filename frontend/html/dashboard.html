@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MITHER3 Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside>
+            <div class="top">
+                <div class="logo">
+                    <img src="../../image/logo.png" alt="Company Logo" 
+               style="height:30px; vertical-align:middle; margin-right:2px; margin-bottom:5px;">
+                    <h2><span class="Company">MITHER3</span></h2>
+                </div>
+            </div>
+            <div class="sidebar">
+                <a href="#" class="active">
+                    <span class="material-symbols-outlined">grid_view</span>
+                    <h3>Dashboard</h3>
+                </a>
+                <a href="archiveReq.html">
+                    <span class="material-symbols-outlined">inventory_2</span>
+                    <h3>Employee Registry</h3>
+                </a>
+                <a href="employeedashboard.html">
+                    <span class="material-symbols-outlined">groups</span>
+                    <h3>Employee</h3>
+                </a>
+                <a href="Feedback&Complaints.html">
+                    <span class="material-symbols-outlined">chat</span>
+                    <h3>Feedback/Complaints</h3>
+                    <span class="badge" id="complaintsBadge">0</span>
+                </a>
+                <a href="account.html">
+                    <span class="material-symbols-outlined">manage_accounts</span>
+                    <h3>Accounts</h3>
+                </a>
+                <a href="accValidation.html">
+                    <span class="material-symbols-outlined">business</span>
+                    <h3>Accounts/Branch</h3>
+                </a>
+                <a href="monthlyDisposition.html">
+                <span class="material-symbols-outlined">description</span>
+                <h3>Monthly Disposition Report</h3>
+                </a>
+                <a id="logoutBtn" href="#" class="logout">
+                    <span class="material-symbols-outlined">logout</span>
+                    <h3>Logout</h3>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main>
+            <h1>Dashboard</h1>
+
+            <!-- Employee Statistics -->
+            <div class="employees">
+                <div class="TotalEmployee">
+                    <span class="material-symbols-outlined">person</span>
+                    <div class="middle">
+                        <div class="left">
+                            <h3>Total Employees</h3>
+                            <h1 id="totalCount">0</h1>
+                        </div>
+                        <div class="Active">
+                            <svg>
+                                <circle id="totalCircle" r="30" cy="35" cx="35"></circle>
+                            </svg>
+                            <div class="number" id="totalPercent">0%</div>
+                        </div>
+                    </div>
+                    <small>Updated Today</small>
+                </div>
+
+                <div class="ActiveEmployees">
+                    <span class="material-symbols-outlined">person</span>
+                    <div class="middle">
+                        <div class="left">
+                            <h3>Active Employees</h3>
+                            <h1 id="activeCount">0</h1>
+                        </div>
+                        <div class="Active">
+                            <svg>
+                                <circle id="activeCircle" r="30" cy="35" cx="35"></circle>
+                            </svg>
+                            <div class="number" id="activePercent">0%</div>
+                        </div>
+                    </div>
+                    <small>Updated Today</small>
+                </div>
+
+                <div class="InactiveEmployees">
+                    <span class="material-symbols-outlined">person</span>
+                    <div class="middle">
+                        <div class="left">
+                            <h3>Pending Employees</h3>
+                            <h1 id="inactiveCount">0</h1>
+                        </div>
+                        <div class="Active">
+                            <svg>
+                                <circle id="inactiveCircle" r="30" cy="35" cx="35"></circle>
+                            </svg>
+                            <div class="number" id="inactivePercent">0%</div>
+                        </div>
+                    </div>
+                    <small>Updated Today</small>
+                </div>
+            </div>
+
+            <!-- Dashboard Stats -->
+            <div class="dashboard-stats">
+                <div class="complaints-bargraph">
+                    <h2>Complaints Ratings</h2>
+                    <div class="bar-container" id="ratingsContainer">
+                        <div class="bar" data-rating="5">
+                            <span class="label">5 Stars</span>
+                            <div class="bar-fill">
+                                <div class="bar-fill-inner"></div>
+                            </div>
+                            <span class="count">0</span>
+                        </div>
+                        <div class="bar" data-rating="4">
+                            <span class="label">4 Stars</span>
+                            <div class="bar-fill">
+                                <div class="bar-fill-inner"></div>
+                            </div>
+                            <span class="count">0</span>
+                        </div>
+                        <div class="bar" data-rating="3">
+                            <span class="label">3 Stars</span>
+                            <div class="bar-fill">
+                                <div class="bar-fill-inner"></div>
+                            </div>
+                            <span class="count">0</span>
+                        </div>
+                        <div class="bar" data-rating="2">
+                            <span class="label">2 Stars</span>
+                            <div class="bar-fill">
+                                <div class="bar-fill-inner"></div>
+                            </div>
+                            <span class="count">0</span>
+                        </div>
+                        <div class="bar" data-rating="1">
+                            <span class="label">1 Star</span>
+                            <div class="bar-fill">
+                                <div class="bar-fill-inner"></div>
+                            </div>
+                            <span class="count">0</span>
+                        </div>
+                    </div>
+                </div>
+
+
+<!-- Leave Requests Section -->
+<div class="dashboard-stats">   
+
+  <!-- Leave Requests Card -->
+  <div class="LeaveRequests" id="leaveCard">
+      <span class="material-symbols-outlined">event_note</span>
+      <div class="middle">
+          <div class="left">
+              <h3>Leave Requests</h3>
+              <h1 id="leaveCount">0</h1>
+          </div>
+      </div>
+      <small>Updated Today</small>
+  </div>
+
+  <!-- Leave Requests Table Modal -->
+  <div id="leaveTableModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>All Leave Requests</h3>
+      </div>
+      <div class="modal-body">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Leave Type</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="leaveRequestsBody">
+              <tr>
+                <td colspan="5" class="no-data">Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn close" id="closeLeaveTableModal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Individual Leave Modal -->
+  <div id="leaveModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Leave Request Details</h3>
+      </div>
+      <div class="modal-body">
+        <p><strong>Name:</strong> <span id="leaveName"></span></p>
+        <p><strong>Leave Type:</strong> <span id="leaveType"></span></p>
+        <p><strong>Date of Effectivity:</strong> <span id="leaveDate"></span></p>
+        <p><strong>Place of Duty:</strong> <span id="leaveDuty"></span></p>
+        <p><strong>Address While on Leave:</strong> <span id="leaveAddress"></span></p>
+        <p><strong>Contact Number:</strong> <span id="leaveContact"></span></p>
+        <p><strong>Reason:</strong> <span id="leaveReason"></span></p>
+        <p><strong>Status:</strong> <span id="leaveStatus"></span></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn close" id="closeLeaveModal">Close</button>
+        <button class="btn approve" id="approveLeaveBtn">Approve</button>
+        <button class="btn disapprove" id="disapproveLeaveBtn">Disapprove</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+            <!-- Recent Complaints Table -->
+            <div class="recentcomplaints">
+                <h2>Recent Complaints</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Subject</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="complaints-body">
+                            <tr>
+                                <td colspan="5" class="no-data">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar -->
+        <div class="right">
+            <div class="top">
+                <div class="theme-toggler">
+                    <span class="material-symbols-outlined active">light_mode</span>
+                    <span class="material-symbols-outlined">dark_mode</span>
+                </div>
+                <div class="profile">
+                    <div class="info">
+                        <p><b id="adminName">Admin</b></p>
+                        <p id="adminRole">Administrator</p>
+                    </div>
+                    <div class="profile-picture">
+                        <img src="https://via.placeholder.com/40" alt="Profile">
+                    </div>
+                </div>
+            </div>
+
+            <div class="recent_notifications">
+                <div class="notif-header">
+                    <h2>Notifications</h2>
+                    <button id="notifBtn" class="notif-btn">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span id="notifDot" class="notif-dot"></span>
+                    </button>
+                </div>
+                <div class="notificationslist">
+                    <p style="color: #7d8da1; text-align: center; padding: 2rem;">Loading notifications...</p>
+                </div>
+            </div>
+
+            <div class="complaint_trends">
+                <h2>Complaints Trends</h2>
+                <div class="chart-container">
+                    <canvas id="complaintschart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="ticketModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Ticket Details</h3>
+            </div>
+            <div class="modal-body">
+                <p><strong>Name:</strong> <span id="modalName"></span></p>
+                <p><strong>Subject:</strong> <span id="modalSubject"></span></p>
+                <p><strong>Reported Employee:</strong> <span id="modalReportedEmployee">N/A</span></p>
+                <p><strong>Source:</strong> <span id="modalSource"></span></p>
+                <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+                <p><strong>Rating:</strong> <span id="modalRating"></span></p>
+                <p><strong>Date:</strong> <span id="modalDate"></span></p>
+                <hr>
+                <p><strong>Concern:</strong></p>
+                <div id="modalConcern" class="concern-box"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn close" id="closeBtn">Close</button>
+                <button class="btn complete" id="markCompletedBtn">Mark as Completed</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../dashboard.js"></script>
+</body>
+</html>

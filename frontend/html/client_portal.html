@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Client Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <style>
+    :root {
+      --clr-light: #f5f7fa;
+      --clr-primary: #131315;
+      --clr-white: #ffffff;
+      --clr-dark: #222222;
+      --clr-color-dark: #2e2e2e;
+      --clr-color-background: #f0f2f5;
+      --clr-black-variant: #555555;
+      --clr-info-dark: #7d8da1;
+      --clr-success: #1abc9c;
+      --clr-danger: #e74c3c;
+      --clr-warning: #f39c12;
+      --card-padding: 1.5rem;
+      --card-border-radius: 12px;
+      --card-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      text-decoration: none;
+      border: 0;
+      list-style: none;
+      appearance: none;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--clr-color-background);
+      font-size: 0.9rem;
+      overflow-x: hidden;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 250px 1fr 420px;
+      gap: 1.5rem;
+      width: 98%;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 1rem;
+      min-height: 100vh;
+    }
+
+    /* Sidebar Styles */
+    aside {
+      background: var(--clr-white);
+      border-radius: var(--card-border-radius);
+      height: calc(100vh - 2rem);
+      position: sticky;
+      top: 1rem;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--card-box-shadow);
+    }
+
+    aside .top {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--clr-light);
+    }
+
+    aside .logo {
+      display: flex;
+      align-items: center;
+    }
+
+    aside .logo h2 {
+      font-size: 1.3rem;
+      color: var(--clr-dark);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    aside .sidebar {
+      padding: 1rem 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    aside .sidebar a {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.9rem 1.5rem;
+      color: var(--clr-info-dark);
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    aside .sidebar a:hover {
+      background: var(--clr-light);
+      color: var(--clr-primary);
+    }
+
+    aside .sidebar a.active {
+      background: var(--clr-light);
+      color: var(--clr-primary);
+      border-left: 4px solid var(--clr-primary);
+      padding-left: calc(1.5rem - 4px);
+    }
+
+    aside .sidebar a h3 {
+      font-weight: 500;
+      font-size: 0.9rem;
+      flex: 1;
+    }
+
+    aside .sidebar a.logout {
+      margin-top: auto;
+      color: var(--clr-danger);
+    }
+
+    aside .sidebar a.logout:hover {
+      background: #ffebee;
+    }
+
+    aside .sidebar .badge {
+      background: var(--clr-danger);
+      color: white;
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+      display: none;
+    }
+
+    aside .sidebar .badge.show {
+      display: block;
+    }
+
+    /* Main Content */
+    main {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    main h1 {
+      color: var(--clr-dark);
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Main Sections */
+    .deployment-section, .form-container, .applicants-section {
+      background: var(--clr-white);
+      padding: var(--card-padding);
+      border-radius: var(--card-border-radius);
+      box-shadow: var(--card-box-shadow);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .deployment-section:hover, .form-container:hover, .applicants-section:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    .deployment-section h2, .form-container h2, .applicants-section h2 {
+      color: var(--clr-dark);
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .filter-bar input {
+      flex: 1;
+      padding: 0.6rem 1rem;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      background: var(--clr-light);
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+    }
+
+    .filter-bar input:focus {
+      outline: none;
+      border-color: var(--clr-primary);
+      background: var(--clr-white);
+    }
+
+    .filter-bar button {
+      padding: 0.6rem 1.5rem;
+      background: var(--clr-primary);
+      color: var(--clr-white);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 500;
+    }
+
+    .filter-bar button:hover {
+      background: var(--clr-dark);
+      transform: translateY(-2px);
+    }
+
+    .filter-bar button:active {
+      transform: translateY(0);
+    }
+
+    /* Tables */
+    .guard-table-container, .table-container {
+      max-height: 400px;
+      overflow-y: auto;
+      border-radius: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: var(--clr-white);
+    }
+
+    thead {
+      background: var(--clr-light);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    th, td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    th {
+      font-weight: 600;
+      color: var(--clr-dark);
+      font-size: 0.85rem;
+    }
+
+    td {
+      color: var(--clr-black-variant);
+    }
+
+    tbody tr:hover {
+      background: var(--clr-light);
+      transition: all 0.2s ease;
+    }
+
+    tbody img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    /* Form Inputs */
+    .form-container input,
+    .form-container textarea,
+    .form-container select {
+      width: 100%;
+      padding: 0.6rem 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      background-color: var(--clr-light);
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .form-container input:focus,
+    .form-container textarea:focus,
+    .form-container select:focus {
+      outline: none;
+      border-color: var(--clr-primary);
+      background: var(--clr-white);
+    }
+
+    .form-container textarea {
+      resize: none;
+      min-height: 100px;
+    }
+
+    /* Rating Stars */
+    .rating {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1rem;
+      margin-top: 1rem;
+      padding: 1rem;
+      background: var(--clr-light);
+      border-radius: 8px;
+    }
+
+    .rating-label {
+      font-weight: 600;
+      color: var(--clr-dark);
+      white-space: nowrap;
+      font-size: 0.9rem;
+    }
+
+    .stars {
+      display: flex;
+      flex-direction: row-reverse;
+      gap: 0.5rem;
+    }
+
+    .rating input {
+      display: none;
+    }
+
+    .rating label {
+      font-size: 24px;
+      color: #ddd;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .rating input:checked ~ label,
+    .rating label:hover,
+    .rating label:hover ~ label {
+      color: #f39c12;
+      transform: scale(1.1);
+    }
+
+    /* Buttons */
+    .form-container button {
+      width: 100%;
+      background: var(--clr-primary);
+      color: var(--clr-white);
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 600;
+    }
+
+    .form-container button:hover {
+      background: var(--clr-dark);
+      transform: translateY(-2px);
+    }
+
+    .form-container button:active {
+      transform: translateY(0);
+    }
+
+    .view-record {
+      display: inline-block;
+      padding: 0.4rem 1rem;
+      background: var(--clr-primary);
+      color: white;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .view-record:hover {
+      background: var(--clr-dark);
+      transform: translateY(-1px);
+    }
+
+    .view-status {
+      display: inline-block;
+      padding: 0.4rem 1rem;
+      border: 1px solid var(--clr-primary);
+      border-radius: 6px;
+      color: var(--clr-primary);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .view-status:hover {
+      background: var(--clr-primary);
+      color: white;
+    }
+
+    /* Status Badges */
+    .status {
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .status.active {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .status.inactive {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .status.urgent {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .status.completed {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .status.pending {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    /* Right Panel */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .client-main {
+      background: transparent;
+    }
+
+    /* Scrollbar Styling */
+    .guard-table-container::-webkit-scrollbar,
+    .table-container::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .guard-table-container::-webkit-scrollbar-track,
+    .table-container::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+
+    .guard-table-container::-webkit-scrollbar-thumb,
+    .table-container::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 10px;
+    }
+
+    .guard-table-container::-webkit-scrollbar-thumb:hover,
+    .table-container::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        position: relative;
+        height: auto;
+      }
+
+      .right-panel {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      }
+    }
+
+    /* No Data Message */
+    .no-data {
+      text-align: center;
+      padding: 2rem;
+      color: var(--clr-info-dark);
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <!-- Sidebar -->
+  <aside>
+    <div class="top">
+      <div class="logo">
+        <h2>
+          <img src="../../image/logo.png" style="height:30px; vertical-align:middle;">
+          <span>MITHER3</span>
+        </h2>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <a href="#" class="active">
+        <span class="material-symbols-outlined">grid_view</span>
+        <h3>Client Portal</h3>
+      </a>
+      <a href="clientProfile.html">
+        <span class="material-symbols-outlined">group</span>
+        <h3>Profile</h3>
+      </a>
+      <a id="logoutBtn" href="#" class="logout"> 
+        <span class="material-symbols-outlined">logout</span>
+        <h3>Logout</h3>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Section -->
+  <main class="client-main">
+    <h1>Welcome to Client Portal</h1>
+    
+    <div class="deployment-section">
+      <h2>Guards Deployed in Your Branch</h2>
+      <div class="filter-bar">
+        <input type="text" id="searchGuard" placeholder="Search guard by name..." />
+        <button id="refreshGuards">Search</button>
+      </div>
+      <div class="guard-table-container">
+        <table id="guardsTable">
+          <thead>
+            <tr>
+              <th>Profile</th>
+              <th>Name</th>
+              <th>Badge.No</th>
+              <th>Shift</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Dynamic guard rows will appear here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Right Panel -->
+  <div class="right-panel">
+    <section class="form-container">
+      <h2>Submit Ticket</h2>
+      <form id="ticketForm">
+        <input type="hidden" id="name" required />
+        <input type="text" id="subject" placeholder="Subject" required />
+        <textarea id="concern" placeholder="Describe your concern" required></textarea>
+
+        <select id="reportedEmployee">
+          <option value="">-- Optional: Report a specific employee --</option>
+        </select>
+
+        <div class="rating" id="ratingSection">
+          <span class="rating-label">Rate Service:</span>
+          <div class="stars">
+            <input type="radio" name="rating" id="rate1" value="1"><label for="rate1">★</label>
+            <input type="radio" name="rating" id="rate2" value="2"><label for="rate2">★</label>
+            <input type="radio" name="rating" id="rate3" value="3"><label for="rate3">★</label>
+            <input type="radio" name="rating" id="rate4" value="4"><label for="rate4">★</label>
+            <input type="radio" name="rating" id="rate5" value="5"><label for="rate5">★</label>
+          </div>
+        </div>
+
+        <button type="submit" id="submitTicketBtn">Submit</button>
+      </form>
+    </section>
+
+    <section class="applicants-section">
+      <h2>Your Submitted Tickets</h2>
+      <div class="table-container">
+        <table id="ticketsTable">
+          <thead>
+            <tr>
+              <th>Subject</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- dynamic rows here -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script src="../auth.js"></script>
+<script src="../client_portal.js"></script>
+</body>
+</html>

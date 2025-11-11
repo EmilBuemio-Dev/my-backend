@@ -1,0 +1,62 @@
+node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE settings
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Build & coverage
+dist/
+build/
+coverage/
+.nyc_output/
+
+# Uploads (optional: include if using local storage)
+uploads/
+
+# MongoDB dump files
+*.dump
+*.archive
+
+# Dependency lock files (if using only one package manager, ignore others)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Optional: Ignore logs folder if only for runtime logs
+logs/
+
+# Optional: PM2 process files
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Optional: Ignore temporary files
+*.swp
+*.tmp
+*.bak
+
+# Optional: TypeScript
+*.tsbuildinfo
+
+# Optional: dotenv override for testing
+.env.test
