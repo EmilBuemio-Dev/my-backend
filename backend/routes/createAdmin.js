@@ -24,14 +24,20 @@ async function createAdmin() {
       process.exit(0);
     }
 
-    const hashedPassword = await bcrypt.hash("yourStrongPassword123", 10);
+    // Use password from environment variable
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!adminPassword) {
+      throw new Error("ADMIN_PASSWORD is not set in the environment variables");
+    }
+
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
     const admin = new User({
       name: "Super Admin",
       email,
       password: hashedPassword,
       role: "admin",
-      firstLogin: false, // set false if you don't want to force password change
+      firstLogin: false,
     });
 
     await admin.save();
