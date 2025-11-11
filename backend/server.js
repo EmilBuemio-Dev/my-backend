@@ -36,12 +36,10 @@ console.log("MONGO_URI:", process.env.MONGO_URI ? "Set" : "Not Set");
 console.log("JWT_SECRET:", process.env.JWT_SECRET ? "Set" : "Not Set");
 console.log("EMAIL_USER:", process.env.EMAIL_USER);
 console.log("EMAIL_PASS length:", process.env.EMAIL_PASS?.length);
+
 transporter.verify((err, success) => {
-  if (err) {
-    console.error("Email transporter failed:", err);
-  } else {
-    console.log("Email transporter is ready");
-  }
+  if (err) console.error("Email transporter failed:", err);
+  else console.log("Email transporter is ready");
 });
 
 // ===== Middleware =====
@@ -56,9 +54,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // ===== Uploads folder =====
 const uploadDir = path.join(__dirname, "../uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 app.use("/uploads", express.static(uploadDir));
 
 // ===== MongoDB connection =====
@@ -78,10 +74,21 @@ app.use("/api/email", emailRoutes);
 app.use("/api/branches-management", branchManagementRoutes);
 app.use('/', leaveRoutes);
 
+// ===== Serve static frontend files =====
 const publicDir = path.join(__dirname, "../public");
 app.use(express.static(publicDir));
 
+// ===== Serve loginSection.html as homepage =====
+app.get("/", (req, res) => {
+  res.sendFile(path.join(publicDir, "loginSection.html"));
+});
 
+// Optional: fallback for any frontend routing (if needed)
+app.get("*", (req, res) => {
+  res.sendFile(path.join(publicDir, "loginSection.html"));
+});
+
+// ===== Start server =====
 app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`Server running at port ${PORT}`);
 });
