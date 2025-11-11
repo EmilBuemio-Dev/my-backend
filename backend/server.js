@@ -79,12 +79,13 @@ const publicDir = path.join(__dirname, "../public");
 app.use(express.static(publicDir));
 
 // ===== Serve loginSection.html as homepage =====
+// Serve loginSection.html as homepage
 app.get("/", (req, res) => {
   res.sendFile(path.join(publicDir, "loginSection.html"));
 });
 
-// Optional: fallback for any frontend routing (if needed)
-app.get("*", (req, res) => {
+// Fallback for any other frontend route
+app.get("/*", (req, res) => {
   res.sendFile(path.join(publicDir, "loginSection.html"));
 });
 
