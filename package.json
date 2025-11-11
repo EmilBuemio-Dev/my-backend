@@ -17,6 +17,7 @@
     "concurrently": "^9.2.0"
   },
   "scripts": {
+    "start": "node -r dotenv/config backend/server.js dotenv_config_path=backend/.env",
     "dev": "concurrently \"node -r dotenv/config backend/server.js dotenv_config_path=backend/.env\""
   }
 }
