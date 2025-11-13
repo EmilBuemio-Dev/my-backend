@@ -67,15 +67,31 @@ app.use("/uploads", express.static(uploadDir));
 // ===== MongoDB connection =====
 connectDB();
 
-// ===== Static files =====
+// ===== Static Files - FIXED FOR BOTH HOSTINGER AND RENDER =====
+const frontendDir = path.join(__dirname, "../frontend");
 const publicDir = path.join(__dirname, "../public");
 
-console.log("\n========== STATIC FILES ==========");
+console.log("\n========== STATIC FILES CONFIGURATION ==========");
+console.log("Frontend Dir:", frontendDir);
+console.log("Public Dir:", publicDir);
+
+// Serve static files from frontend directory (HTML, CSS, JS, Images)
+if (fs.existsSync(frontendDir)) {
+  app.use(express.static(frontendDir));
+  console.log("✓ Frontend files served from:", frontendDir);
+} else {
+  console.warn("⚠ Frontend directory not found:", frontendDir);
+}
+
+// Serve static files from public directory as fallback
 if (fs.existsSync(publicDir)) {
   app.use(express.static(publicDir));
-  console.log("✓ Static files served from:", publicDir);
+  console.log("✓ Public files served from:", publicDir);
+} else {
+  console.warn("⚠ Public directory not found:", publicDir);
 }
-console.log("=================================\n");
+
+console.log("==============================================\n");
 
 // ===== Routes =====
 app.use("/archive", archiveRoutes);
@@ -100,10 +116,19 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// ===== Serve dashboard.html directly =====
+app.get("/dashboard", (req, res) => {
+  const dashboardPath = path.join(frontendDir, "html", "dashboard.html");
+  if (fs.existsSync(dashboardPath)) {
+    res.sendFile(dashboardPath);
+  } else {
+    res.status(404).send("<h1>Dashboard not found</h1>");
+  }
+});
+
 // ===== Serve loginSection.html as home page =====
-const frontendDir = path.join(__dirname, "../frontend/html");
 app.get("/", (req, res) => {
-  const indexPath = path.join(frontendDir, "loginSection.html");
+  const indexPath = path.join(frontendDir, "html", "loginSection.html");
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
@@ -111,7 +136,17 @@ app.get("/", (req, res) => {
   }
 });
 
+// ===== 404 Handler =====
+app.use((req, res) => {
+  res.status(404).json({
+    error: "Not Found",
+    requested_path: req.path,
+    message: "Please check the URL and try again"
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`🌐 Access at: http://localhost:${PORT}`);
+  console.log(`📊 Dashboard at: http://localhost:${PORT}/dashboard`);
 });
