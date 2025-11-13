@@ -66,9 +66,20 @@ connectDB();
 
 // ===== Static files =====
 const publicDir = path.join(__dirname, "../public");
-const frontendDir = path.join(__dirname, "../../frontend");
-app.use(express.static(publicDir));
-app.use(express.static(frontendDir));
+const frontendDir = path.join(__dirname, "../frontend/html");
+
+console.log("\n\nFrontend directory path:", frontendDir);
+console.log("Frontend directory exists:", fs.existsSync(frontendDir));
+
+if (fs.existsSync(publicDir)) {
+  app.use(express.static(publicDir));
+  console.log("✓ Static files served from:", publicDir);
+}
+
+if (fs.existsSync(frontendDir)) {
+  app.use(express.static(frontendDir));
+  console.log("✓ Static files served from:", frontendDir);
+}
 
 // ===== Routes =====
 app.use("/archive", archiveRoutes);
@@ -85,8 +96,13 @@ app.use("/api/branches-management", branchManagementRoutes);
 app.use('/', leaveRoutes);
 
 // ===== Serve loginSection.html as home page =====
-app.get('/', (req, res) => {
-  res.sendFile(path.join(frontendDir, 'html/loginSection.html'));
+app.get("/", (req, res) => {
+  const indexPath = path.join(frontendDir, "loginSection.html");
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.send("<h1>Welcome to Mither System</h1>");
+  }
 });
 
 app.listen(PORT, () => {
