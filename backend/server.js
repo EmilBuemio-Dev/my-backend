@@ -30,17 +30,21 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ===== ENV Verification =====
-console.log("Loaded ENV:");
-console.log("PORT:", process.env.PORT);
-console.log("MONGO_URI:", process.env.MONGO_URI ? "Set" : "Not Set");
-console.log("JWT_SECRET:", process.env.JWT_SECRET ? "Set" : "Not Set");
-console.log("RESEND_API_KEY:", process.env.RESEND_API_KEY ? "Set" : "Not Set");
+console.log("\n========== ENVIRONMENT VERIFICATION ==========");
+console.log("PORT:", process.env.PORT || "5000 (default)");
+console.log("MONGO_URI:", process.env.MONGO_URI ? "✅ Set" : "❌ Not Set");
+console.log("JWT_SECRET:", process.env.JWT_SECRET ? "✅ Set" : "❌ Not Set");
+console.log("RESEND_API_KEY:", process.env.RESEND_API_KEY ? "✅ Set" : "❌ NOT SET - EMAIL WON'T WORK!");
+console.log("=============================================\n");
 
 // ✅ Verify Resend is initialized
 if (process.env.RESEND_API_KEY) {
   console.log("✅ Resend email service is ready");
+  console.log("📧 Using Resend API Key (first 10 chars):", process.env.RESEND_API_KEY.substring(0, 10) + "...");
 } else {
-  console.warn("⚠️ RESEND_API_KEY not set - email functionality will not work");
+  console.error("❌ RESEND_API_KEY not set in environment - EMAIL FUNCTIONALITY WILL NOT WORK");
+  console.error("📝 Add this to your .env file:");
+  console.error("   RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxx");
 }
 
 // ===== Middleware =====
@@ -67,8 +71,9 @@ connectDB();
 const publicDir = path.join(__dirname, "../public");
 const frontendDir = path.join(__dirname, "../frontend/html");
 
-console.log("\n\nFrontend directory path:", frontendDir);
-console.log("Frontend directory exists:", fs.existsSync(frontendDir));
+console.log("\n========== STATIC FILES ==========");
+console.log("Frontend directory path:", frontendDir);
+console.log("Frontend directory exists:", fs.existsSync(frontendDir) ? "✅ Yes" : "❌ No");
 
 if (fs.existsSync(publicDir)) {
   app.use(express.static(publicDir));
@@ -79,6 +84,7 @@ if (fs.existsSync(frontendDir)) {
   app.use(express.static(frontendDir));
   console.log("✓ Static files served from:", frontendDir);
 }
+console.log("=================================\n");
 
 // ===== Routes =====
 app.use("/archive", archiveRoutes);
@@ -94,6 +100,15 @@ app.use("/api/email", emailRoutes);
 app.use("/api/branches-management", branchManagementRoutes);
 app.use('/', leaveRoutes);
 
+// ===== Health Check Endpoint =====
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "✅ Server is running",
+    resendConfigured: !!process.env.RESEND_API_KEY,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // ===== Serve loginSection.html as home page =====
 app.get("/", (req, res) => {
   const indexPath = path.join(frontendDir, "loginSection.html");
@@ -106,4 +121,5 @@ app.get("/", (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🌐 Access at: http://localhost:${PORT}`);
 });

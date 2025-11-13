@@ -3,13 +3,10 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Branch from "../models/Branch.js";
 import User from "../models/User.js";
-import { Resend } from "resend";
+import resend from "../config/email.js"; // ✅ Import from config, not initialize here
 import { authMiddleware, roleMiddleware } from "../middleware/auth.js";
 
 const router = express.Router();
-
-// ✅ Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ===== REGISTER (HR + Admin) =====
 router.post(
@@ -179,25 +176,39 @@ router.post("/login", async (req, res) => {
     user.otpExpires = new Date(Date.now() + 5 * 60 * 1000);
     await user.save();
 
-    // ✅ Send OTP using Resend
+    // ✅ Send OTP using Resend (imported from config)
     try {
-      await resend.emails.send({
-        from: "noreply@resend.dev", // ✅ Use this for testing, or your custom domain after verification
+      console.log("🔄 Attempting to send OTP to:", user.email);
+      console.log("📧 Resend instance:", resend ? "Initialized" : "NOT initialized");
+      console.log("🔑 RESEND_API_KEY set:", process.env.RESEND_API_KEY ? "Yes" : "NO - THIS IS THE PROBLEM");
+
+      const result = await resend.emails.send({
+        from: "noreply@resend.dev",
         to: user.email,
         subject: "Your Login OTP",
         html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px;">
-            <h2>Login Verification</h2>
-            <p>Your OTP code is:</p>
-            <h1 style="color: #007bff; letter-spacing: 5px;">${otp}</h1>
+          <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9; border-radius: 8px;">
+            <h2 style="color: #333;">Login Verification</h2>
+            <p style="color: #555;">Your OTP code is:</p>
+            <h1 style="color: #007bff; letter-spacing: 5px; margin: 20px 0;">${otp}</h1>
             <p style="color: #666;">This OTP will expire in 5 minutes.</p>
-            <p style="color: #999; font-size: 12px;">If you didn't request this, please ignore this email.</p>
+            <p style="color: #999; font-size: 12px; margin-top: 20px;">If you didn't request this, please ignore this email.</p>
           </div>
         `,
       });
+
+      console.log("📬 Resend response:", result);
+
+      if (result.error) {
+        console.error("❌ Resend API error:", result.error);
+        return res.status(500).json({ msg: "Failed to send OTP email.", error: result.error.message });
+      }
+
+      console.log("✅ OTP email sent successfully:", result.data.id);
     } catch (emailErr) {
-      console.error("❌ Error sending OTP email:", emailErr);
-      return res.status(500).json({ msg: "Failed to send OTP email. Please try again." });
+      console.error("❌ Error sending OTP email:", emailErr.message);
+      console.error("Full error:", emailErr);
+      return res.status(500).json({ msg: "Failed to send OTP email.", error: emailErr.message });
     }
 
     res.json({ msg: "OTP sent to your email." });
