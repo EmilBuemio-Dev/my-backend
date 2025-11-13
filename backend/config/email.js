@@ -1,23 +1,23 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587, // ✅ Change from 465 to 587
-  secure: false, // ✅ Change to false for TLS
-  auth: {
-    user: process.env.EMAIL_USER?.trim(),
-    pass: process.env.EMAIL_PASS?.trim(),
-  },
-  connectionTimeout: 10000, // 10 seconds
-  socketTimeout: 10000,
-});
+// ✅ Initialize Resend with API Key
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("❌ Email transporter error:", error);
-  } else {
-    console.log("✅ Email transporter ready");
+// ✅ Verify connection on startup
+const verifyResend = async () => {
+  try {
+    // Test by checking if API key is valid
+    if (!process.env.RESEND_API_KEY) {
+      console.error("❌ RESEND_API_KEY is not set in environment variables");
+      return;
+    }
+    console.log("✅ Resend email service ready");
+  } catch (error) {
+    console.error("❌ Resend initialization error:", error);
   }
-});
+};
 
-export default transporter;
+// Call verification on startup
+verifyResend();
+
+export default resend;

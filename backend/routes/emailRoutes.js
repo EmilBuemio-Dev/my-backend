@@ -1,28 +1,39 @@
 import express from "express";
-import transporter from "../config/email.js";
+import resend from "../config/email.js";
+import { authMiddleware } from "../middleware/auth.js";
 
 const router = express.Router();
 
 // POST /api/email/send
-router.post("/send", async (req, res) => {
+router.post("/send", authMiddleware, async (req, res) => {
   try {
     const { to, subject, text, html } = req.body;
+
     if (!to || !subject || (!text && !html)) {
       return res.status(400).json({ error: "Missing email fields." });
     }
 
-    await transporter.sendMail({
-      from: `"Mither3 Security" <${process.env.EMAIL_USER}>`,
+    // ✅ Send email using Resend
+    const result = await resend.emails.send({
+      from: "noreply@resend.dev", // ✅ Change to your verified domain after setup
       to,
       subject,
-      text,
-      html,
+      html: html || `<p>${text}</p>`,
     });
 
-    res.json({ msg: "Email sent successfully." });
+    // ✅ Check for errors
+    if (result.error) {
+      console.error("❌ Resend error:", result.error);
+      return res.status(400).json({ error: result.error.message });
+    }
+
+    res.json({ 
+      msg: "Email sent successfully.",
+      emailId: result.data.id 
+    });
   } catch (err) {
-    console.error("Email error:", err);
-    res.status(500).json({ error: "Failed to send email." });
+    console.error("❌ Email sending error:", err);
+    res.status(500).json({ error: "Failed to send email.", details: err.message });
   }
 });
 

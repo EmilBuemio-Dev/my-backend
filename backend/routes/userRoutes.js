@@ -3,19 +3,14 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Branch from "../models/Branch.js";
 import User from "../models/User.js";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { authMiddleware, roleMiddleware } from "../middleware/auth.js";
 
 const router = express.Router();
 
-const transporter = nodemailer.createTransport({
-  service: "gmail", // you can replace with "hotmail", "yahoo", or a custom SMTP host
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
-// ===== REGISTER (HR + Admin) =====
+// ✅ Initialize Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 // ===== REGISTER (HR + Admin) =====
 router.post(
   "/register",
@@ -43,13 +38,12 @@ router.post(
       }
 
       // ✅ Find by email or clientIdNumber to avoid duplicates
-     const lookupConditions = [{ email }];
-if (clientIdNumber && clientIdNumber.trim() !== "") {
-  lookupConditions.push({ clientIdNumber });
-}
+      const lookupConditions = [{ email }];
+      if (clientIdNumber && clientIdNumber.trim() !== "") {
+        lookupConditions.push({ clientIdNumber });
+      }
 
-let existingUser = await User.findOne({ $or: lookupConditions });
-
+      let existingUser = await User.findOne({ $or: lookupConditions });
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -88,11 +82,11 @@ let existingUser = await User.findOne({ $or: lookupConditions });
         }
 
         if (existingUser.employeeId?.toString() !== employeeId?.toString()) {
-    return res.status(400).json({
-      msg: "Email already exists. Use a different email address.",
-    });
-  }
-}
+          return res.status(400).json({
+            msg: "Email already exists. Use a different email address.",
+          });
+        }
+      }
 
       // ✅ Otherwise, create a brand-new user
       const user = new User({
@@ -151,7 +145,6 @@ let existingUser = await User.findOne({ $or: lookupConditions });
   }
 );
 
-
 // ===== LOGIN (Step 1: Verify password & send OTP) =====
 router.post("/login", async (req, res) => {
   let { email, password, badgeNumber, hrIdNumber, clientIdNumber } = req.body;
@@ -180,20 +173,32 @@ router.post("/login", async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
 
-    // ✅ DO NOT create Employee in login to prevent duplicates
-
     // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     user.otp = otp;
     user.otpExpires = new Date(Date.now() + 5 * 60 * 1000);
     await user.save();
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: user.email,
-      subject: "Your Login OTP",
-      text: `Your OTP code is: ${otp}. It will expire in 5 minutes.`,
-    });
+    // ✅ Send OTP using Resend
+    try {
+      await resend.emails.send({
+        from: "noreply@resend.dev", // ✅ Use this for testing, or your custom domain after verification
+        to: user.email,
+        subject: "Your Login OTP",
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <h2>Login Verification</h2>
+            <p>Your OTP code is:</p>
+            <h1 style="color: #007bff; letter-spacing: 5px;">${otp}</h1>
+            <p style="color: #666;">This OTP will expire in 5 minutes.</p>
+            <p style="color: #999; font-size: 12px;">If you didn't request this, please ignore this email.</p>
+          </div>
+        `,
+      });
+    } catch (emailErr) {
+      console.error("❌ Error sending OTP email:", emailErr);
+      return res.status(500).json({ msg: "Failed to send OTP email. Please try again." });
+    }
 
     res.json({ msg: "OTP sent to your email." });
   } catch (err) {
@@ -202,7 +207,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// ===== VERIFY OTP =====
 // ===== VERIFY OTP =====
 router.post("/verify-otp", async (req, res) => {
   let { email, otp } = req.body;
@@ -260,7 +264,6 @@ router.post("/verify-otp", async (req, res) => {
   }
 });
 
-
 // ===== CHANGE PASSWORD =====
 router.post("/change-password", authMiddleware, async (req, res) => {
   try {
@@ -309,7 +312,5 @@ router.get("/", authMiddleware, roleMiddleware(["admin", "hr"]), async (req, res
     res.status(500).json({ msg: "Server error" });
   }
 });
-
-
 
 export default router;
