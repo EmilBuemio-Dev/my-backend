@@ -64,6 +64,10 @@ app.use("/uploads", express.static(uploadDir));
 // ===== MongoDB connection =====
 connectDB();
 
+// ===== Static files =====
+const publicDir = path.join(__dirname, "../public");
+app.use(express.static(publicDir));
+
 // ===== Routes =====
 app.use("/archive", archiveRoutes);
 app.use("/tickets", ticketRoutes);
@@ -78,9 +82,10 @@ app.use("/api/email", emailRoutes);
 app.use("/api/branches-management", branchManagementRoutes);
 app.use('/', leaveRoutes);
 
-const publicDir = path.join(__dirname, "../public");
-app.use(express.static(publicDir));
-
+// ===== Serve loginSection.html as home page =====
+app.get('/', (req, res) => {
+  res.sendFile(path.join(publicDir, 'loginSection.html'));
+});
 
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
