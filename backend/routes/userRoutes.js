@@ -183,7 +183,7 @@ router.post("/login", async (req, res) => {
       console.log("🔑 RESEND_API_KEY set:", process.env.RESEND_API_KEY ? "Yes" : "NO - THIS IS THE PROBLEM");
 
       const result = await resend.emails.send({
-        from: "noreply@resend.dev",
+        from: "otp@mither3security.com",
         to: user.email,
         subject: "Your Login OTP",
         html: `
