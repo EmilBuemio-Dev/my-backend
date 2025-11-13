@@ -93,19 +93,19 @@ if (fs.existsSync(publicDir)) {
 
 console.log("==============================================\n");
 
-// ===== API Routes (MUST be before dynamic HTML routes) =====
-app.use("/api/", archiveRoutes);  // Changed from /archive to /api/archive
-app.use("/api/tickets", ticketRoutes);
+// ===== Routes =====
+app.use("/archive", archiveRoutes);
+app.use("/tickets", ticketRoutes);
+app.use("/", attendanceRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/employees", employeeRoutes);
+app.use("/employees", employeeRoutes);
 app.use("/api/branches", branchRoutes);
-app.use("/api/accounts", accountRoutes);
+app.use("/accounts", accountRoutes);
 app.use("/api/requirements", requirementRoutes);
 app.use("/api/registers", registerRoutes);
 app.use("/api/email", emailRoutes);
 app.use("/api/branches-management", branchManagementRoutes);
-app.use("/api/attendance", attendanceRoutes);
-app.use("/api/leave", leaveRoutes);
+app.use('/', leaveRoutes);
 
 // ===== Health Check Endpoint =====
 app.get("/api/health", (req, res) => {
