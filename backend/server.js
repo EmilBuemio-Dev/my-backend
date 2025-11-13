@@ -69,20 +69,11 @@ connectDB();
 
 // ===== Static files =====
 const publicDir = path.join(__dirname, "../public");
-const frontendDir = path.join(__dirname, "../frontend/html");
 
 console.log("\n========== STATIC FILES ==========");
-console.log("Frontend directory path:", frontendDir);
-console.log("Frontend directory exists:", fs.existsSync(frontendDir) ? "✅ Yes" : "❌ No");
-
 if (fs.existsSync(publicDir)) {
   app.use(express.static(publicDir));
   console.log("✓ Static files served from:", publicDir);
-}
-
-if (fs.existsSync(frontendDir)) {
-  app.use(express.static(frontendDir));
-  console.log("✓ Static files served from:", frontendDir);
 }
 console.log("=================================\n");
 
@@ -110,6 +101,7 @@ app.get("/api/health", (req, res) => {
 });
 
 // ===== Serve loginSection.html as home page =====
+const frontendDir = path.join(__dirname, "../frontend/html");
 app.get("/", (req, res) => {
   const indexPath = path.join(frontendDir, "loginSection.html");
   if (fs.existsSync(indexPath)) {
