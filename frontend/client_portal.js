@@ -94,7 +94,7 @@ async function loadClientGuards(searchName = "") {
       return [];
     }
 
-    const res = await fetch("http://localhost:5000/employees");
+    const res = await fetch("https://www.mither3security.com/employees");
     if (!res.ok) throw new Error("Failed to fetch employees");
     const employees = await res.json();
     console.log("Employees fetched:", employees.length);
@@ -170,7 +170,7 @@ function renderGuardsTable(guards) {
 
   guards.forEach(emp => {
     const profileImg = emp.employeeData?.credentials?.profileImage
-      ? `http://localhost:5000${emp.employeeData.credentials.profileImage.replace(/^\/?/, "")}`
+      ? `https://www.mither3security.com${emp.employeeData.credentials.profileImage.replace(/^\/?/, "")}`
       : "../../image/profile.png";
 
     const name = emp.employeeData?.personalData?.name || "N/A";
@@ -236,7 +236,7 @@ function initTicketSubmit() {
         creatorEmail: user.email,
       };
 
-      const res = await fetch("http://localhost:5000/tickets", {
+      const res = await fetch("https://www.mither3security.com/tickets", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -266,7 +266,7 @@ async function loadMyTickets() {
   if (!user) return;
 
   try {
-    const res = await fetch("http://localhost:5000/tickets", {
+    const res = await fetch("https://www.mither3security.com/tickets", {
       headers: { "Authorization": `Bearer ${user.token}` },
     });
 

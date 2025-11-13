@@ -11,7 +11,7 @@
       async function fetchEmployeeData() {
         try {
           if (!employeeId) return alert("No employee ID found in the URL.");
-          const res = await fetch(`http://localhost:5000/employees/${employeeId}`);
+          const res = await fetch(`https://www.mither3security.com/employees/${employeeId}`);
           if (!res.ok) throw new Error("Failed to fetch employee data");
           const emp = await res.json();
           employeeDataCache = emp;
@@ -32,7 +32,7 @@
         const photoElement = document.getElementById("employeePhoto");
         if (photoElement) {
           photoElement.src = creds.profileImage
-            ? `http://localhost:5000${creds.profileImage}`
+            ? `https://www.mither3security.com${creds.profileImage}`
             : "../../image/profile.png";
         }
 
@@ -128,7 +128,7 @@
           if (!span) return;
           const filePath = creds[f];
           const cleanedPath = filePath ? filePath.split("/").map(s => encodeURIComponent(s)).join("/") : null;
-          const fileUrl = cleanedPath ? `http://localhost:5000/${cleanedPath}` : null;
+          const fileUrl = cleanedPath ? `https://www.mither3security.com/${cleanedPath}` : null;
 
           span.innerHTML = "";
           if (fileUrl) {
@@ -199,7 +199,7 @@
         });
 
         try {
-          const res = await fetch(`http://localhost:5000/employees/${employeeId}`, {
+          const res = await fetch(`hhttps://www.mither3security.com/employees/${employeeId}`, {
             method: "PATCH",
             body: formData
           });
@@ -266,7 +266,7 @@
 
 
         // Fetch all employees
-        const res = await fetch("http://localhost:5000/employees");
+        const res = await fetch("https://www.mither3security.com/employees");
         if (!res.ok) throw new Error("Failed to fetch employees");
         const employees = await res.json();
 
@@ -275,7 +275,7 @@
 
         employees.forEach(emp => {
           const profileImg = emp.employeeData?.credentials?.profileImage
-            ? `http://localhost:5000/${emp.employeeData.credentials.profileImage.replace(/^\/?/, "")}`
+            ? `https://www.mither3security.com/${emp.employeeData.credentials.profileImage.replace(/^\/?/, "")}`
             : "../../image/profile.png";
           const name = emp.employeeData?.personalData?.name || "N/A";
           const badgeNo = emp.employeeData?.basicInformation?.badgeNo || "N/A";
@@ -314,9 +314,9 @@
     async function openCompareView(firstId, secondId) {
       try {
         const [firstRes, secondRes, reqRes] = await Promise.all([
-          fetch(`http://localhost:5000/employees/${firstId}`),
-          fetch(`http://localhost:5000/employees/${secondId}`),
-          fetch("http://localhost:5000/api/requirements")
+          fetch(`https://www.mither3security.com/employees/${firstId}`),
+          fetch(`https://www.mither3security.com/employees/${secondId}`),
+          fetch("https://www.mither3security.com/api/requirements")
         ]);
 
         if (!firstRes.ok || !secondRes.ok || !reqRes.ok)
@@ -352,7 +352,7 @@
 
               <img src="${
                 firstEmp.employeeData?.credentials?.profileImage
-                  ? `http://localhost:5000/${firstEmp.employeeData.credentials.profileImage.replace(/^\/?/, "")}`
+                  ? `https://www.mither3security.com/${firstEmp.employeeData.credentials.profileImage.replace(/^\/?/, "")}`
                   : "../../image/profile.png"
               }" class="compare-photo">
 
@@ -395,7 +395,7 @@
               <h4>${secondEmp.employeeData?.personalData?.name || "N/A"}</h4>
               <img src="${
                 secondEmp.employeeData?.credentials?.profileImage
-                  ? `http://localhost:5000/${secondEmp.employeeData.credentials.profileImage.replace(/^\/?/, "")}`
+                  ? `https://www.mither3security.com/${secondEmp.employeeData.credentials.profileImage.replace(/^\/?/, "")}`
                   : "../../image/profile.png"
               }" class="compare-photo">
 
@@ -513,7 +513,7 @@
   try {
     if (!employeeId) throw new Error("Employee ID not found");
 
-    const res = await fetch(`http://localhost:5000/attendance/${employeeId}/weekly`);
+    const res = await fetch(`https://www.mither3security.com/attendance/${employeeId}/weekly`);
     if (!res.ok) throw new Error("Failed to fetch weekly attendance");
 
     const data = await res.json();
@@ -573,7 +573,7 @@ async function loadMonthlyAttendance() {
   try {
     if (!employeeId) throw new Error("Employee ID not found");
 
-    const res = await fetch(`http://localhost:5000/attendance/${employeeId}/monthly-summary`);
+    const res = await fetch(`https://www.mither3security.com/attendance/${employeeId}/monthly-summary`);
     if (!res.ok) throw new Error("Failed to fetch monthly summary");
 
     const data = await res.json();

@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000/employees";
+const API_URL = "https://www.mither3security.com/employees";
 
 // Get token and employeeId from localStorage
 const token = localStorage.getItem("token");
@@ -219,7 +219,7 @@ editBtn.addEventListener("click", async () => {
         formData.append("name", updatedData.personalData.name || "unknown");
 
         // Upload file
-        const p = fetch("http://localhost:5000/employees/upload-credentials", {
+        const p = fetch("https://www.mither3security.com/employees/upload-credentials", {
           method: "POST",
           body: formData,
           headers: { Authorization: `Bearer ${token}` }

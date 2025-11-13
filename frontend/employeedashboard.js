@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const API_BASE = "http://localhost:5000";
+  const API_BASE = "https://www.mither3security.com";
   const token = localStorage.getItem("token");
 
   const logoutBtn = document.getElementById("logoutBtn");

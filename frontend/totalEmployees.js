@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function loadEmployees() {
   try {
-    const res = await fetch("http://localhost:5000/employees");
+    const res = await fetch("https://www.mither3security.com/employees");
     if (!res.ok) throw new Error("Failed to fetch employees");
 
     const employees = await res.json();
@@ -15,7 +15,7 @@ async function loadEmployees() {
   const tr = document.createElement("tr");
 
   const profileImg = emp.employeeData?.credentials?.profileImage
-    ? `http://localhost:5000/${emp.employeeData.credentials.profileImage.replace(/^\/?/, "")}`
+    ? `https://www.mither3security.com/${emp.employeeData.credentials.profileImage.replace(/^\/?/, "")}`
     : "../../image/profile.png";
 
   const name = emp.employeeData?.personalData?.name || "N/A";

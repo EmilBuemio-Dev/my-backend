@@ -51,7 +51,7 @@ function setCircleProgress(circleId, percent, circleLength) {
 
 async function loadDashboardStats() {
   try {
-    const res = await fetch("http://localhost:5000/employees");
+    const res = await fetch("https://www.mither3security.com/employees");
     if (!res.ok) throw new Error("Failed to fetch employees");
     const employees = await res.json();
 
@@ -88,7 +88,7 @@ async function loadDashboardStats() {
 
 async function loadComplaintRatingsBarGraph() {
   try {
-    const res = await fetch("http://localhost:5000/tickets", {
+    const res = await fetch("https://www.mither3security.com/tickets", {
       headers: { "Authorization": `Bearer ${token}` }
     });
     if (!res.ok) throw new Error("Failed to fetch complaints");
@@ -138,7 +138,7 @@ async function loadComplaintRatingsBarGraph() {
 
 async function loadComplaintsChart() {
   try {
-    const res = await fetch("http://localhost:5000/tickets", {
+    const res = await fetch("https://www.mither3security.com/tickets", {
       headers: { "Authorization": `Bearer ${token}` }
     });
     if(!res.ok) throw new Error("Failed to fetch complaints");
@@ -256,7 +256,7 @@ async function loadComplaintsChart() {
 
 async function loadTodayComplaints() {
   try {
-    const res = await fetch("http://localhost:5000/tickets", {
+    const res = await fetch("https://www.mither3security.com/tickets", {
       headers: { "Authorization": `Bearer ${token}` }
     });
     if (!res.ok) throw new Error("Failed to fetch complaints");
@@ -330,7 +330,7 @@ window.addEventListener("click", e => {
 // Load leave requests
 async function loadLeaveRequests() {
     try {
-        const res = await fetch("http://localhost:5000/leave-requests", {
+        const res = await fetch("https://www.mither3security.com/leave-requests", {
             headers: { Authorization: `Bearer ${token}` }
         });
         if (!res.ok) throw new Error("Failed to fetch leave requests");
@@ -370,7 +370,7 @@ async function loadLeaveRequests() {
 // Open individual leave modal
 async function openLeaveModal(leaveId) {
     try {
-        const res = await fetch(`http://localhost:5000/leave-requests/${leaveId}`, {
+        const res = await fetch(`https://www.mither3security.com/leave-requests/${leaveId}`, {
             headers: { Authorization: `Bearer ${token}` }
         });
         if (!res.ok) throw new Error("Failed to fetch leave details");
@@ -408,7 +408,7 @@ async function openLeaveModal(leaveId) {
 // Update leave status
 async function updateLeaveStatus(leaveId, status) {
     try {
-        const res = await fetch(`http://localhost:5000/leave-requests/${leaveId}`, {
+        const res = await fetch(`https://www.mither3security.com/leave-requests/${leaveId}`, {
             method: "PATCH",
             headers: { 
                 "Content-Type": "application/json",
@@ -443,7 +443,7 @@ window.addEventListener("click", e => {
 
 async function loadAttendanceAlerts() {
   try {
-    const res = await fetch("http://localhost:5000/attendance/all", {
+    const res = await fetch("https://www.mither3security.com/attendance/all", {
       headers: { Authorization: `Bearer ${token}` }
     });
     if (!res.ok) throw new Error("Failed to fetch attendance");
@@ -498,7 +498,7 @@ async function loadAttendanceAlerts() {
 
 async function openTicketModal(ticketId) {
   try {
-    const res = await fetch(`http://localhost:5000/tickets/${ticketId}`, {
+    const res = await fetch(`https://www.mither3security.com/tickets/${ticketId}`, {
       headers: { "Authorization": `Bearer ${token}` },
     });
     if (!res.ok) throw new Error(`Failed to load ticket ${ticketId}`);
@@ -536,7 +536,7 @@ async function openTicketModal(ticketId) {
 
 async function markCompleted(ticketId) {
   try {
-    const res = await fetch(`http://localhost:5000/tickets/${ticketId}`, {
+    const res = await fetch(`https://www.mither3security.com/tickets/${ticketId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",

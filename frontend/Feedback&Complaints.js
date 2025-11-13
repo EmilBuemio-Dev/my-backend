@@ -12,7 +12,7 @@ if (!token) {
 // ===== Load all tickets =====
 async function loadTickets() {
   try {
-    const res = await fetch("http://localhost:5000/tickets", {
+    const res = await fetch("https://www.mither3security.com/tickets", {
       headers: { "Authorization": `Bearer ${token}` },
     });
     if (!res.ok) throw new Error(`Failed to fetch tickets: ${res.status}`);
@@ -58,7 +58,7 @@ async function loadTickets() {
 // ===== Open Ticket Modal =====
 async function openTicketModal(ticketId) {
   try {
-    const res = await fetch(`http://localhost:5000/tickets/${ticketId}`, {
+    const res = await fetch(`https://www.mither3security.com/tickets/${ticketId}`, {
       headers: { "Authorization": `Bearer ${token}` },
     });
     if (!res.ok) throw new Error(`Failed to load ticket ${ticketId}`);
@@ -118,7 +118,7 @@ async function openTicketModal(ticketId) {
 // ===== Mark Ticket as Completed =====
 async function markCompleted(ticketId) {
   try {
-    const res = await fetch(`http://localhost:5000/tickets/${ticketId}`, {
+    const res = await fetch(`https://www.mither3security.com/tickets/${ticketId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",

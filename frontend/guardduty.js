@@ -117,7 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
       formData.append("checkinImage", blob, "checkin.png");
       formData.append("employeeId", employeeId);
 
-      const res = await fetch("http://localhost:5000/checkin", {
+      const res = await fetch("https://www.mither3security.com/checkin", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -149,7 +149,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!token || !employeeId) return alert("Missing token or employee ID.");
 
     try {
-      const res = await fetch("http://localhost:5000/checkout", {
+      const res = await fetch("https://www.mither3security.com/checkout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -189,7 +189,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!employeeId || !token) return alert("Missing token or employee ID.");
 
       try {
-        const res = await fetch(`http://localhost:5000/employees/leave-requests/employee/${employeeId}`, {
+        const res = await fetch(`https://www.mither3security.com/employees/leave-requests/employee/${employeeId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -224,7 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!concern) return alert("Please describe your concern.");
 
       try {
-        const res = await fetch('http://localhost:5000/tickets', {
+        const res = await fetch('https://www.mither3security.com/tickets', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -262,7 +262,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     try {
-      const res = await fetch('http://localhost:5000/leave-requests', {
+      const res = await fetch('https://www.mither3security.com/leave-requests', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -295,12 +295,12 @@ document.addEventListener("DOMContentLoaded", () => {
     tableBody.innerHTML = "";
 
     try {
-      const ticketsRes = await fetch('http://localhost:5000/tickets', {
+      const ticketsRes = await fetch('https://www.mither3security.com/tickets', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const tickets = await ticketsRes.json();
 
-      const leaveRes = await fetch('http://localhost:5000/leave-requests', { 
+      const leaveRes = await fetch('https://www.mither3security.com/leave-requests', { 
         headers: { Authorization: `Bearer ${token}` }
       });
       const leaveRequests = await leaveRes.json();

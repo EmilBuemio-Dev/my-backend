@@ -80,8 +80,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const [branchesRes, employeesRes] = await Promise.all([
-      fetch("http://localhost:5000/api/branches"),
-      fetch("http://localhost:5000/employees"),
+      fetch("https://www.mither3security.com/api/branches"),
+      fetch("https://www.mither3security.com/employees"),
     ]);
 
     if (!branchesRes.ok || !employeesRes.ok)

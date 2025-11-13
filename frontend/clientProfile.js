@@ -61,7 +61,7 @@ async function loadBranchOverview() {
   }
 
   try {
-    const res = await fetch(`http://localhost:5000/api/branches/${user.branchId}`);
+    const res = await fetch(`https://www.mither3security.com/api/branches/${user.branchId}`);
     if (!res.ok) throw new Error(`Failed to fetch branch data (status ${res.status})`);
     const data = await res.json();
 
@@ -123,7 +123,7 @@ async function loadBranchOverview() {
 
         try {
           const updateRes = await fetch(
-            `http://localhost:5000/api/branches/${user.branchId}`,
+            `https://www.mither3security.com/api/branches/${user.branchId}`,
             {
               method: "PATCH",
               headers: {
@@ -176,7 +176,7 @@ async function loadGuardsForBranch() {
 
   try {
     // ✅ Fetch guards assigned to this branch
-    const res = await fetch(`http://localhost:5000/employees/branch/${user.branchId}`);
+    const res = await fetch(`https://www.mither3security.com/employees/branch/${user.branchId}`);
     if (!res.ok) {
       throw new Error(`Failed to fetch guards (status ${res.status})`);
     }
@@ -242,12 +242,12 @@ async function showGuardDetails(guardId) {
 
   initGuardDetailTabs();
 
-  const employeeRes = await fetch(`http://localhost:5000/employees/${guardId}`);
+  const employeeRes = await fetch(`https://www.mither3security.com/employees/${guardId}`);
   const employee = await employeeRes.json();
 
   // Load attendance
   // Load attendance by employee ID only
-const attendanceRes = await fetch(`http://localhost:5000/attendance/${guardId}`);
+const attendanceRes = await fetch(`https://www.mither3security.com/attendance/${guardId}`);
 if (!attendanceRes.ok) {
   console.error("❌ Failed to fetch attendance for employee ID:", guardId);
 } else {
@@ -256,7 +256,7 @@ if (!attendanceRes.ok) {
 }
 
 
-const concernRes = await fetch(`http://localhost:5000/tickets?reportedEmployeeId=${guardId}`, {
+const concernRes = await fetch(`https://www.mither3security.com/tickets?reportedEmployeeId=${guardId}`, {
   headers: { "Authorization": `Bearer ${getUser().token}` }
 });
 
@@ -284,7 +284,7 @@ document.querySelectorAll(".view-ticket-btn").forEach(btn => {
   btn.addEventListener("click", async () => {
     const ticketId = btn.dataset.id;
     try {
-      const res = await fetch(`http://localhost:5000/tickets/${ticketId}`, {
+      const res = await fetch(`https://www.mither3security.com/tickets/${ticketId}`, {
         headers: { "Authorization": `Bearer ${getUser().token}` }
       });
       const ticket = await res.json();

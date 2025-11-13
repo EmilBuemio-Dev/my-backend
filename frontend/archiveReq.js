@@ -31,11 +31,11 @@ const allowedFields = [
 
 async function loadArchives() {
   try {
-    const res = await fetch("http://localhost:5000/archive");
+    const res = await fetch("https://www.mither3security.com/archive");
     archives = await res.json();
 
     // Pre-fetch branch data once
-    const branchRes = await fetch("http://localhost:5000/api/branches");
+    const branchRes = await fetch("https://www.mither3security.com/api/branches");
     const branches = await branchRes.json();
 
     await Promise.all(
@@ -75,7 +75,7 @@ async function checkIfRegisteredAndReturnEmail(record) {
   if (!record.familyName || !record.firstName || !record.badgeNo) return null;
 
   try {
-    let url = `http://localhost:5000/api/registers/search?familyName=${encodeURIComponent(record.familyName)}&firstName=${encodeURIComponent(record.firstName)}&badgeNo=${encodeURIComponent(record.badgeNo)}`;
+    let url = `https://www.mither3security.com/api/registers/search?familyName=${encodeURIComponent(record.familyName)}&firstName=${encodeURIComponent(record.firstName)}&badgeNo=${encodeURIComponent(record.badgeNo)}`;
     if (record.middleName) url += `&middleName=${encodeURIComponent(record.middleName)}`;
 
     const res = await fetch(url);
@@ -92,7 +92,7 @@ async function checkIfRegistered(record) {
   if (!record.familyName || !record.firstName || !record.badgeNo) return false;
 
   try {
-    let url = `http://localhost:5000/api/registers/search?familyName=${encodeURIComponent(record.familyName)}&firstName=${encodeURIComponent(record.firstName)}&badgeNo=${encodeURIComponent(record.badgeNo)}`;
+    let url = `https://www.mither3security.com/api/registers/search?familyName=${encodeURIComponent(record.familyName)}&firstName=${encodeURIComponent(record.firstName)}&badgeNo=${encodeURIComponent(record.badgeNo)}`;
     if (record.middleName) url += `&middleName=${encodeURIComponent(record.middleName)}`;
 
     const res = await fetch(url);
@@ -149,7 +149,7 @@ async function loadBranches(preselectedBranch = "") {
   if (!select || !expiryInput || !salaryInput || !shiftSelect) return;
 
   try {
-    const res = await fetch("http://localhost:5000/api/branches");
+    const res = await fetch("https://www.mither3security.com/api/branches");
     const branches = await res.json();
 
     // Reset branch select
@@ -287,7 +287,7 @@ function viewRecord(id) {
   let credList = "";
   for (const [key, label] of Object.entries(requiredDocs)) {
     credList += creds[key]
-      ? `<div class="cred-item">✅ ${label}: <a href="http://localhost:5000/uploads/${encodeURIComponent(creds[key])}" target="_blank">View File</a></div>`
+      ? `<div class="cred-item">✅ ${label}: <a href="https://www.mither3security.com/uploads/${encodeURIComponent(creds[key])}" target="_blank">View File</a></div>`
       : `<div class="cred-item">❌ ${label}: Not Submitted</div>`;
   }
 
@@ -363,7 +363,7 @@ if (emailInput) {
   } else {
     try {
       // 2. Fetch from Register
-      let url = `http://localhost:5000/api/registers/search?familyName=${encodeURIComponent(selectedRecord.familyName)}&firstName=${encodeURIComponent(selectedRecord.firstName)}&badgeNo=${encodeURIComponent(selectedRecord.badgeNo)}`;
+      let url = `https://www.mither3security.com/api/registers/search?familyName=${encodeURIComponent(selectedRecord.familyName)}&firstName=${encodeURIComponent(selectedRecord.firstName)}&badgeNo=${encodeURIComponent(selectedRecord.badgeNo)}`;
       if (selectedRecord.middleName) url += `&middleName=${encodeURIComponent(selectedRecord.middleName)}`;
 
       const res = await fetch(url);
@@ -426,7 +426,7 @@ async function checkIfRegisteredAndFillForm() {
   if (!familyName || !firstName || !badgeNo) return console.warn("Missing required fields.");
 
   try {
-    let url = `http://localhost:5000/api/registers/search?familyName=${encodeURIComponent(familyName)}&firstName=${encodeURIComponent(firstName)}&badgeNo=${encodeURIComponent(badgeNo)}`;
+    let url = `hhttps://www.mither3security.com/api/registers/search?familyName=${encodeURIComponent(familyName)}&firstName=${encodeURIComponent(firstName)}&badgeNo=${encodeURIComponent(badgeNo)}`;
     if (middleName) url += `&middleName=${encodeURIComponent(middleName)}`;
 
     const res = await fetch(url);
@@ -667,7 +667,7 @@ const getInputValue = (selector, recordKey, type = "string") => {
     if (profileFile) formData.append("employeeProfile", profileFile);
 
     try {
-      const res = await fetch(`http://localhost:5000/accounts/approve/${selectedRecordId}`, {
+      const res = await fetch(`https://www.mither3security.com/accounts/approve/${selectedRecordId}`, {
         method: "POST",
         body: formData,
       });
