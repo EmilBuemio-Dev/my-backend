@@ -68,10 +68,13 @@ app.use("/uploads", express.static(uploadDir));
 connectDB();
 
 // ===== Static Files - FIXED FOR BOTH HOSTINGER AND RENDER =====
+// For Render: backend is at root/backend, frontend at root/frontend
+// For Hostinger: same structure
 const frontendDir = path.join(__dirname, "../frontend");
 const publicDir = path.join(__dirname, "../public");
 
 console.log("\n========== STATIC FILES CONFIGURATION ==========");
+console.log("Current __dirname:", __dirname);
 console.log("Frontend Dir:", frontendDir);
 console.log("Public Dir:", publicDir);
 
@@ -119,16 +122,35 @@ app.get("/api/health", (req, res) => {
 // ===== Serve dashboard.html directly =====
 app.get("/dashboard", (req, res) => {
   const dashboardPath = path.join(frontendDir, "html", "dashboard.html");
+  console.log("Attempting to serve dashboard from:", dashboardPath);
+  console.log("File exists:", fs.existsSync(dashboardPath));
   if (fs.existsSync(dashboardPath)) {
     res.sendFile(dashboardPath);
   } else {
-    res.status(404).send("<h1>Dashboard not found</h1>");
+    res.status(404).json({ 
+      error: "Dashboard not found",
+      looked_in: dashboardPath,
+      frontend_dir_exists: fs.existsSync(frontendDir),
+      frontend_contents: fs.existsSync(frontendDir) ? fs.readdirSync(frontendDir) : "N/A"
+    });
+  }
+});
+
+// ===== Serve dashboard.html as .html route =====
+app.get("/dashboard.html", (req, res) => {
+  const dashboardPath = path.join(frontendDir, "html", "dashboard.html");
+  if (fs.existsSync(dashboardPath)) {
+    res.sendFile(dashboardPath);
+  } else {
+    res.status(404).json({ error: "Dashboard not found" });
   }
 });
 
 // ===== Serve loginSection.html as home page =====
 app.get("/", (req, res) => {
   const indexPath = path.join(frontendDir, "html", "loginSection.html");
+  console.log("Attempting to serve index from:", indexPath);
+  console.log("File exists:", fs.existsSync(indexPath));
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
