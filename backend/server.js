@@ -68,13 +68,10 @@ app.use("/uploads", express.static(uploadDir));
 connectDB();
 
 // ===== Static Files - FIXED FOR BOTH HOSTINGER AND RENDER =====
-// For Render: backend is at root/backend, frontend at root/frontend
-// For Hostinger: same structure
 const frontendDir = path.join(__dirname, "../frontend");
 const publicDir = path.join(__dirname, "../public");
 
 console.log("\n========== STATIC FILES CONFIGURATION ==========");
-console.log("Current __dirname:", __dirname);
 console.log("Frontend Dir:", frontendDir);
 console.log("Public Dir:", publicDir);
 
@@ -119,43 +116,49 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// ===== Serve dashboard.html directly =====
-app.get("/dashboard", (req, res) => {
-  const dashboardPath = path.join(frontendDir, "html", "dashboard.html");
-  console.log("Attempting to serve dashboard from:", dashboardPath);
-  console.log("File exists:", fs.existsSync(dashboardPath));
-  if (fs.existsSync(dashboardPath)) {
-    res.sendFile(dashboardPath);
+// ===== Dynamic HTML Routes - Handles all HTML files automatically =====
+const htmlDir = path.join(frontendDir, "html");
+
+// Function to serve HTML files dynamically
+const serveHtmlFile = (req, res, filename) => {
+  const filePath = path.join(htmlDir, filename);
+  
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
   } else {
     res.status(404).json({ 
-      error: "Dashboard not found",
-      looked_in: dashboardPath,
-      frontend_dir_exists: fs.existsSync(frontendDir),
-      frontend_contents: fs.existsSync(frontendDir) ? fs.readdirSync(frontendDir) : "N/A"
+      error: `${filename} not found`,
+      looked_in: filePath
     });
   }
-});
+};
 
-// ===== Serve dashboard.html as .html route =====
-app.get("/dashboard.html", (req, res) => {
-  const dashboardPath = path.join(frontendDir, "html", "dashboard.html");
-  if (fs.existsSync(dashboardPath)) {
-    res.sendFile(dashboardPath);
+// Generic route: /pagename or /pagename.html serves pagename.html
+app.get("/:page", (req, res) => {
+  const page = req.params.page;
+  
+  // Skip if it looks like an API route or special path
+  if (page.startsWith("api") || page === "uploads") {
+    return res.status(404).json({ error: "Not Found" });
+  }
+  
+  // Check if file exists with .html extension
+  let htmlFile = page.endsWith(".html") ? page : `${page}.html`;
+  const filePath = path.join(htmlDir, htmlFile);
+  
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
   } else {
-    res.status(404).json({ error: "Dashboard not found" });
+    res.status(404).json({ 
+      error: `${htmlFile} not found`,
+      looked_in: filePath
+    });
   }
 });
 
 // ===== Serve loginSection.html as home page =====
 app.get("/", (req, res) => {
-  const indexPath = path.join(frontendDir, "html", "loginSection.html");
-  console.log("Attempting to serve index from:", indexPath);
-  console.log("File exists:", fs.existsSync(indexPath));
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.send("<h1>Welcome to Mither System</h1>");
-  }
+  serveHtmlFile(req, res, "loginSection.html");
 });
 
 // ===== 404 Handler =====
@@ -171,4 +174,6 @@ app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`🌐 Access at: http://localhost:${PORT}`);
   console.log(`📊 Dashboard at: http://localhost:${PORT}/dashboard`);
+  console.log(`👤 Employee Dashboard at: http://localhost:${PORT}/employeedashboard`);
+  console.log(`💡 Tip: Any .html file in /frontend/html can be accessed by name (e.g., /archiveReq, /account.html)`);
 });
