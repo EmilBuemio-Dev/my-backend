@@ -7,7 +7,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
 import connectDB from "./config/db.js";
-import transporter from "./config/email.js";
+import resend from "./config/email.js";
 
 // Routes
 import archiveRoutes from "./routes/archiveRoutes.js";
@@ -34,15 +34,14 @@ console.log("Loaded ENV:");
 console.log("PORT:", process.env.PORT);
 console.log("MONGO_URI:", process.env.MONGO_URI ? "Set" : "Not Set");
 console.log("JWT_SECRET:", process.env.JWT_SECRET ? "Set" : "Not Set");
-console.log("EMAIL_USER:", process.env.EMAIL_USER);
-console.log("EMAIL_PASS length:", process.env.EMAIL_PASS?.length);
-transporter.verify((err, success) => {
-  if (err) {
-    console.error("Email transporter failed:", err);
-  } else {
-    console.log("Email transporter is ready");
-  }
-});
+console.log("RESEND_API_KEY:", process.env.RESEND_API_KEY ? "Set" : "Not Set");
+
+// ✅ Verify Resend is initialized
+if (process.env.RESEND_API_KEY) {
+  console.log("✅ Resend email service is ready");
+} else {
+  console.warn("⚠️ RESEND_API_KEY not set - email functionality will not work");
+}
 
 // ===== Middleware =====
 app.use(
