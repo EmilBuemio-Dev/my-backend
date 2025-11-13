@@ -14,6 +14,35 @@ router.get("/", async (req, res) => {
   }
 });
 
+// ===== SEARCH archives by multiple fields =====
+router.get("/search", async (req, res) => {
+  try {
+    const { familyName, firstName, middleName, badgeNo } = req.query;
+    
+    // Build search query dynamically
+    const searchQuery = {};
+    if (familyName) searchQuery.familyName = { $regex: familyName, $options: "i" };
+    if (firstName) searchQuery.firstName = { $regex: firstName, $options: "i" };
+    if (middleName) searchQuery.middleName = { $regex: middleName, $options: "i" };
+    if (badgeNo) searchQuery.badgeNo = { $regex: badgeNo, $options: "i" };
+
+    if (Object.keys(searchQuery).length === 0) {
+      return res.status(400).json({ message: "At least one search parameter is required" });
+    }
+
+    const archives = await Archive.find(searchQuery, "familyName firstName middleName badgeNo position credentials status createdAt");
+    
+    if (archives.length === 0) {
+      return res.status(404).json({ message: "No archives found matching your search criteria" });
+    }
+
+    res.json(archives);
+  } catch (err) {
+    console.error("❌ Search error:", err);
+    res.status(500).json({ message: "Failed to search archives", error: err.message });
+  }
+});
+
 // ===== CREATE new archive =====
 router.post(
   "/",
@@ -77,7 +106,6 @@ router.post(
   }
 );
 
-// ===== GET single archive by familyName =====
 router.get("/:familyName", async (req, res) => {
   try {
     const archive = await Archive.findOne({ familyName: req.params.familyName });
@@ -87,7 +115,5 @@ router.get("/:familyName", async (req, res) => {
     res.status(500).json({ message: "Failed to retrieve archive", error: err.message });
   }
 });
-
-
 
 export default router;
