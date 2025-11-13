@@ -593,7 +593,7 @@
   </div>
 
   <script>
-    const API_URL = "http://localhost:5000/api/users";
+    const API_URL = "https://www.mither3security.com/api/users";
 
     document.addEventListener("DOMContentLoaded", () => {
       const loginBtn = document.getElementById("loginBtn");
@@ -1036,7 +1036,7 @@
           const data = { familyName, firstName, middleName, email, badgeNo };
 
           try {
-            const res = await fetch("http://localhost:5000/api/registers", {
+            const res = await fetch("https://www.mither3security.com/api/registers", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(data),
@@ -1173,7 +1173,7 @@
       // Load branches
       async function loadClientBranches() {
         try {
-          const res = await fetch("http://localhost:5000/api/branches-management");
+          const res = await fetch("https://www.mither3security.com/api/branches-management");
           const branches = await res.json();
           branches.forEach(branch => {
             const option = document.createElement("option");
@@ -1230,7 +1230,7 @@
           }
 
           try {
-            const res = await fetch("http://localhost:5000/accounts", {
+            const res = await fetch("https://www.mither3security.com/accounts", {
               method: "POST",
               body: formData
             });

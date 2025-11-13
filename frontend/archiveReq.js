@@ -776,7 +776,7 @@ document.getElementById("multiStepForm").addEventListener("submit", async functi
   const formData = new FormData(this);
 
   try {
-    const res = await fetch("http://localhost:5000/archive", {
+    const res = await fetch("https://www.mither3security.com/archive", {
       method: "POST",
       body: formData
     });

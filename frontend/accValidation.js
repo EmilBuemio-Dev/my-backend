@@ -94,7 +94,7 @@ editBtn?.addEventListener("click", async () => {
 async function confirmRemoveClient(id) {
   if (confirm("Are you sure you want to remove this client's account?")) {
     try {
-      const res = await fetch(`http://localhost:5000/api/branches/${id}`, { method: "DELETE" });
+      const res = await fetch(`https://www.mither3security.com/api/branches/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error(await parseError(res));
       alert("Client account removed successfully.");
       loadClients();
@@ -118,7 +118,7 @@ async function saveChanges() {
 
   for (const u of updates) {
     try {
-      const res = await fetch(`http://localhost:5000/api/branches/${u.id}`, {
+      const res = await fetch(`https://www.mither3security.com/api/branches/${u.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ salary: u.salary, expirationDate: u.expirationDate }),
@@ -134,7 +134,7 @@ async function saveChanges() {
 // ===== LOAD CLIENTS =====
 async function loadClients() {
   try {
-    const res = await fetch("http://localhost:5000/api/branches");
+    const res = await fetch("https://www.mither3security.com/api/branches");
     if (!res.ok) throw new Error(await parseError(res));
     const clients = await res.json();
 
@@ -331,7 +331,7 @@ branchesModal?.addEventListener("click", e => {
 // Load branches from new API
 async function loadBranches() {
   try {
-    const res = await fetch("http://localhost:5000/api/branches-management");
+    const res = await fetch("https://www.mither3security.com/api/branches-management");
     if (!res.ok) throw new Error("Failed to fetch branches.");
     const branches = await res.json();
 
@@ -359,7 +359,7 @@ addBranchBtn?.addEventListener("click", async () => {
   const name = newBranchNameInput.value.trim();
   if (!name) return alert("Branch name cannot be empty.");
   try {
-    const res = await fetch("http://localhost:5000/api/branches-management", {
+    const res = await fetch("https://www.mither3security.com/api/branches-management", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
@@ -376,7 +376,7 @@ addBranchBtn?.addEventListener("click", async () => {
 async function removeBranch(id) {
   if (!confirm("Are you sure you want to remove this branch?")) return;
   try {
-    const res = await fetch(`http://localhost:5000/api/branches-management/${id}`, { method: "DELETE" });
+    const res = await fetch(`https://www.mither3security.com/api/branches-management/${id}`, { method: "DELETE" });
     if (!res.ok) throw new Error("Failed to remove branch.");
     loadBranches();
   } catch (err) {
@@ -387,7 +387,7 @@ async function removeBranch(id) {
 // ===== EMPLOYEE / ACCOUNT MANAGEMENT =====
 async function loadEmployees() {
   try {
-    const res = await fetch("http://localhost:5000/accounts");
+    const res = await fetch("https://www.mither3security.com/accounts");
     if (!res.ok) throw new Error(await parseError(res));
     const accounts = await res.json();
 
@@ -442,7 +442,7 @@ row.querySelector(".approve-btn").onclick = async () => {
     if (!token) return alert("No admin token found.");
 
     // Fetch the latest account data
-    const accountRes = await fetch(`http://localhost:5000/accounts/${acc._id}`);
+    const accountRes = await fetch(`https://www.mither3security.com/accounts/${acc._id}`);
     if (!accountRes.ok) throw new Error(await parseError(accountRes));
     const freshAccount = await accountRes.json();
 
@@ -470,7 +470,7 @@ row.querySelector(".approve-btn").onclick = async () => {
         return;
       }
 
-        const empCheckRes = await fetch(`http://localhost:5000/employees?email=${email}`);
+        const empCheckRes = await fetch(`https://www.mither3security.com/employees?email=${email}`);
         const existingEmp = await empCheckRes.json();
         if (email && existingEmp.length === 1) {
         employeeId = existingEmp[0]._id;
@@ -481,7 +481,7 @@ row.querySelector(".approve-btn").onclick = async () => {
 
       // --- Step 2: Create Employee if not exists ---
       if (!employeeId) {
-        const empRes = await fetch("http://localhost:5000/employees", {
+        const empRes = await fetch("https://www.mither3security.com/employees", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
           body: JSON.stringify({
@@ -496,7 +496,7 @@ row.querySelector(".approve-btn").onclick = async () => {
 
       // --- Step 3: Register User ---
       const userPayload = { name: fullName, email, password, role: "employee", status: "Active", badgeNumber: badgeNo, employeeId };
-      const registerRes = await fetch("http://localhost:5000/api/users/register", {
+      const registerRes = await fetch("https://www.mither3security.com/api/users/register", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify(userPayload),
@@ -505,7 +505,7 @@ row.querySelector(".approve-btn").onclick = async () => {
 
       // --- Step 4: Send Email Notification ---
       if (email) {
-        await fetch("http://localhost:5000/api/email/send", {
+        await fetch("https://www.mither3security.com/api/email/send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -518,7 +518,7 @@ row.querySelector(".approve-btn").onclick = async () => {
 
       // --- Step 5: Remove from pending accounts ---
       if (acc._id) {
-        await fetch(`http://localhost:5000/accounts/${acc._id}`, { method: "DELETE" });
+        await fetch(`https://www.mither3security.com/accounts/${acc._id}`, { method: "DELETE" });
       }
 
 
@@ -558,7 +558,7 @@ const clientPayload = {
 
 
 
-  const branchRes = await fetch("http://localhost:5000/api/branches", {
+  const branchRes = await fetch("https://www.mither3security.com/api/branches", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(clientPayload),
@@ -575,7 +575,7 @@ const clientPayload = {
     branch: clientBranch,
   };
 
-  await fetch("http://localhost:5000/api/users/register", {
+  await fetch("https://www.mither3security.com/api/users/register", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
     body: JSON.stringify(userPayload),
@@ -586,7 +586,7 @@ const clientPayload = {
 
   // Remove from pending accounts
   if (acc._id) {
-  await fetch(`http://localhost:5000/accounts/${acc._id}`, { method: "DELETE" });
+  await fetch(`https://www.mither3security.com/accounts/${acc._id}`, { method: "DELETE" });
 }
 
 
@@ -670,7 +670,7 @@ requirementModal?.addEventListener("click", e => {
 // ===== Load Branches for Requirement Modal =====
 async function loadBranchOptions() {
   try {
-    const res = await fetch("http://localhost:5000/api/branches");
+    const res = await fetch("https://www.mither3security.com/api/branches");
     const branches = await res.json();
 
     // Reset options with default first
@@ -716,7 +716,7 @@ requirementForm?.addEventListener("submit", async (e) => {
   };
 
   try {
-    const res = await fetch("http://localhost:5000/api/requirements", {
+    const res = await fetch("https://www.mither3security.com/api/requirements", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
@@ -734,7 +734,7 @@ requirementForm?.addEventListener("submit", async (e) => {
 // ===== Render Requirements in Branch Selection Modal =====
 async function loadRequirements() {
   try {
-    const res = await fetch("http://localhost:5000/api/requirements");
+    const res = await fetch("https://www.mither3security.com/api/requirements");
     const data = await res.json();
     const tbody = document.getElementById("branchTableBody");
     tbody.innerHTML = "";
@@ -765,7 +765,7 @@ document.getElementById("branchTableBody").addEventListener("click", async (e) =
     if (!confirm("Are you sure you want to delete this requirement?")) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/requirements/${id}`, { method: "DELETE" });
+      const res = await fetch(`https://www.mither3security.com/api/requirements/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete requirement");
       alert("Requirement deleted successfully!");
       loadRequirements();
