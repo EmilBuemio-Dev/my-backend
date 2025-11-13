@@ -66,7 +66,9 @@ connectDB();
 
 // ===== Static files =====
 const publicDir = path.join(__dirname, "../public");
+const frontendDir = path.join(__dirname, "../../frontend");
 app.use(express.static(publicDir));
+app.use(express.static(frontendDir));
 
 // ===== Routes =====
 app.use("/archive", archiveRoutes);
@@ -84,7 +86,7 @@ app.use('/', leaveRoutes);
 
 // ===== Serve loginSection.html as home page =====
 app.get('/', (req, res) => {
-  res.sendFile(path.join(publicDir, 'loginSection.html'));
+  res.sendFile(path.join(frontendDir, 'html/loginSection.html'));
 });
 
 app.listen(PORT, () => {
