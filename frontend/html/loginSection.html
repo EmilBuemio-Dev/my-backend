@@ -364,6 +364,25 @@
       text-align: center;
     }
 
+    .register-text {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: var(--clr-black-variant);
+    }
+
+    .register-link {
+      color: var(--clr-primary);
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .register-link:hover {
+      color: var(--clr-success);
+      text-decoration: underline;
+    }
+
     @media (max-width: 600px) {
       .top-bar {
         padding: 1rem 1.5rem;
@@ -433,16 +452,16 @@
           <h3>Admin Login</h3>
         </div>
         <form id="loginFormAdmin">
-          <input type="email" id="email" placeholder="Email" required>
-          <input type="password" id="password" placeholder="Password" required>
+          <input type="email" id="adminEmail" placeholder="Email" required>
+          <input type="password" id="adminPassword" placeholder="Password" required>
           <div class="otp-row">
-            <input type="text" id="otp" placeholder="Enter OTP" disabled required>
-            <button type="button" id="getOtpBtn">Get OTP</button>
+            <input type="text" id="adminOtp" placeholder="Enter OTP" disabled required>
+            <button type="button" id="adminGetOtpBtn">Get OTP</button>
           </div>
           <button type="submit">Login</button>
         </form>
-        <p id="error" class="error"></p>
-        <p id="success" class="success"></p>
+        <p id="adminError" class="error"></p>
+        <p id="adminSuccess" class="success"></p>
       </div>
 
       <!-- HR Login Form -->
@@ -452,11 +471,17 @@
           <h3>HR Login</h3>
         </div>
         <form id="loginFormHR">
-          <input type="email" placeholder="Email" required>
-          <input type="password" placeholder="Password" required>
+          <input type="email" id="hrEmail" placeholder="Email" required>
+          <input type="text" id="hrIdNumber" placeholder="ID Number" required>
+          <input type="password" id="hrPassword" placeholder="Password" required>
+          <div class="otp-row">
+            <input type="text" id="hrOtp" placeholder="Enter OTP" disabled required>
+            <button type="button" id="hrGetOtpBtn">Get OTP</button>
+          </div>
           <button type="submit">Login</button>
         </form>
-        <p class="error"></p>
+        <p id="hrError" class="error"></p>
+        <p id="hrSuccess" class="success"></p>
       </div>
 
       <!-- Employee Login Form -->
@@ -466,11 +491,20 @@
           <h3>Employee Login</h3>
         </div>
         <form id="loginFormEmployee">
-          <input type="email" placeholder="Email" required>
-          <input type="password" placeholder="Password" required>
+          <input type="email" id="employeeEmail" placeholder="Email" required>
+          <input type="text" id="employeeBadgeNumber" placeholder="SSS NR (00-0000000-0)" required maxlength="12">
+          <input type="password" id="employeePassword" placeholder="Password" required>
+          <div class="otp-row">
+            <input type="text" id="employeeOtp" placeholder="Enter OTP" disabled required>
+            <button type="button" id="employeeGetOtpBtn">Get OTP</button>
+          </div>
           <button type="submit">Login</button>
         </form>
-        <p class="error"></p>
+        <p id="employeeError" class="error"></p>
+        <p id="employeeSuccess" class="success"></p>
+        <p class="register-text" style="text-align: center; margin-top: 1rem; font-size: 0.9rem;">
+          No account? <span id="employeeRegisterLink" class="register-link" style="color: var(--clr-primary); cursor: pointer; font-weight: 600;">Register here</span>
+        </p>
       </div>
 
       <!-- Client Login Form -->
@@ -480,16 +514,87 @@
           <h3>Client Login</h3>
         </div>
         <form id="loginFormClient">
-          <input type="email" placeholder="Email" required>
-          <input type="password" placeholder="Password" required>
+          <input type="email" id="clientLoginEmail" placeholder="Email" required>
+          <input type="text" id="clientIdNumber" placeholder="ID Number" required>
+          <input type="password" id="clientLoginPassword" placeholder="Password" required>
+          <div class="otp-row">
+            <input type="text" id="clientOtp" placeholder="Enter OTP" disabled required>
+            <button type="button" id="clientGetOtpBtn">Get OTP</button>
+          </div>
           <button type="submit">Login</button>
         </form>
-        <p class="error"></p>
+        <p id="clientError" class="error"></p>
+        <p id="clientSuccess" class="success"></p>
+        <p class="register-text" style="text-align: center; margin-top: 1rem; font-size: 0.9rem;">
+          No account? <span id="clientRegisterLink" class="register-link" style="color: var(--clr-primary); cursor: pointer; font-weight: 600;">Register here</span>
+        </p>
       </div>
     </div>
   </div>
 
+  <!-- Register Modal for Employee -->
+  <div class="modal" id="registerModal">
+    <div class="modal-content">
+      <span class="close" id="closeRegister">&times;</span>
+      <h2>Employee Registration</h2>
+
+      <form id="registerForm">
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <input type="text" id="familyName" placeholder="Family Name" required>
+          <input type="text" id="firstName" placeholder="First Name" required>
+          <input type="text" id="middleName" placeholder="Middle Name">
+          <input type="email" id="registerEmail" placeholder="Email" required>
+          <input type="text" id="badgeNo" placeholder="SSS NR (00-0000000-0)" required maxlength="12">
+        </div>
+        <button type="submit" style="margin-top: 1rem;">Register</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Change Password Modal -->
+  <div class="modal" id="changePasswordModal">
+    <div class="modal-content">
+      <h2>Change Password</h2>
+      <form id="changePasswordForm">
+        <input type="password" id="newPassword" placeholder="New Password" required />
+        <input type="password" id="confirmPassword" placeholder="Confirm Password" required />
+        <button type="submit">Update Password</button>
+      </form>
+      <p id="changePasswordError" class="error"></p>
+    </div>
+  </div>
+
+  <!-- Client Registration Modal -->
+  <div class="modal" id="clientRegisterModal">
+    <div class="modal-content" style="max-width: 500px;">
+      <span class="close" id="closeClientRegister">&times;</span>
+      <h2>Register as a Client</h2>
+
+      <form id="clientRegisterForm" enctype="multipart/form-data">
+        <input type="text" id="clientName" placeholder="Name" required />
+        <input type="email" id="clientEmail" placeholder="Email" required />
+        <input type="password" id="clientPassword" placeholder="Password" required />
+        <input type="password" id="clientPasswordConfirm" placeholder="Confirm Password" required />
+        
+        <select id="clientBranch" required>
+          <option value="">Select a branch</option>
+        </select>
+
+        <label style="font-size: 0.9rem; color: var(--clr-info-dark); margin-top: 0.5rem; display: block;">
+          Contract (PDF, DOC, DOCX):
+        </label>
+        <input type="file" id="contractFile" accept=".pdf,.doc,.docx" required />
+
+        <button type="submit">Submit Registration</button>
+      </form>
+      <p id="clientRegisterError" class="error"></p>
+      <p id="clientRegisterSuccess" class="success"></p>
+    </div>
+  </div>
+
   <script>
+    const API_URL = "http://localhost:5000/api/users";
+
     document.addEventListener("DOMContentLoaded", () => {
       const loginBtn = document.getElementById("loginBtn");
       const modal = document.getElementById("loginModal");
@@ -542,23 +647,23 @@
         btn.addEventListener("click", showRoleSelection);
       });
 
-      // Admin Login API Configuration
-      const API_URL = "http://localhost:5000/api/users";
+      // ==================== ADMIN LOGIN ====================
       const adminForm = document.getElementById("loginFormAdmin");
-      const getOtpBtn = document.getElementById("getOtpBtn");
-      const otpInput = document.getElementById("otp");
-      const errorP = document.getElementById("error");
-      const successP = document.getElementById("success");
+      const adminGetOtpBtn = document.getElementById("adminGetOtpBtn");
+      const adminOtpInput = document.getElementById("adminOtp");
+      const adminEmailInput = document.getElementById("adminEmail");
+      const adminPasswordInput = document.getElementById("adminPassword");
+      const adminErrorP = document.getElementById("adminError");
+      const adminSuccessP = document.getElementById("adminSuccess");
 
-      // 1) Request OTP
-      getOtpBtn.addEventListener("click", async () => {
-        errorP.textContent = "";
-        successP.textContent = "";
-        const email = document.getElementById("email").value;
-        const password = document.getElementById("password").value;
+      adminGetOtpBtn.addEventListener("click", async () => {
+        adminErrorP.textContent = "";
+        adminSuccessP.textContent = "";
+        const email = adminEmailInput.value.trim();
+        const password = adminPasswordInput.value.trim();
 
         if (!email || !password) {
-          errorP.textContent = "Please enter email and password first.";
+          adminErrorP.textContent = "Please enter email and password first.";
           return;
         }
 
@@ -571,34 +676,34 @@
           const data = await res.json();
 
           if (!res.ok) {
-            errorP.textContent = data.msg || "Failed to send OTP.";
+            adminErrorP.textContent = data.msg || "Failed to send OTP.";
             return;
           }
 
-          otpInput.disabled = false;
-          otpInput.focus();
-          successP.textContent = "OTP sent to your email.";
-        } catch {
-          errorP.textContent = "Server error while requesting OTP.";
+          adminOtpInput.disabled = false;
+          adminOtpInput.focus();
+          adminSuccessP.textContent = "OTP sent to your email.";
+        } catch (err) {
+          console.error("Admin OTP request error:", err);
+          adminErrorP.textContent = "Server error while requesting OTP.";
         }
       });
 
-      // 2) Submit with OTP to get token
       adminForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        errorP.textContent = "";
-        successP.textContent = "";
+        adminErrorP.textContent = "";
+        adminSuccessP.textContent = "";
 
-        const email = document.getElementById("email").value;
-        const otp = otpInput.value;
+        const email = adminEmailInput.value.trim();
+        const otp = adminOtpInput.value.trim();
 
-        if (otpInput.disabled) {
-          errorP.textContent = "Please click 'Get OTP' first.";
+        if (adminOtpInput.disabled) {
+          adminErrorP.textContent = "Please click 'Get OTP' first.";
           return;
         }
 
         if (!otp) {
-          errorP.textContent = "Please enter the OTP.";
+          adminErrorP.textContent = "Please enter the OTP.";
           return;
         }
 
@@ -611,12 +716,12 @@
           const data = await res.json();
 
           if (!res.ok) {
-            errorP.textContent = data.msg || "OTP verification failed.";
+            adminErrorP.textContent = data.msg || "OTP verification failed.";
             return;
           }
 
           if (data.role !== "admin") {
-            errorP.textContent = "Only admins can log in.";
+            adminErrorP.textContent = "Only admins can log in.";
             return;
           }
 
@@ -624,19 +729,531 @@
           localStorage.setItem("name", data.name);
           localStorage.setItem("role", data.role);
           window.location.href = "dashboard.html";
-        } catch {
-          errorP.textContent = "Server error during login.";
+        } catch (err) {
+          console.error("Admin OTP verification error:", err);
+          adminErrorP.textContent = "Server error during login.";
         }
       });
 
-      // Other forms submission
-      document.querySelectorAll("form:not(#loginFormAdmin)").forEach(form => {
-        form.addEventListener("submit", (e) => {
-          e.preventDefault();
-          console.log("Form submitted:", form.id);
-          // Add your login logic here
-        });
+      // ==================== HR LOGIN ====================
+      const hrForm = document.getElementById("loginFormHR");
+      const hrGetOtpBtn = document.getElementById("hrGetOtpBtn");
+      const hrOtpInput = document.getElementById("hrOtp");
+      const hrEmailInput = document.getElementById("hrEmail");
+      const hrIdNumberInput = document.getElementById("hrIdNumber");
+      const hrPasswordInput = document.getElementById("hrPassword");
+      const hrErrorP = document.getElementById("hrError");
+      const hrSuccessP = document.getElementById("hrSuccess");
+
+      hrGetOtpBtn.addEventListener("click", async () => {
+        hrErrorP.textContent = "";
+        hrSuccessP.textContent = "";
+        const email = hrEmailInput.value.trim();
+        const hrIdNumber = hrIdNumberInput.value.trim();
+        const password = hrPasswordInput.value.trim();
+
+        if (!email || !hrIdNumber || !password) {
+          hrErrorP.textContent = "Please fill Email, ID Number, and Password first.";
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API_URL}/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password, hrIdNumber }),
+          });
+
+          const data = await res.json();
+          console.log("HR login response:", data);
+
+          if (!res.ok) {
+            hrErrorP.textContent = data.msg || "Failed to send OTP.";
+            return;
+          }
+
+          hrOtpInput.disabled = false;
+          hrOtpInput.value = "";
+          hrOtpInput.focus();
+          hrSuccessP.textContent = "OTP sent to your email.";
+        } catch (err) {
+          console.error("HR OTP request error:", err);
+          hrErrorP.textContent = "Server error while requesting OTP.";
+        }
       });
+
+      hrForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        hrErrorP.textContent = "";
+        hrSuccessP.textContent = "";
+
+        const email = hrEmailInput.value.trim();
+        const otp = hrOtpInput.value.trim();
+
+        if (hrOtpInput.disabled) {
+          hrErrorP.textContent = "Please click 'Get OTP' first.";
+          return;
+        }
+
+        if (!otp) {
+          hrErrorP.textContent = "Please enter the OTP.";
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API_URL}/verify-otp`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, otp }),
+          });
+
+          const data = await res.json();
+          console.log("HR OTP verification response:", data);
+
+          if (!res.ok) {
+            hrErrorP.textContent = data.msg || "OTP verification failed.";
+            return;
+          }
+
+          if (data.role !== "hr") {
+            hrErrorP.textContent = "Only HR personnel can log in.";
+            return;
+          }
+
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("role", data.role);
+          localStorage.setItem("name", data.name);
+
+          window.location.href = "dashboard.html";
+        } catch (err) {
+          console.error("HR OTP verification error:", err);
+          hrErrorP.textContent = "Server error during login.";
+        }
+      });
+
+      // ==================== EMPLOYEE LOGIN ====================
+      const employeeForm = document.getElementById("loginFormEmployee");
+      const employeeGetOtpBtn = document.getElementById("employeeGetOtpBtn");
+      const employeeOtpInput = document.getElementById("employeeOtp");
+      const employeeEmailInput = document.getElementById("employeeEmail");
+      const employeeBadgeNumberInput = document.getElementById("employeeBadgeNumber");
+      const employeePasswordInput = document.getElementById("employeePassword");
+      const employeeErrorP = document.getElementById("employeeError");
+      const employeeSuccessP = document.getElementById("employeeSuccess");
+      const changePasswordModal = document.getElementById("changePasswordModal");
+      const changePasswordForm = document.getElementById("changePasswordForm");
+      const changePasswordErrorP = document.getElementById("changePasswordError");
+
+      // Badge number formatting
+      [employeeBadgeNumberInput, document.getElementById("badgeNo")].forEach(input => {
+        if (input) {
+          input.addEventListener("input", function() {
+            this.value = this.value
+              .replace(/[^0-9]/g, "")
+              .replace(/(\d{2})(\d{1,7})(\d{0,1}).*/, function(_, p1, p2, p3) {
+                return p3 ? `${p1}-${p2}-${p3}` : p2 ? `${p1}-${p2}` : p1;
+              });
+          });
+        }
+      });
+
+      employeeGetOtpBtn.addEventListener("click", async () => {
+        employeeErrorP.textContent = "";
+        employeeSuccessP.textContent = "";
+        const email = employeeEmailInput.value.trim();
+        const badgeNumber = employeeBadgeNumberInput.value.trim();
+        const password = employeePasswordInput.value.trim();
+
+        if (!email || !badgeNumber || !password) {
+          employeeErrorP.textContent = "Please fill Email, Badge Number, and Password first.";
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API_URL}/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password, badgeNumber }),
+          });
+
+          const data = await res.json();
+          console.log("Employee login response:", data);
+
+          if (!res.ok) {
+            employeeErrorP.textContent = data.msg || "Failed to send OTP.";
+            return;
+          }
+
+          employeeOtpInput.disabled = false;
+          employeeOtpInput.value = "";
+          employeeOtpInput.focus();
+          employeeSuccessP.textContent = "OTP sent to your email.";
+        } catch (err) {
+          console.error("Employee OTP request error:", err);
+          employeeErrorP.textContent = "Server error while requesting OTP.";
+        }
+      });
+
+      employeeForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        employeeErrorP.textContent = "";
+        employeeSuccessP.textContent = "";
+
+        const email = employeeEmailInput.value.trim();
+        const otp = employeeOtpInput.value.trim();
+
+        if (employeeOtpInput.disabled) {
+          employeeErrorP.textContent = "Please click 'Get OTP' first.";
+          return;
+        }
+
+        if (!otp) {
+          employeeErrorP.textContent = "Please enter the OTP.";
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API_URL}/verify-otp`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, otp }),
+          });
+
+          const data = await res.json();
+          console.log("Employee OTP verification response:", data);
+
+          if (!res.ok) {
+            employeeErrorP.textContent = data.msg || "OTP verification failed.";
+            return;
+          }
+
+          // Store data locally
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("name", data.name);
+          localStorage.setItem("role", data.role);
+          localStorage.setItem("employeeId", data.employeeId || "N/A");
+
+          // Check if password change required
+          if (data.requirePasswordChange) {
+            changePasswordModal.classList.add("show");
+            return;
+          }
+
+          window.location.href = "guardduty.html";
+        } catch (err) {
+          console.error("Employee OTP verification error:", err);
+          employeeErrorP.textContent = "Server error during login.";
+        }
+      });
+
+      // ===== Change Password on First Login =====
+      changePasswordForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        changePasswordErrorP.textContent = "";
+        const newPassword = document.getElementById("newPassword").value.trim();
+        const confirmPassword = document.getElementById("confirmPassword").value.trim();
+
+        if (!newPassword || !confirmPassword) {
+          changePasswordErrorP.textContent = "Please fill in both password fields.";
+          return;
+        }
+
+        if (newPassword !== confirmPassword) {
+          changePasswordErrorP.textContent = "Passwords do not match!";
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API_URL}/change-password`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify({ newPassword }),
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            changePasswordErrorP.textContent = data.msg || "Failed to update password.";
+            return;
+          }
+
+          changePasswordErrorP.textContent = "Password updated successfully!";
+          setTimeout(() => {
+            changePasswordModal.classList.remove("show");
+            window.location.href = "guardduty.html";
+          }, 1500);
+        } catch (err) {
+          console.error("Change password error:", err);
+          changePasswordErrorP.textContent = "Server error while updating password.";
+        }
+      });
+
+      // ===== Employee Registration =====
+      const registerModal = document.getElementById("registerModal");
+      const closeRegister = document.getElementById("closeRegister");
+      const employeeRegisterLink = document.getElementById("employeeRegisterLink");
+      const registerForm = document.getElementById("registerForm");
+
+      if (employeeRegisterLink) {
+        employeeRegisterLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          registerModal.classList.add("show");
+        });
+      }
+
+      if (closeRegister) {
+        closeRegister.addEventListener("click", () => {
+          registerModal.classList.remove("show");
+        });
+      }
+
+      window.addEventListener("click", (e) => {
+        if (e.target === registerModal) {
+          registerModal.classList.remove("show");
+        }
+        if (e.target === changePasswordModal) {
+          changePasswordModal.classList.remove("show");
+        }
+      });
+
+      if (registerForm) {
+        registerForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const familyName = document.getElementById("familyName").value.trim();
+          const firstName = document.getElementById("firstName").value.trim();
+          const middleName = document.getElementById("middleName").value.trim();
+          const email = document.getElementById("registerEmail").value.trim();
+          const badgeNo = document.getElementById("badgeNo").value.trim();
+
+          if (!familyName || !firstName || !email || !badgeNo) {
+            alert("Please fill in all required fields.");
+            return;
+          }
+
+          const data = { familyName, firstName, middleName, email, badgeNo };
+
+          try {
+            const res = await fetch("http://localhost:5000/api/registers", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
+            });
+
+            console.log("Response status:", res.status);
+            const result = await res.json();
+            console.log("Response body:", result);
+
+            if (!res.ok) {
+              alert(result.msg || "Registration failed!");
+              return;
+            }
+
+            alert("Registration successful!");
+            registerModal.classList.remove("show");
+            registerForm.reset();
+          } catch (err) {
+            console.error("Register error:", err);
+            alert("Server error during registration.");
+          }
+        });
+      }
+
+      // ==================== CLIENT LOGIN ====================
+      const clientForm = document.getElementById("loginFormClient");
+      const clientGetOtpBtn = document.getElementById("clientGetOtpBtn");
+      const clientOtpInput = document.getElementById("clientOtp");
+      const clientLoginEmailInput = document.getElementById("clientLoginEmail");
+      const clientIdNumberInput = document.getElementById("clientIdNumber");
+      const clientLoginPasswordInput = document.getElementById("clientLoginPassword");
+      const clientErrorP = document.getElementById("clientError");
+      const clientSuccessP = document.getElementById("clientSuccess");
+
+      clientGetOtpBtn.addEventListener("click", async () => {
+        clientErrorP.textContent = "";
+        clientSuccessP.textContent = "";
+        const email = clientLoginEmailInput.value.trim();
+        const clientIdNumber = clientIdNumberInput.value.trim();
+        const password = clientLoginPasswordInput.value.trim();
+
+        if (!email || !clientIdNumber || !password) {
+          clientErrorP.textContent = "Please fill Email, ID Number, and Password first.";
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API_URL}/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password, clientIdNumber }),
+          });
+
+          const data = await res.json();
+          console.log("Client login response:", data);
+
+          if (!res.ok) {
+            clientErrorP.textContent = data.msg || "Failed to send OTP.";
+            return;
+          }
+
+          clientOtpInput.disabled = false;
+          clientOtpInput.value = "";
+          clientOtpInput.focus();
+          clientSuccessP.textContent = "OTP sent to your email.";
+        } catch (err) {
+          console.error("Client OTP request error:", err);
+          clientErrorP.textContent = "Server error while requesting OTP.";
+        }
+      });
+
+      clientForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        clientErrorP.textContent = "";
+        clientSuccessP.textContent = "";
+
+        const email = clientLoginEmailInput.value.trim();
+        const otp = clientOtpInput.value.trim();
+
+        if (clientOtpInput.disabled) {
+          clientErrorP.textContent = "Please click 'Get OTP' first.";
+          return;
+        }
+
+        if (!otp) {
+          clientErrorP.textContent = "Please enter the OTP.";
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API_URL}/verify-otp`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, otp }),
+          });
+
+          const data = await res.json();
+          console.log("Client OTP verification response:", data);
+
+          if (!res.ok) {
+            clientErrorP.textContent = data.msg || "OTP verification failed.";
+            return;
+          }
+
+          // Save full client info + token in localStorage
+          const userData = {
+            _id: data._id,
+            name: data.name,
+            email: data.email,
+            role: data.role,
+            clientIdNumber: data.clientIdNumber,
+            branch: data.branch,
+            branchId: data.branchId,
+            token: data.token
+          };
+
+          localStorage.setItem("user", JSON.stringify(userData));
+          window.location.href = "client_portal.html";
+        } catch (err) {
+          console.error("Client OTP verification error:", err);
+          clientErrorP.textContent = "Server error during login.";
+        }
+      });
+
+      // ==================== CLIENT REGISTRATION ====================
+      const clientRegisterModal = document.getElementById("clientRegisterModal");
+      const closeClientRegister = document.getElementById("closeClientRegister");
+      const clientRegisterLink = document.getElementById("clientRegisterLink");
+      const clientRegisterForm = document.getElementById("clientRegisterForm");
+      const clientBranchSelect = document.getElementById("clientBranch");
+      const clientRegisterErrorP = document.getElementById("clientRegisterError");
+      const clientRegisterSuccessP = document.getElementById("clientRegisterSuccess");
+
+      // Load branches
+      async function loadClientBranches() {
+        try {
+          const res = await fetch("http://localhost:5000/api/branches-management");
+          const branches = await res.json();
+          branches.forEach(branch => {
+            const option = document.createElement("option");
+            option.value = branch.name;
+            option.textContent = branch.name;
+            clientBranchSelect.appendChild(option);
+          });
+        } catch (err) {
+          console.error("Failed to load branches:", err);
+          clientRegisterErrorP.textContent = "Failed to load branch list. Please try again later.";
+        }
+      }
+
+      loadClientBranches();
+
+      if (clientRegisterLink) {
+        clientRegisterLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          clientRegisterModal.classList.add("show");
+        });
+      }
+
+      if (closeClientRegister) {
+        closeClientRegister.addEventListener("click", () => {
+          clientRegisterModal.classList.remove("show");
+        });
+      }
+
+      if (clientRegisterForm) {
+        clientRegisterForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          clientRegisterErrorP.textContent = "";
+          clientRegisterSuccessP.textContent = "";
+
+          const password = document.getElementById("clientPassword").value.trim();
+          const passwordConfirm = document.getElementById("clientPasswordConfirm").value.trim();
+
+          if (password !== passwordConfirm) {
+            clientRegisterErrorP.textContent = "Passwords do not match. Please try again.";
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append("name", document.getElementById("clientName").value.trim());
+          formData.append("email", document.getElementById("clientEmail").value.trim());
+          formData.append("password", password);
+          formData.append("branch", clientBranchSelect.value);
+          formData.append("role", "client");
+          formData.append("status", "Pending");
+
+          const contractFile = document.getElementById("contractFile").files[0];
+          if (contractFile) {
+            formData.append("contract", contractFile);
+          }
+
+          try {
+            const res = await fetch("http://localhost:5000/accounts", {
+              method: "POST",
+              body: formData
+            });
+
+            const result = await res.json();
+
+            if (!res.ok) {
+              clientRegisterErrorP.textContent = result.msg || "Failed to create client request";
+              return;
+            }
+
+            clientRegisterSuccessP.textContent = "Client request submitted. Waiting for admin approval.";
+            clientRegisterForm.reset();
+            
+            setTimeout(() => {
+              clientRegisterModal.classList.remove("show");
+            }, 2000);
+          } catch (err) {
+            console.error("Error creating client:", err);
+            clientRegisterErrorP.textContent = "Server error: " + err.message;
+          }
+        });
+      }
     });
   </script>
 </body>

@@ -4,7 +4,20 @@ const API_URL = "http://localhost:5000/employees";
 const token = localStorage.getItem("token");
 const employeeId = localStorage.getItem("employeeId");
 
-// ===== Elements =====
+const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const userRole = localStorage.getItem("role");
+    localStorage.clear();
+    if (userRole === "employee") {
+      window.location.href = "loginSection.html";
+    } else {
+      window.location.href = "loginSection.html";
+    }
+  });
+}
+
 const employeePhoto = document.getElementById("employeePhoto");
 
 // Basic info

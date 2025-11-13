@@ -8,7 +8,7 @@ if (
   currentPage.includes("dashboard.html") ||
   currentPage.includes("employeedashboard.html") ||
   currentPage.includes("message.html") ||
-  currentPage.includes("applicant.html")
+  currentPage.includes("archiveReq.html")
 ) {
   if (!token || (role !== "admin" && role !== "hr")) {
     // Redirect based on role
@@ -21,9 +21,10 @@ if (
 }
 
 // Protect Client page
-if (currentPage.includes("client_dashboard.html")) {
+if (currentPage.includes("client_portal.html")||
+ currentPage.includes("clienProfile.html")) {
   if (!token || role !== "client") {
-    window.location.href = "client_login.html";
+    window.location.href = "loginSection.html";
   }
 }
 
@@ -32,7 +33,7 @@ if (
   currentPage.includes("guardduty.html")||
   currentPage.includes("employeeProfile.html")) {
   if (!token || role !== "employee") {
-    window.location.href = "employee_login.html";
+    window.location.href = "loginSection.html";
   }
 }
 

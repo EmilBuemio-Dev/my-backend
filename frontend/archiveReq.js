@@ -2,6 +2,20 @@ let archives = [];
 let selectedRecordId = null;
 let selectedRecord = null;
 
+const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const userRole = localStorage.getItem("role");
+    localStorage.clear();
+    if (userRole === "hr") {
+      window.location.href = "loginSection.html";
+    } else {
+      window.location.href = "loginSection.html";
+    }
+  });
+}
+
 const allowedFields = [
   "approvedBadgeNo",
   "approveFamilyName",

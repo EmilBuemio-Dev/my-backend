@@ -4,6 +4,20 @@ if (!token || (role !== "admin")) {
     window.location.href = "dashboard.html";
 }
 
+const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const userRole = localStorage.getItem("role");
+    localStorage.clear();
+    if (userRole === "hr") {
+      window.location.href = "loginSection.html";
+    } else {
+      window.location.href = "loginSection.html";
+    }
+  });
+}
+
 // ===== HELPER FUNCTIONS FOR NESTED TABLES =====
 function createDetailedNestedTable(dataArray) {
   if (!dataArray || dataArray.length === 0) return '<div>N/A</div>';

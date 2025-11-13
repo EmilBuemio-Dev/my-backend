@@ -15,9 +15,9 @@ if (logoutBtn) {
     const userRole = localStorage.getItem("role");
     localStorage.clear();
     if (userRole === "hr") {
-      window.location.href = "hr_login.html";
+      window.location.href = "loginSection.html";
     } else {
-      window.location.href = "admin.html";
+      window.location.href = "loginSection.html";
     }
   });
 }

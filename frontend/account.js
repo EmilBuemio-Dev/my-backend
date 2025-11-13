@@ -5,6 +5,19 @@ const CLIENT_API = "http://localhost:5000/api/branches";
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("role");
 
+const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const userRole = localStorage.getItem("role");
+    localStorage.clear();
+    if (userRole === "hr") {
+      window.location.href = "loginSection.html";
+    } else {
+      window.location.href = "loginSection.html";
+    }
+  });
+}
 // === Access Protection (HR or Admin only) ===
 if (!token || role !== "hr") {
   alert("Access denied. HR only!");

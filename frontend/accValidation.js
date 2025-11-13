@@ -1,4 +1,18 @@
-// ===== Helper =====
+
+const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const userRole = localStorage.getItem("role");
+    localStorage.clear();
+    if (userRole === "hr") {
+      window.location.href = "loginSection.html";
+    } else {
+      window.location.href = "loginSection.html";
+    }
+  });
+}
+
 async function parseError(res) {
   try {
     const data = await res.clone().json();

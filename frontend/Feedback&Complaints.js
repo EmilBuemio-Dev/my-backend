@@ -147,11 +147,19 @@ window.addEventListener("click", (e) => {
 });
 
 // ===== Logout =====
-document.getElementById("logoutBtn").addEventListener("click", e => {
-  e.preventDefault();
-  localStorage.clear();
-  window.location.href = "index.html";
-});
+const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const userRole = localStorage.getItem("role");
+    localStorage.clear();
+    if (userRole === "hr") {
+      window.location.href = "loginSection.html";
+    } else {
+      window.location.href = "loginSection.html";
+    }
+  });
+}
 
 // ===== Load tickets on page load =====
 window.addEventListener("DOMContentLoaded", loadTickets);

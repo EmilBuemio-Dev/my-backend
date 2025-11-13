@@ -1,6 +1,17 @@
 // client_portal.js
 
 document.addEventListener("DOMContentLoaded", async () => {
+  console.log("client_portal.js loaded");
+  
+  // Check user session first
+  const userData = getUserData();
+  if (!userData) {
+    console.log("No user data, redirecting to login");
+    return;
+  }
+
+  console.log("User data retrieved:", userData);
+
   await loadClientGuards();
   await populateEmployeeSelect();
   await loadMyTickets();
@@ -11,33 +22,89 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // === Helper: Get user and token ===
 function getUserData() {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  if (!user || !user.token) {
-    alert("Invalid user session. Please log in again.");
+  try {
+    const userStr = localStorage.getItem("user");
+    console.log("Raw localStorage user:", userStr);
+    
+    if (!userStr) {
+      console.warn("No user in localStorage");
+      alert("Invalid user session. Please log in again.");
+      window.location.href = "index.html";
+      return null;
+    }
+
+    const user = JSON.parse(userStr);
+    console.log("Parsed user object:", user);
+    
+    // Validate required fields
+    if (!user) {
+      console.warn("User object is null/undefined after parsing");
+      alert("Session error. Please log in again.");
+      localStorage.removeItem("user");
+      window.location.href = "index.html";
+      return null;
+    }
+
+    if (!user.token) {
+      console.warn("No token in user object");
+      alert("Invalid session token. Please log in again.");
+      localStorage.removeItem("user");
+      window.location.href = "index.html";
+      return null;
+    }
+
+    if (!user.role) {
+      console.warn("No role in user object");
+      alert("User role not found. Please log in again.");
+      localStorage.removeItem("user");
+      window.location.href = "index.html";
+      return null;
+    }
+
+    if (user.role !== "client") {
+      console.warn("User role is not client:", user.role);
+      alert("Unauthorized access. Please log in as a client.");
+      localStorage.removeItem("user");
+      window.location.href = "index.html";
+      return null;
+    }
+    
+    console.log("User validation passed");
+    return user;
+  } catch (err) {
+    console.error("Error parsing user data:", err);
+    alert("Session error. Please log in again.");
     localStorage.removeItem("user");
-    window.location.href = "client_login.html";
+    window.location.href = "index.html";
     return null;
   }
-  return user;
 }
 
 // === Load all guards under client's branch ===
 async function loadClientGuards(searchName = "") {
   try {
     const clientData = getUserData();
-    if (!clientData) return;
+    if (!clientData) return [];
 
     const clientBranch = clientData.branch || "";
-    if (!clientBranch) return alert("⚠️ Your branch is not set!");
+    console.log("Client branch:", clientBranch);
+    
+    if (!clientBranch) {
+      console.warn("⚠️ Client branch is not set!");
+      return [];
+    }
 
     const res = await fetch("http://localhost:5000/employees");
     if (!res.ok) throw new Error("Failed to fetch employees");
     const employees = await res.json();
+    console.log("Employees fetched:", employees.length);
 
     const filtered = employees.filter(emp =>
       emp.employeeData?.basicInformation?.branch === clientBranch &&
       emp.employeeData?.basicInformation?.status === "Active"
     );
+
+    console.log("Filtered guards for branch:", filtered.length);
 
     const finalList = searchName
       ? filtered.filter(emp =>
@@ -58,11 +125,18 @@ async function loadClientGuards(searchName = "") {
 // === Populate Employee Selection in Ticket Form ===
 async function populateEmployeeSelect() {
   const select = document.getElementById("reportedEmployee");
-  if (!select) return;
+  if (!select) {
+    console.warn("reportedEmployee select not found in DOM");
+    return;
+  }
+  
   select.innerHTML = `<option value="">-- Optional: Report a specific employee --</option>`;
 
   const guards = await loadClientGuards();
-  if (!guards?.length) return;
+  if (!guards?.length) {
+    console.warn("No guards to populate");
+    return;
+  }
 
   guards.forEach(emp => {
     const name = emp.employeeData?.personalData?.name || "Unnamed";
@@ -75,11 +149,18 @@ async function populateEmployeeSelect() {
     opt.textContent = `${name}${badge}`;
     select.appendChild(opt);
   });
+  
+  console.log("Employee select populated with", guards.length, "guards");
 }
 
 // === Render Guards Table ===
 function renderGuardsTable(guards) {
   const tbody = document.querySelector("#guardsTable tbody");
+  if (!tbody) {
+    console.warn("#guardsTable tbody not found in DOM");
+    return;
+  }
+  
   tbody.innerHTML = "";
 
   if (!guards.length) {
@@ -108,23 +189,30 @@ function renderGuardsTable(guards) {
     `;
     tbody.appendChild(tr);
   });
+  
+  console.log("Guards table rendered with", guards.length, "entries");
 }
 
 // === Initialize Ticket Submission ===
 function initTicketSubmit() {
   const ticketForm = document.getElementById("ticketForm");
-  ticketForm?.addEventListener("submit", async (e) => {
+  if (!ticketForm) {
+    console.warn("ticketForm not found in DOM");
+    return;
+  }
+
+  ticketForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const user = getUserData();
     if (!user) return;
 
-    const subject = document.getElementById("subject").value.trim();
-    const concern = document.getElementById("concern").value.trim();
+    const subject = document.getElementById("subject")?.value.trim();
+    const concern = document.getElementById("concern")?.value.trim();
     const reportedEmployeeSelect = document.getElementById("reportedEmployee");
     const reportedEmployeeId = reportedEmployeeSelect?.value || null;
 
-    // ⭐ Get selected rating (only for clients)
+    // Get selected rating (only for clients)
     let rating = "Not Rated";
     if (user.role === "client") {
       const selectedRating = document.querySelector('input[name="rating"]:checked');
@@ -168,8 +256,9 @@ function initTicketSubmit() {
       alert("Error submitting ticket. See console for details.");
     }
   });
+  
+  console.log("Ticket submit handler initialized");
 }
-
 
 // === Load Client's Submitted Tickets ===
 async function loadMyTickets() {
@@ -188,6 +277,11 @@ async function loadMyTickets() {
 
     const tickets = await res.json();
     const tableBody = document.querySelector("#ticketsTable tbody");
+    if (!tableBody) {
+      console.warn("#ticketsTable tbody not found in DOM");
+      return;
+    }
+
     tableBody.innerHTML = "";
 
     if (!tickets.length) {
@@ -206,6 +300,8 @@ async function loadMyTickets() {
       `;
       tableBody.appendChild(row);
     });
+    
+    console.log("Tickets loaded:", tickets.length);
   } catch (err) {
     console.error("Error loading tickets:", err);
   }
@@ -216,19 +312,41 @@ function initSearch() {
   const searchBtn = document.getElementById("refreshGuards");
   const searchInput = document.getElementById("searchGuard");
 
+  if (!searchBtn) {
+    console.warn("refreshGuards button not found in DOM");
+    return;
+  }
+  
+  if (!searchInput) {
+    console.warn("searchGuard input not found in DOM");
+    return;
+  }
+
   searchBtn.addEventListener("click", async (e) => {
     e.preventDefault();
     const query = searchInput.value.trim();
+    console.log("Searching for guards:", query);
     await loadClientGuards(query);
     await populateEmployeeSelect();
   });
+  
+  console.log("Search handler initialized");
 }
 
 // === Logout handler ===
 function initLogout() {
   const logoutBtn = document.getElementById("logoutBtn");
+  if (!logoutBtn) {
+    console.warn("logoutBtn not found in DOM");
+    return;
+  }
+
   logoutBtn.addEventListener("click", () => {
+    console.log("Logout clicked");
     localStorage.removeItem("user");
-    window.location.href = "../html/client_login.html";
+    // Update this to point to your main login page filename
+    window.location.href = "loginSection.html"; // Change this if your login file has a different name
   });
+  
+  console.log("Logout handler initialized");
 }

@@ -28,7 +28,7 @@ registerForm.addEventListener('submit', async (e) => {
     }
 
     alert('Registration successful!');
-    window.location.href = 'loginpage.html'; // redirect to login
+    window.location.href = 'loginSection.html'; // redirect to login
   } catch (err) {
     errorMsg.textContent = err.message;
   }

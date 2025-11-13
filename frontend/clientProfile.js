@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 function getUser() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   if (!user.token) {
-    window.location.href = "client_login.html";
+    window.location.href = "loginSection.html";
     return null;
   }
   return user;
@@ -49,7 +49,7 @@ function initGuardDetailTabs() {
 function initLogout() {
   document.getElementById("logoutBtn").addEventListener("click", () => {
     localStorage.removeItem("user");
-    window.location.href = "../html/client_login.html";
+    window.location.href = "../html/loginSection.html";
   });
 }
 

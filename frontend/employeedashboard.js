@@ -2,6 +2,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const API_BASE = "http://localhost:5000";
   const token = localStorage.getItem("token");
 
+  const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const userRole = localStorage.getItem("role");
+    localStorage.clear();
+    if (userRole === "hr") {
+      window.location.href = "loginSection.html";
+    } else {
+      window.location.href = "loginSection.html";
+    }
+  });
+}
   // ================= CALENDAR =================
   const calendarEl = document.getElementById("calendar");
   const monthYearEl = document.getElementById("monthYear");
