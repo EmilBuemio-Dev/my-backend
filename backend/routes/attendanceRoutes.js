@@ -8,6 +8,12 @@ import cron from "node-cron";
 
 const router = express.Router();
 
+// ===== TIMEZONE UTILITY =====
+// Get current time in Philippines timezone (UTC+8)
+function getNowInPH() {
+  return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+}
+
 // ===== Middleware: Verify Token =====
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
@@ -34,8 +40,11 @@ router.post("/checkin", authenticateToken, upload.single("checkinImage"), async 
     const employeeName = employee.employeeData?.personalData?.name || "Unknown Employee";
     const empShift = employee.employeeData?.basicInformation?.shift || "Day, 8:00AM-8:00PM";
 
+    console.log(`📝 Check-in attempt for: ${employeeName}`);
+    console.log(`🕐 Shift: ${empShift}`);
+
     // ===== Parse shift start time =====
-    const shiftTimeMatch = empShift.match(/(\d{1,2}:\d{2}[AP]M)/); // first time in shift string
+    const shiftTimeMatch = empShift.match(/(\d{1,2}:\d{2}[AP]M)/);
     if (!shiftTimeMatch) return res.status(400).json({ message: "Invalid shift format." });
 
     let [shiftHour, shiftMinute, shiftPeriod] = shiftTimeMatch[1].match(/(\d{1,2}):(\d{2})(AM|PM)/).slice(1);
@@ -44,28 +53,34 @@ router.post("/checkin", authenticateToken, upload.single("checkinImage"), async 
     if (shiftPeriod === "PM" && shiftHour !== 12) shiftHour += 12;
     if (shiftPeriod === "AM" && shiftHour === 12) shiftHour = 0;
 
-    const now = new Date();
-    const shiftStart = new Date();
+    // ===== USE PHILIPPINES TIME FOR ALL CALCULATIONS =====
+    const now = getNowInPH();
+    const shiftStart = new Date(now);
     shiftStart.setHours(shiftHour, shiftMinute, 0, 0);
 
     const diffMinutes = (now - shiftStart) / 60000; // difference in minutes
 
+    console.log(`🕐 Philippines Now: ${now.toLocaleString()}`);
+    console.log(`🕐 Shift Start: ${shiftStart.toLocaleString()}`);
+    console.log(`⏱️  Minutes diff: ${diffMinutes}`);
+
     // ===== Prevent check-in more than 30 minutes early =====
     if (diffMinutes < -30) {
       return res.status(400).json({
-        message: `Too early to check in. You can only check in 30 minutes before your shift.`,
+        message: `Too early to check in. You can only check in 30 minutes before your shift starts at ${shiftTimeMatch[1]}.`,
+        debug: { diffMinutes, shiftTime: shiftTimeMatch[1] }
       });
     }
 
     // ===== Determine status =====
     let status = "On-Time";
-    if (diffMinutes > 10) status = "Late"; // late up to 10 min
-    // all early check-ins within 30 mins before shift are "On-Time"
+    if (diffMinutes > 10) status = "Late"; // late if more than 10 min after shift start
+    // all check-ins within 30 mins before to 10 mins after shift are "On-Time"
 
-    // ===== Check if already checked in today =====
-    const todayStart = new Date();
+    // ===== Check if already checked in today (in PH timezone) =====
+    const todayStart = new Date(now);
     todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date();
+    const todayEnd = new Date(now);
     todayEnd.setHours(23, 59, 59, 999);
 
     const existingCheckin = await Attendance.findOne({
@@ -81,17 +96,26 @@ router.post("/checkin", authenticateToken, upload.single("checkinImage"), async 
 
     const checkinImageUrl = req.file ? `/uploads/attendance/${req.file.filename}` : null;
 
+    // ===== Save using UTC time (for database storage) =====
     const record = new Attendance({
       employeeId,
       employeeName,
-      checkinTime: now,
+      checkinTime: new Date(), // Store as UTC
       checkinImageUrl,
       shift: empShift,
       status,
+      timezone: "Asia/Manila", // Store timezone info
     });
 
     await record.save();
-    res.status(201).json({ message: "Check-in successful", record });
+    
+    console.log(`✅ Check-in successful: ${employeeName} (Status: ${status})`);
+    
+    res.status(201).json({ 
+      message: "Check-in successful", 
+      record,
+      displayTime: now.toLocaleString() // Show PH time to user
+    });
 
   } catch (err) {
     console.error("❌ Check-in error:", err);
@@ -117,8 +141,9 @@ router.post("/checkout", authenticateToken, async (req, res) => {
       return res.status(404).json({ message: "No active check-in found for today." });
     }
 
-    const now = new Date();
-    record.checkoutTime = now;
+    // ===== USE PHILIPPINES TIME =====
+    const now = getNowInPH();
+    record.checkoutTime = new Date(); // Store as UTC
 
     // ===== Determine shift end from employee shift =====
     const empShift = employee.employeeData?.basicInformation?.shift || "Day, 8:00AM-8:00PM";
@@ -134,7 +159,7 @@ router.post("/checkout", authenticateToken, async (req, res) => {
       if (endPeriod === "PM" && endHour !== 12) endHour += 12;
       if (endPeriod === "AM" && endHour === 12) endHour = 0;
 
-      const shiftEnd = new Date();
+      const shiftEnd = new Date(now);
       shiftEnd.setHours(endHour, endMinute, 0, 0);
 
       // Check if leaving early
@@ -145,7 +170,11 @@ router.post("/checkout", authenticateToken, async (req, res) => {
 
     await record.save();
 
-    res.json({ message: "Check-out successful", record });
+    res.json({ 
+      message: "Check-out successful", 
+      record,
+      displayTime: now.toLocaleString() // Show PH time to user
+    });
   } catch (err) {
     console.error("❌ Check-out error:", err);
     res.status(500).json({ message: "Failed to check-out", error: err.message });
@@ -175,14 +204,12 @@ router.get("/attendance/all", async (req, res) => {
   }
 });
 
-
 // ===== GET WEEKLY ATTENDANCE =====
 router.get("/attendance/:employeeId/weekly", async (req, res) => {
   try {
     const { employeeId } = req.params;
-    const now = new Date();
+    const now = getNowInPH();
 
-    // Using date-fns to get week boundaries (Monday as first day)
     const weekStart = startOfWeek(now, { weekStartsOn: 1 });
     const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
 
@@ -202,9 +229,8 @@ router.get("/attendance/:employeeId/weekly", async (req, res) => {
 router.get("/attendance/:employeeId/monthly-summary", async (req, res) => {
   try {
     const { employeeId } = req.params;
-    const now = new Date();
+    const now = getNowInPH();
 
-    // Using date-fns to get month boundaries
     const monthStart = startOfMonth(now);
     const monthEnd = endOfMonth(now);
 
@@ -246,13 +272,16 @@ router.get("/attendance/:employeeId", async (req, res) => {
   }
 });
 
+// ===== DAILY ABSENCE CHECK CRON (3:00 AM PH TIME) =====
 cron.schedule("0 3 * * *", async () => {
   try {
-    console.log("🕒 Running daily absence check (3:00 AM)...");
+    console.log("🕒 Running daily absence check (3:00 AM PH time)...");
 
-    const now = new Date();
-    const todayStart = new Date(now.setHours(0, 0, 0, 0));
-    const todayEnd = new Date(now.setHours(23, 59, 59, 999));
+    const now = getNowInPH();
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(now);
+    todayEnd.setHours(23, 59, 59, 999);
 
     const employees = await Employee.find({
       "employeeData.employmentData.status": { $ne: "Resigned" },
@@ -273,11 +302,12 @@ cron.schedule("0 3 * * *", async () => {
         await Attendance.create({
           employeeId: empId,
           employeeName: empName,
-          checkinTime: todayStart,
-          checkoutTime: todayEnd,
+          checkinTime: new Date(todayStart),
+          checkoutTime: new Date(todayEnd),
           shift: empShift,
           status: "Absent",
           checkinImageUrl: null,
+          timezone: "Asia/Manila",
         });
         console.log(`❌ Marked Absent: ${empName}`);
       }
