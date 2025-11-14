@@ -11,6 +11,7 @@ function ensureUploadPath(folder = "general") {
   const dest = path.join(__dirname, "../../uploads", folder);
   if (!fs.existsSync(dest)) {
     fs.mkdirSync(dest, { recursive: true });
+    console.log(`✅ Created upload folder: ${dest}`);
   }
   return dest;
 }
@@ -50,12 +51,15 @@ const storage = multer.diskStorage({
       folder = "attendance";
     }
     // ✅ Applicant credentials → applicant-specific folder
+    // FIX: Use familyName_firstName instead of name
     else {
-      const applicantName = req.body.name?.trim() || "general";
-      folder = applicantName.replace(/\s+/g, "_");
+      const familyName = req.body.familyName?.trim() || "general";
+      const firstName = req.body.firstName?.trim() || "applicant";
+      folder = `${familyName}_${firstName}`.replace(/\s+/g, "_");
     }
 
-    cb(null, ensureUploadPath(folder));
+    const dest = ensureUploadPath(folder);
+    cb(null, dest);
   },
 
   filename: (req, file, cb) => {
@@ -92,7 +96,29 @@ const storage = multer.diskStorage({
   },
 });
 
+// ===== File Filter (Accept only PDFs and images) =====
+const fileFilter = (req, file, cb) => {
+  // Allow PDFs for credentials
+  if (file.mimetype === "application/pdf") {
+    return cb(null, true);
+  }
+
+  // Allow images for profiles and attendance
+  if (file.mimetype.startsWith("image/")) {
+    return cb(null, true);
+  }
+
+  // Reject other file types
+  cb(new Error(`File type not allowed: ${file.mimetype}`));
+};
+
 // ===== Multer Instance =====
-const upload = multer({ storage });
+const upload = multer({ 
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB max
+  }
+});
 
 export default upload;

@@ -63,23 +63,53 @@ router.post(
   ]),
   async (req, res) => {
     try {
+      console.log("📝 Archive POST received");
+      console.log("Body:", req.body);
+      console.log("Files uploaded:", Object.keys(req.files || {}));
+
       const { familyName, firstName, middleName, badgeNo, position } = req.body;
-      if (!familyName || !firstName)
-        return res.status(400).json({ message: "Family name and first name are required." });
 
-      const existing = await Archive.findOne({ familyName, firstName, middleName });
-      if (existing) return res.status(400).json({ message: "Archive already exists for this person." });
+      // ✅ Validate required fields
+      if (!familyName || !firstName) {
+        return res.status(400).json({ 
+          message: "Family name and first name are required." 
+        });
+      }
 
-      const folder = `${familyName}_${firstName}`.trim().replace(/\s+/g, "_");
-      const makePath = (field) =>
-        req.files?.[field]?.[0] ? `${folder}/${req.files[field][0].filename}` : "";
+      if (!badgeNo) {
+        return res.status(400).json({ 
+          message: "Badge number is required." 
+        });
+      }
 
+      // ✅ Check if archive already exists
+      const existing = await Archive.findOne({ badgeNo });
+      if (existing) {
+        return res.status(400).json({ 
+          message: `Archive already exists for badge number ${badgeNo}.` 
+        });
+      }
+
+      // ✅ Build folder path (must match upload.js logic)
+      const folder = `${familyName.trim()}_${firstName.trim()}`
+        .replace(/\s+/g, "_");
+
+      // ✅ Helper function to build credential paths
+      const makePath = (fieldname) => {
+        if (req.files?.[fieldname]?.[0]) {
+          return `${folder}/${req.files[fieldname][0].filename}`;
+        }
+        return "";
+      };
+
+      // ✅ Create new archive document
       const newArchive = new Archive({
-        familyName,
-        firstName,
-        middleName,
-        badgeNo,
-        position,
+        familyName: familyName.trim(),
+        firstName: firstName.trim(),
+        middleName: middleName?.trim() || "",
+        badgeNo: badgeNo.trim(),
+        position: position || "Guard",
+        status: "Pending",
         credentials: {
           barangayClearance: makePath("barangayClearance"),
           policeClearance: makePath("policeClearance"),
@@ -97,11 +127,46 @@ router.post(
         },
       });
 
-      await newArchive.save();
-      res.status(201).json({ message: "Archived credentials saved successfully!" });
+      const saved = await newArchive.save();
+      
+      console.log("✅ Archive created successfully:", {
+        id: saved._id,
+        name: `${saved.firstName} ${saved.familyName}`,
+        badgeNo: saved.badgeNo,
+        status: saved.status
+      });
+
+      res.status(201).json({ 
+        message: "Archived credentials saved successfully!",
+        archiveId: saved._id,
+        data: {
+          familyName: saved.familyName,
+          firstName: saved.firstName,
+          badgeNo: saved.badgeNo,
+          status: saved.status
+        }
+      });
+
     } catch (err) {
-      console.error("❌ Archive creation error:", err);
-      res.status(500).json({ message: "Failed to archive credentials", error: err.message });
+      console.error("❌ Archive creation error:", {
+        message: err.message,
+        code: err.code,
+        name: err.name,
+        stack: err.stack
+      });
+
+      // Handle specific MongoDB errors
+      if (err.code === 11000) {
+        const field = Object.keys(err.keyValue)[0];
+        return res.status(400).json({ 
+          message: `An archive with this ${field} already exists.` 
+        });
+      }
+
+      res.status(500).json({ 
+        message: "Failed to archive credentials", 
+        error: err.message
+      });
     }
   }
 );
