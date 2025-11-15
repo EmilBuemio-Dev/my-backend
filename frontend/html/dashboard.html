@@ -46,8 +46,8 @@
                     <h3>Accounts/Branch</h3>
                 </a>
                 <a href="monthlyDisposition.html">
-                <span class="material-symbols-outlined">description</span>
-                <h3>Monthly Disposition Report</h3>
+                    <span class="material-symbols-outlined">description</span>
+                    <h3>Monthly Disposition Report</h3>
                 </a>
                 <a id="logoutBtn" href="#" class="logout">
                     <span class="material-symbols-outlined">logout</span>
@@ -114,118 +114,110 @@
                 </div>
             </div>
 
-<!-- Replace the Complaints Ratings section with this: -->
-
-<div class="dashboard-stats">
-    <div class="attendance-bargraph">
-        <h2>Attendance Rate</h2>
-        <div class="bar-container" id="attendanceContainer">
-            <!-- On-Time Bar -->
-            <div class="bar" data-attendance="on-time">
-                <span class="label">On-Time</span>
-                <div class="bar-fill">
-                    <div class="bar-fill-inner" style="background: linear-gradient(90deg, #1abc9c, #16a085);"></div>
+            <!-- Attendance Rate + Leave Requests Section -->
+            <div class="dashboard-stats">
+                <div class="attendance-bargraph">
+                    <h2>Attendance Rate</h2>
+                    <div class="bar-container" id="attendanceContainer">
+                        <!-- On-Time Bar -->
+                        <div class="bar" data-attendance="on-time">
+                            <span class="label">On-Time</span>
+                            <div class="bar-fill">
+                                <div class="bar-fill-inner" style="background: linear-gradient(90deg, #1abc9c, #16a085);"></div>
+                            </div>
+                            <span class="count">0</span>
+                            <span class="percent">0%</span>
+                        </div>
+                        
+                        <!-- Late Bar -->
+                        <div class="bar" data-attendance="late">
+                            <span class="label">Late</span>
+                            <div class="bar-fill">
+                                <div class="bar-fill-inner" style="background: linear-gradient(90deg, #f39c12, #e67e22);"></div>
+                            </div>
+                            <span class="count">0</span>
+                            <span class="percent">0%</span>
+                        </div>
+                        
+                        <!-- Absent Bar -->
+                        <div class="bar" data-attendance="absent">
+                            <span class="label">Absent</span>
+                            <div class="bar-fill">
+                                <div class="bar-fill-inner" style="background: linear-gradient(90deg, #e74c3c, #c0392b);"></div>
+                            </div>
+                            <span class="count">0</span>
+                            <span class="percent">0%</span>
+                        </div>
+                    </div>
                 </div>
-                <span class="count">0</span>
-                <span class="percent">0%</span>
-            </div>
-            
-            <!-- Late Bar -->
-            <div class="bar" data-attendance="late">
-                <span class="label">Late</span>
-                <div class="bar-fill">
-                    <div class="bar-fill-inner" style="background: linear-gradient(90deg, #f39c12, #e67e22);"></div>
+
+                <!-- Leave Requests Card -->
+                <div class="LeaveRequests" id="leaveCard">
+                    <span class="material-symbols-outlined">event_note</span>
+                    <div class="middle">
+                        <div class="left">
+                            <h3>Leave Requests</h3>
+                            <h1 id="leaveCount">0</h1>
+                        </div>
+                    </div>
+                    <small>Updated Today</small>
                 </div>
-                <span class="count">0</span>
-                <span class="percent">0%</span>
             </div>
-            
-            <!-- Absent Bar -->
-            <div class="bar" data-attendance="absent">
-                <span class="label">Absent</span>
-                <div class="bar-fill">
-                    <div class="bar-fill-inner" style="background: linear-gradient(90deg, #e74c3c, #c0392b);"></div>
+
+            <!-- Leave Requests Table Modal -->
+            <div id="leaveTableModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>All Leave Requests</h3>
+                    </div>
+                    <div class="modal-body">
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Leave Type</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="leaveRequestsBody">
+                                    <tr>
+                                        <td colspan="4" class="no-data">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn close" id="closeLeaveTableModal">Close</button>
+                    </div>
                 </div>
-                <span class="count">0</span>
-                <span class="percent">0%</span>
             </div>
-        </div>
-    </div>
-</div>
 
-
-<!-- Leave Requests Section -->
-<div class="dashboard-stats">   
-
-  <!-- Leave Requests Card -->
-  <div class="LeaveRequests" id="leaveCard">
-      <span class="material-symbols-outlined">event_note</span>
-      <div class="middle">
-          <div class="left">
-              <h3>Leave Requests</h3>
-              <h1 id="leaveCount">0</h1>
-          </div>
-      </div>
-      <small>Updated Today</small>
-  </div>
-
-  <!-- Leave Requests Table Modal -->
-  <div id="leaveTableModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>All Leave Requests</h3>
-      </div>
-      <div class="modal-body">
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Leave Type</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="leaveRequestsBody">
-              <tr>
-                <td colspan="5" class="no-data">Loading...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn close" id="closeLeaveTableModal">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Individual Leave Modal -->
-  <div id="leaveModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Leave Request Details</h3>
-      </div>
-      <div class="modal-body">
-        <p><strong>Name:</strong> <span id="leaveName"></span></p>
-        <p><strong>Leave Type:</strong> <span id="leaveType"></span></p>
-        <p><strong>Date of Effectivity:</strong> <span id="leaveDate"></span></p>
-        <p><strong>Place of Duty:</strong> <span id="leaveDuty"></span></p>
-        <p><strong>Address While on Leave:</strong> <span id="leaveAddress"></span></p>
-        <p><strong>Contact Number:</strong> <span id="leaveContact"></span></p>
-        <p><strong>Reason:</strong> <span id="leaveReason"></span></p>
-        <p><strong>Status:</strong> <span id="leaveStatus"></span></p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn close" id="closeLeaveModal">Close</button>
-        <button class="btn approve" id="approveLeaveBtn">Approve</button>
-        <button class="btn disapprove" id="disapproveLeaveBtn">Disapprove</button>
-      </div>
-    </div>
-  </div>
-
-</div>
-</div>
+            <!-- Individual Leave Modal -->
+            <div id="leaveModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Leave Request Details</h3>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Name:</strong> <span id="leaveName"></span></p>
+                        <p><strong>Leave Type:</strong> <span id="leaveType"></span></p>
+                        <p><strong>Date of Effectivity:</strong> <span id="leaveDate"></span></p>
+                        <p><strong>Place of Duty:</strong> <span id="leaveDuty"></span></p>
+                        <p><strong>Address While on Leave:</strong> <span id="leaveAddress"></span></p>
+                        <p><strong>Contact Number:</strong> <span id="leaveContact"></span></p>
+                        <p><strong>Reason:</strong> <span id="leaveReason"></span></p>
+                        <p><strong>Status:</strong> <span id="leaveStatus"></span></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn close" id="closeLeaveModal">Close</button>
+                        <button class="btn approve" id="approveLeaveBtn">Approve</button>
+                        <button class="btn disapprove" id="disapproveLeaveBtn">Disapprove</button>
+                    </div>
+                </div>
+            </div>
 
             <!-- Recent Complaints Table -->
             <div class="recentcomplaints">
@@ -291,7 +283,7 @@
         </div>
     </div>
 
-    <!-- Modal -->
+    <!-- Ticket Modal -->
     <div id="ticketModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
