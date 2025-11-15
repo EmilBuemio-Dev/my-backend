@@ -1,7 +1,7 @@
-const API_URL = "https://www.mither3security.com//api/users";
-const BRANCH_API = "https://www.mither3security.com//api/branches";
+const API_URL = "https://www.mither3security.com/api/users";
+const BRANCH_API = "https://www.mither3security.com/api/branches";
 const EMPLOYEE_API = "https://www.mither3security.com/employees";
-const CLIENT_API = "https://www.mither3security.com//api/branches";
+const CLIENT_API = "https://www.mither3security.com/api/branches";
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("role");
 
