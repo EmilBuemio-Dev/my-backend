@@ -29,26 +29,6 @@ const allowedFields = [
   "approveEmail"
 ];
 
-// ===== FORMAT BADGE NUMBER =====
-function formatBadgeNumber(value) {
-  return value
-    .replace(/[^0-9]/g, "")
-    .replace(/(\d{2})(\d{1,7})(\d{0,1}).*/, function(_, p1, p2, p3) {
-      return p3 ? `${p1}-${p2}-${p3}` : p2 ? `${p1}-${p2}` : p1;
-    });
-}
-
-// Initialize badge formatting - works for existing and dynamically created inputs
-function initBadgeFormatting() {
-  // Use event delegation on document to catch all badge inputs (existing and future)
-  document.addEventListener('input', function(e) {
-    if (e.target.id === 'badgeNo' || e.target.name === 'badgeNo') {
-      e.target.value = formatBadgeNumber(e.target.value);
-    }
-  }, true); // Use capture phase to ensure it fires
-}
-
-
 async function loadArchives() {
   try {
     const res = await fetch("https://www.mither3security.com/archive");
@@ -159,6 +139,7 @@ function renderArchives() {
 }
 
 // === LOAD BRANCHES ===
+// === LOAD BRANCHES ===
 async function loadBranches(preselectedBranch = "") {
   const select = document.getElementById("branchSelect");
   const expiryInput = document.querySelector('input[name="expiryDate"]');
@@ -225,7 +206,7 @@ async function loadBranches(preselectedBranch = "") {
           salaryInput.placeholder = "N/A";
         }
 
-        // Handle guard shift (works for both array and object)
+        // ✅ Handle guard shift (works for both array and object)
         shiftSelect.innerHTML = `<option value="">Choose time of shift</option>`;
         const guardShift = selectedBranchObj.guardShift;
 
@@ -245,6 +226,7 @@ async function loadBranches(preselectedBranch = "") {
             }
           });
         } 
+        // ✅ if guardShift is an object (not array)
         else if (guardShift && (guardShift.day || guardShift.night)) {
           if (guardShift.day) {
             const dayOption = document.createElement("option");
@@ -259,6 +241,7 @@ async function loadBranches(preselectedBranch = "") {
             shiftSelect.appendChild(nightOption);
           }
         } 
+        // ❌ no shift data at all
         else {
           const noShiftOption = document.createElement("option");
           noShiftOption.value = "No Shift Data";
@@ -310,7 +293,7 @@ function viewRecord(id) {
 
   document.getElementById("modalBody").innerHTML = `
     <p><strong>Name:</strong> ${record.familyName ? `${record.familyName}, ${record.firstName || ""} ${record.middleName || ""}`.trim() : "N/A"}</p>
-    <p><strong>Badge No:</strong> ${formatBadgeNumber(record.badgeNo) || "N/A"}</p>
+    <p><strong>Badge No:</strong> ${record.badgeNo || "N/A"}</p>
     <p><strong>Position:</strong> ${record.position || "N/A"}</p>
     <p><strong>Status:</strong> ${record.status || "Pending"}</p>
     <p><strong>Date Archived:</strong> ${record.createdAt ? new Date(record.createdAt).toLocaleString() : "N/A"}</p>
@@ -319,14 +302,13 @@ function viewRecord(id) {
   openModal();
 }
 
-
 function openModal() { document.getElementById("detailsModal").style.display = "block"; }
 function closeModal() { document.getElementById("detailsModal").style.display = "none"; }
 
 async function openApproveModal() {
   if (!selectedRecord) return;
 
-  // Add check for pending status
+  // 🚨 Add check for pending status
   if ((selectedRecord.status || "Pending").toLowerCase() === "pending") {
     return alert("⚠️ Cannot approve employee. The status is still pending and cannot be proceeded.");
   }
@@ -364,12 +346,7 @@ async function openApproveModal() {
   setValue("approveFamilyName", "familyName");
   setValue("approveFirstName", "firstName");
   setValue("approveMiddleName", "middleName");
-  
-  // Format badge number
-  const badgeNoInput = document.getElementById("approvedBadgeNo");
-  if (badgeNoInput) {
-    badgeNoInput.value = formatBadgeNo(selectedRecord.badgeNo);
-  }
+  setValue("approvedBadgeNo", "badgeNo");
 
   // Status
   const statusInput = document.querySelector('input[name="status"]');
@@ -378,31 +355,32 @@ async function openApproveModal() {
     statusInput.style.fontWeight = "bold";
   }
 
-  const emailInput = document.getElementById("approveEmail");
-  if (emailInput) {
-    // 1. Use archive email if exists
-    if (selectedRecord.email?.trim() && selectedRecord.email !== "N/A") {
-      emailInput.value = selectedRecord.email.trim();
-    } else {
-      try {
-        // 2. Fetch from Register
-        let url = `https://www.mither3security.com/api/registers/search?familyName=${encodeURIComponent(selectedRecord.familyName)}&firstName=${encodeURIComponent(selectedRecord.firstName)}&badgeNo=${encodeURIComponent(selectedRecord.badgeNo)}`;
-        if (selectedRecord.middleName) url += `&middleName=${encodeURIComponent(selectedRecord.middleName)}`;
+const emailInput = document.getElementById("approveEmail");
+if (emailInput) {
+  // 1. Use archive email if exists
+  if (selectedRecord.email?.trim() && selectedRecord.email !== "N/A") {
+    emailInput.value = selectedRecord.email.trim();
+  } else {
+    try {
+      // 2. Fetch from Register
+      let url = `https://www.mither3security.com/api/registers/search?familyName=${encodeURIComponent(selectedRecord.familyName)}&firstName=${encodeURIComponent(selectedRecord.firstName)}&badgeNo=${encodeURIComponent(selectedRecord.badgeNo)}`;
+      if (selectedRecord.middleName) url += `&middleName=${encodeURIComponent(selectedRecord.middleName)}`;
 
-        const res = await fetch(url);
-        const data = await res.json();
+      const res = await fetch(url);
+      const data = await res.json();
 
-        // 3. Assign email to selectedRecord so submit uses it
-        const fetchedEmail = data?.register?.email?.trim() || "N/A";
-        selectedRecord.email = fetchedEmail;
-        emailInput.value = fetchedEmail;
-      } catch (err) {
-        console.error("❌ Failed to fetch registered email:", err);
-        selectedRecord.email = "N/A";
-        emailInput.value = "N/A";
-      }
+      // 3. Assign email to selectedRecord so submit uses it
+      const fetchedEmail = data?.register?.email?.trim() || "N/A";
+      selectedRecord.email = fetchedEmail;
+      emailInput.value = fetchedEmail;
+    } catch (err) {
+      console.error("❌ Failed to fetch registered email:", err);
+      selectedRecord.email = "N/A";
+      emailInput.value = "N/A";
     }
   }
+}
+
 
   // Load branches
   await loadBranches(selectedRecord.branch || "");
@@ -448,43 +426,46 @@ async function checkIfRegisteredAndFillForm() {
   if (!familyName || !firstName || !badgeNo) return console.warn("Missing required fields.");
 
   try {
-    let url = `https://www.mither3security.com/api/registers/search?familyName=${encodeURIComponent(familyName)}&firstName=${encodeURIComponent(firstName)}&badgeNo=${encodeURIComponent(badgeNo)}`;
+    let url = `hhttps://www.mither3security.com/api/registers/search?familyName=${encodeURIComponent(familyName)}&firstName=${encodeURIComponent(firstName)}&badgeNo=${encodeURIComponent(badgeNo)}`;
     if (middleName) url += `&middleName=${encodeURIComponent(middleName)}`;
 
     const res = await fetch(url);
     const data = await res.json();
 
     const emailInput = document.getElementById("approveEmail");
-    if (emailInput) {
-      emailInput.value = (res.status === 200 && data?.register?.email) ? data.register.email : "N/A";
+if (emailInput) {
+  emailInput.value = (res.status === 200 && data?.register?.email) ? data.register.email : "N/A"; // ← set "N/A" if not found
+}
+
+
+const formElements = document.getElementById("approveForm")?.elements;
+if (formElements) {
+  for (let el of formElements) {
+    if (el.type === "hidden" || el.tagName.toLowerCase() === "button") continue;
+    if (el.closest("#firearmsTable")) continue; // skip firearms inputs
+
+    // Only set N/A if the field is truly empty AND not in allowedFields
+    const allowedFields = [
+      "approvedBadgeNo",
+      "approveFamilyName",
+      "approveFirstName",
+      "approveMiddleName",
+      "status",
+      "shift",
+      "branch",
+      "salary",
+      "expiryDate",
+      "approveEmail"
+    ];
+
+    if (!el.value && !allowedFields.includes(el.id)) {
+      if (el.type === "file") el.value = "";
+      else if (el.type === "number") el.placeholder = "N/A";
+      else el.value = "N/A";
     }
+  }
+}
 
-    const formElements = document.getElementById("approveForm")?.elements;
-    if (formElements) {
-      for (let el of formElements) {
-        if (el.type === "hidden" || el.tagName.toLowerCase() === "button") continue;
-        if (el.closest("#firearmsTable")) continue;
-
-        const allowedFields = [
-          "approvedBadgeNo",
-          "approveFamilyName",
-          "approveFirstName",
-          "approveMiddleName",
-          "status",
-          "shift",
-          "branch",
-          "salary",
-          "expiryDate",
-          "approveEmail"
-        ];
-
-        if (!el.value && !allowedFields.includes(el.id)) {
-          if (el.type === "file") el.value = "";
-          else if (el.type === "number") el.placeholder = "N/A";
-          else el.value = "N/A";
-        }
-      }
-    }
 
   } catch (err) {
     console.error("❌ Error checking registration:", err);
@@ -542,6 +523,7 @@ function initProfilePreview() {
   input.addEventListener("change", (event) => {
     const file = event.target.files[0];
     if (!file) {
+      // Reset to default Material Symbol
       preview.innerHTML = "person";
       preview.classList.add("material-symbols-outlined");
       preview.style.backgroundImage = "";
@@ -554,7 +536,7 @@ function initProfilePreview() {
       preview.style.backgroundImage = `url(${e.target.result})`;
       preview.style.backgroundSize = "cover";
       preview.style.backgroundPosition = "center";
-      preview.innerHTML = "";
+      preview.innerHTML = ""; // remove default icon text
     };
     reader.readAsDataURL(file);
   });
@@ -565,32 +547,49 @@ function initSubmitHandler() {
   const form = document.getElementById("approveForm");
   if (!form) return;
 
-  const archiveFieldMap = {
+  const fieldMap = {
     approveFamilyName: "familyName",
     approveFirstName: "firstName",
     approveMiddleName: "middleName",
     approvedBadgeNo: "badgeNo",
-    approveEmail: "email"
+    approveEmail: "email",
+    status: "status",
+    branch: "branch",
+    shift: "shift",
+    salary: "salary",
+    expiryDate: "expiryDate"
   };
 
-  const getInputValue = (selector, recordKey, type = "string") => {
-    const el = form.querySelector(selector);
-    let val = el?.value?.trim();
+  const archiveFieldMap = {
+  approveFamilyName: "familyName",
+  approveFirstName: "firstName",
+  approveMiddleName: "middleName",
+  approvedBadgeNo: "badgeNo",
+  approveEmail: "email"
+};
 
-    if (recordKey === "approveEmail" && !val) val = null;
+const getInputValue = (selector, recordKey, type = "string") => {
+  const el = form.querySelector(selector);
+  let val = el?.value?.trim();
 
-    if (val) return val;
+  // If the field is email and value is empty string, treat as N/A
+  if (recordKey === "approveEmail" && !val) val = null;
 
-    if (selectedRecord && recordKey && archiveFieldMap[recordKey]) {
-      const fallback = selectedRecord[archiveFieldMap[recordKey]];
-      if (recordKey === "approveEmail") return fallback || "N/A";
-      return fallback ?? "";
-    }
+  if (val) return val;
 
-    if (type === "date") return null;
-    if (type === "number") return 0;
-    return "N/A";
-  };
+  // Fallback to archive data
+  if (selectedRecord && recordKey && archiveFieldMap[recordKey]) {
+    const fallback = selectedRecord[archiveFieldMap[recordKey]];
+    if (recordKey === "approveEmail") return fallback || "N/A"; // email specific fallback
+    return fallback ?? "";
+  }
+
+  if (type === "date") return null;
+  if (type === "number") return 0;
+  return "N/A";
+};
+
+
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -605,7 +604,7 @@ function initSubmitHandler() {
       shift: getInputValue('select[name="shift"]'),
       status: getInputValue('input[name="status"]', "status"),
       expiryDate: getInputValue('input[name="expiryDate"]', "expiryDate"),
-      badgeNo: formatBadgeNo(getInputValue('input[name="approvedBadgeNo"]', "approvedBadgeNo")),
+      badgeNo: getInputValue('input[name="approvedBadgeNo"]', "approvedBadgeNo"),
       salary: getInputValue('input[name="salary"]', "salary"),
       branch: getInputValue('select[name="branch"]', "branch"),
       role: "employee",
@@ -613,24 +612,25 @@ function initSubmitHandler() {
 
     // Personal data
     const personalData = {
-      familyName: getInputValue('input[name="approveFamilyName"]', "approveFamilyName"),
-      firstName: getInputValue('input[name="approveFirstName"]', "approveFirstName"),
-      middleName: getInputValue('input[name="approveMiddleName"]', "approveMiddleName"),
-      email: getInputValue('input[name="approveEmail"]', "approveEmail"),
-      dateOfBirth: getInputValue('input[name="dateOfBirth"]', null, "date"),
-      presentAddress: getInputValue('input[name="presentAddress"]'),
-      placeOfBirth: getInputValue('input[name="placeOfBirth"]'),
-      prevAddress: getInputValue('input[name="prevAddress"]'),
-      citizenship: getInputValue('input[name="citizenship"]'),
-      weight: getInputValue('input[name="weight"]'),
-      languageSpoken: getInputValue('input[name="languageSpoken"]'),
-      age: Number(getInputValue('input[name="age"]', 0, "number")),
-      height: getInputValue('input[name="height"]'),
-      religion: getInputValue('input[name="religion"]'),
-      civilStatus: getInputValue('input[name="civilStatus"]'),
-      colorOfHair: getInputValue('input[name="colorOfHair"]'),
-      colorOfEyes: getInputValue('input[name="colorOfEyes"]'),
-    };
+  familyName: getInputValue('input[name="approveFamilyName"]', "approveFamilyName"),
+  firstName: getInputValue('input[name="approveFirstName"]', "approveFirstName"),
+  middleName: getInputValue('input[name="approveMiddleName"]', "approveMiddleName"),
+  email: getInputValue('input[name="approveEmail"]', "approveEmail"),
+  dateOfBirth: getInputValue('input[name="dateOfBirth"]', null, "date"), // <-- important
+  presentAddress: getInputValue('input[name="presentAddress"]'),
+  placeOfBirth: getInputValue('input[name="placeOfBirth"]'),
+  prevAddress: getInputValue('input[name="prevAddress"]'),
+  citizenship: getInputValue('input[name="citizenship"]'),
+  weight: getInputValue('input[name="weight"]'),
+  languageSpoken: getInputValue('input[name="languageSpoken"]'),
+  age: Number(getInputValue('input[name="age"]', 0, "number")),
+  height: getInputValue('input[name="height"]'),
+  religion: getInputValue('input[name="religion"]'),
+  civilStatus: getInputValue('input[name="civilStatus"]'),
+  colorOfHair: getInputValue('input[name="colorOfHair"]'),
+  colorOfEyes: getInputValue('input[name="colorOfEyes"]'),
+};
+
 
     // Education
     const educationalBackground = Array.from(form.querySelectorAll("#educationTable tbody tr"))
@@ -801,5 +801,4 @@ document.addEventListener("DOMContentLoaded", () => {
   initEducationTable();
   initProfilePreview();
   initSubmitHandler();
-  initBadgeFormatting();
 });
