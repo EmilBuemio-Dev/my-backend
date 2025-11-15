@@ -516,6 +516,7 @@ row.querySelector(".approve-btn").onclick = async () => {
         });
       }
 
+
       // --- Step 5: Remove from pending accounts ---
       if (acc._id) {
         await fetch(`https://www.mither3security.com/accounts/${acc._id}`, { method: "DELETE" });

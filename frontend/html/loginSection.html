@@ -1136,7 +1136,7 @@
           console.log("Archive search response:", data, "Status:", res.status);
 
           if (!res.ok || !data || data.length === 0) {
-            badgeNoFeedback.textContent = "❌ Badge number not found in archive. Cannot register.";
+            badgeNoFeedback.textContent = "❌ Badge number not found in records. Cannot register.";
             badgeNoFeedback.className = "feedback error";
             registerSubmitBtn.disabled = true;
             return;
@@ -1230,7 +1230,7 @@
               return;
             }
 
-            registerFormFeedback.textContent = "✅ Registration successful! You can now log in.";
+            registerFormFeedback.textContent = "Registration successful! Check your email for account activation details.";
             registerFormFeedback.className = "feedback success";
             registerForm.reset();
             registerSubmitBtn.disabled = true;
@@ -1240,7 +1240,7 @@
             }, 2000);
           } catch (err) {
             console.error("Register error:", err);
-            registerFormFeedback.textContent = "⚠️ Server error during registration. Please try again.";
+            registerFormFeedback.textContent = "Server error during registration. Please try again.";
             registerFormFeedback.className = "feedback error";
           }
         });
