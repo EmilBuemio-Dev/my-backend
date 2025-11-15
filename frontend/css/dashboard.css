@@ -264,7 +264,6 @@ main h1 {
     max-height: 100%;
 }
 
-/* Leave Requests Card */
 .LeaveRequests {
     background: var(--clr-white);
     padding: var(--card-padding);
@@ -273,9 +272,12 @@ main h1 {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: center;          /* ✅ CENTER horizontally */
+    text-align: center;           /* ✅ CENTER all text */
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
 
 .LeaveRequests:hover {
     transform: translateY(-4px);
