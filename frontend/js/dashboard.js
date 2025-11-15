@@ -46,6 +46,43 @@ function setCircleProgress(circleId, percent, circleLength) {
 }
 
 // ============================================
+// LOAD DASHBOARD STATISTICS
+// ============================================
+
+async function loadDashboardStats() {
+  try {
+    const res = await fetch("https://www.mither3security.com/employees");
+    if (!res.ok) throw new Error("Failed to fetch employees");
+    const employees = await res.json();
+
+    const total = employees.length;
+    const active = employees.filter(e => e.employeeData?.basicInformation?.status === "Active").length;
+    const inactive = employees.filter(e => e.employeeData?.basicInformation?.status === "Inactive").length;
+
+    document.getElementById("totalCount").textContent = total;
+    document.getElementById("activeCount").textContent = active;
+    document.getElementById("inactiveCount").textContent = inactive;
+
+    const activePercent = total > 0 ? Math.round((active / total) * 100) : 0;
+    const inactivePercent = total > 0 ? Math.round((inactive / total) * 100) : 0;
+
+    document.getElementById("totalPercent").textContent = "100%";
+    document.getElementById("activePercent").textContent = `${activePercent}%`;
+    document.getElementById("inactivePercent").textContent = `${inactivePercent}%`;
+
+    const circleLength = 2 * Math.PI * 30;
+    setTimeout(() => {
+      setCircleProgress("totalCircle", 100, circleLength);
+      setCircleProgress("activeCircle", activePercent, circleLength);
+      setCircleProgress("inactiveCircle", inactivePercent, circleLength);
+    }, 100);
+
+  } catch (err) {
+    console.error("Error loading dashboard stats:", err);
+  }
+}
+
+// ============================================
 // LOAD ATTENDANCE RATE PIE CHART
 // ============================================
 
@@ -82,11 +119,6 @@ async function loadAttendanceRateBarGraph() {
     });
 
     const total = records.length || 1;
-
-    // Calculate percentages
-    const onTimePercent = Math.round((attendanceCounts.onTime / total) * 100);
-    const latePercent = Math.round((attendanceCounts.late / total) * 100);
-    const absentPercent = Math.round((attendanceCounts.absent / total) * 100);
 
     // Create Pie Chart
     const ctx = document.getElementById('attendanceChart').getContext('2d');
@@ -451,10 +483,6 @@ window.addEventListener("click", e => {
 
 
 
-
-// ============================================
-// LOAD ATTENDANCE ALERTS (NOTIFICATIONS)
-// ============================================
 
 // ============================================
 // LOAD ATTENDANCE ALERTS & COMPLAINTS (NOTIFICATIONS)
