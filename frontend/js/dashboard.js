@@ -46,48 +46,7 @@ function setCircleProgress(circleId, percent, circleLength) {
 }
 
 // ============================================
-// LOAD DASHBOARD STATISTICS
-// ============================================
-
-async function loadDashboardStats() {
-  try {
-    const res = await fetch("https://www.mither3security.com/employees");
-    if (!res.ok) throw new Error("Failed to fetch employees");
-    const employees = await res.json();
-
-    const total = employees.length;
-    const active = employees.filter(e => e.employeeData?.basicInformation?.status === "Active").length;
-    const inactive = employees.filter(e => e.employeeData?.basicInformation?.status === "Inactive").length;
-
-    document.getElementById("totalCount").textContent = total;
-    document.getElementById("activeCount").textContent = active;
-    document.getElementById("inactiveCount").textContent = inactive;
-
-    const activePercent = total > 0 ? Math.round((active / total) * 100) : 0;
-    const inactivePercent = total > 0 ? Math.round((inactive / total) * 100) : 0;
-
-    document.getElementById("totalPercent").textContent = "100%";
-    document.getElementById("activePercent").textContent = `${activePercent}%`;
-    document.getElementById("inactivePercent").textContent = `${inactivePercent}%`;
-
-    const circleLength = 2 * Math.PI * 30;
-    setTimeout(() => {
-      setCircleProgress("totalCircle", 100, circleLength);
-      setCircleProgress("activeCircle", activePercent, circleLength);
-      setCircleProgress("inactiveCircle", inactivePercent, circleLength);
-    }, 100);
-
-  } catch (err) {
-    console.error("Error loading dashboard stats:", err);
-  }
-}
-
-// ============================================
-// LOAD COMPLAINTS RATINGS BAR GRAPH
-// ============================================
-
-// ============================================
-// LOAD ATTENDANCE RATE BAR GRAPH
+// LOAD ATTENDANCE RATE PIE CHART
 // ============================================
 
 async function loadAttendanceRateBarGraph() {
@@ -122,41 +81,69 @@ async function loadAttendanceRateBarGraph() {
       }
     });
 
-    const total = records.length || 1; // Avoid division by zero
+    const total = records.length || 1;
 
     // Calculate percentages
     const onTimePercent = Math.round((attendanceCounts.onTime / total) * 100);
     const latePercent = Math.round((attendanceCounts.late / total) * 100);
     const absentPercent = Math.round((attendanceCounts.absent / total) * 100);
 
-    setTimeout(() => {
-      // Update On-Time bar
-      const onTimeBar = document.querySelector('[data-attendance="on-time"] .bar-fill-inner');
-      const onTimeCount = document.querySelector('[data-attendance="on-time"] .count');
-      const onTimePercSpan = document.querySelector('[data-attendance="on-time"] .percent');
-      if (onTimeBar) onTimeBar.style.width = onTimePercent + '%';
-      if (onTimeCount) onTimeCount.textContent = attendanceCounts.onTime;
-      if (onTimePercSpan) onTimePercSpan.textContent = onTimePercent + '%';
-
-      // Update Late bar
-      const lateBar = document.querySelector('[data-attendance="late"] .bar-fill-inner');
-      const lateCount = document.querySelector('[data-attendance="late"] .count');
-      const latePercSpan = document.querySelector('[data-attendance="late"] .percent');
-      if (lateBar) lateBar.style.width = latePercent + '%';
-      if (lateCount) lateCount.textContent = attendanceCounts.late;
-      if (latePercSpan) latePercSpan.textContent = latePercent + '%';
-
-      // Update Absent bar
-      const absentBar = document.querySelector('[data-attendance="absent"] .bar-fill-inner');
-      const absentCount = document.querySelector('[data-attendance="absent"] .count');
-      const absentPercSpan = document.querySelector('[data-attendance="absent"] .percent');
-      if (absentBar) absentBar.style.width = absentPercent + '%';
-      if (absentCount) absentCount.textContent = attendanceCounts.absent;
-      if (absentPercSpan) absentPercSpan.textContent = absentPercent + '%';
-    }, 300);
+    // Create Pie Chart
+    const ctx = document.getElementById('attendanceChart').getContext('2d');
+    
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['On-Time', 'Late', 'Absent'],
+        datasets: [{
+          data: [attendanceCounts.onTime, attendanceCounts.late, attendanceCounts.absent],
+          backgroundColor: [
+            '#1abc9c', // On-Time (Green)
+            '#f39c12', // Late (Orange)
+            '#e74c3c'  // Absent (Red)
+          ],
+          borderColor: '#fff',
+          borderWidth: 3,
+          hoverBorderWidth: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: '#222222',
+              font: { size: 13, weight: '600' },
+              padding: 20,
+              usePointStyle: true,
+              pointStyle: 'circle'
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            padding: 12,
+            titleColor: '#fff',
+            bodyColor: '#fff',
+            borderColor: '#3498db',
+            borderWidth: 1,
+            displayColors: true,
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.parsed || 0;
+                const percent = Math.round((value / total) * 100);
+                return `${label}: ${value} (${percent}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
 
   } catch (err) {
-    console.error("Error loading attendance rate bar graph:", err);
+    console.error("Error loading attendance rate pie chart:", err);
   }
 }
 

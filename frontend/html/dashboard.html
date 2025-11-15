@@ -114,40 +114,12 @@
                 </div>
             </div>
 
-            <!-- Attendance Rate + Leave Requests Section -->
+            <!-- Attendance Rate Pie Chart + Leave Requests Section -->
             <div class="dashboard-stats">
                 <div class="attendance-bargraph">
                     <h2>Attendance Rate</h2>
-                    <div class="bar-container" id="attendanceContainer">
-                        <!-- On-Time Bar -->
-                        <div class="bar" data-attendance="on-time">
-                            <span class="label">On-Time</span>
-                            <div class="bar-fill">
-                                <div class="bar-fill-inner" style="background: linear-gradient(90deg, #1abc9c, #16a085);"></div>
-                            </div>
-                            <span class="count">0</span>
-                            <span class="percent">0%</span>
-                        </div>
-                        
-                        <!-- Late Bar -->
-                        <div class="bar" data-attendance="late">
-                            <span class="label">Late</span>
-                            <div class="bar-fill">
-                                <div class="bar-fill-inner" style="background: linear-gradient(90deg, #f39c12, #e67e22);"></div>
-                            </div>
-                            <span class="count">0</span>
-                            <span class="percent">0%</span>
-                        </div>
-                        
-                        <!-- Absent Bar -->
-                        <div class="bar" data-attendance="absent">
-                            <span class="label">Absent</span>
-                            <div class="bar-fill">
-                                <div class="bar-fill-inner" style="background: linear-gradient(90deg, #e74c3c, #c0392b);"></div>
-                            </div>
-                            <span class="count">0</span>
-                            <span class="percent">0%</span>
-                        </div>
+                    <div class="chart-wrapper">
+                        <canvas id="attendanceChart"></canvas>
                     </div>
                 </div>
 

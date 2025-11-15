@@ -236,7 +236,7 @@ main h1 {
     gap: 1.5rem;
 }
 
-/* Attendance Rate Bar Graph */
+/* Attendance Rate Pie Chart */
 .attendance-bargraph {
     background: var(--clr-white);
     padding: var(--card-padding);
@@ -251,69 +251,17 @@ main h1 {
     font-weight: 600;
 }
 
-/* Bar Container Styles */
-.bar-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1.2rem;
-}
-
-.bar {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.8rem;
-    background: var(--clr-light);
-    border-radius: 8px;
-    transition: background 0.2s ease;
-}
-
-.bar:hover {
-    background: #f0f0f0;
-}
-
-.bar .label {
-    min-width: 80px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--clr-dark);
-}
-
-.bar .bar-fill {
-    flex: 1;
-    height: 28px;
-    background: #e8e8e8;
-    border-radius: 14px;
-    overflow: hidden;
+.chart-wrapper {
     position: relative;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.bar .bar-fill-inner {
-    height: 100%;
-    width: 0;
-    border-radius: 14px;
-    transition: width 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+    height: 300px;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    padding-right: 8px;
+    justify-content: center;
 }
 
-.bar .count {
-    min-width: 45px;
-    text-align: center;
-    font-weight: 700;
-    color: var(--clr-dark);
-    font-size: 1rem;
-}
-
-.bar .percent {
-    min-width: 50px;
-    text-align: right;
-    font-weight: 600;
-    color: var(--clr-primary);
-    font-size: 0.95rem;
+#attendanceChart {
+    max-width: 100%;
+    max-height: 100%;
 }
 
 /* Leave Requests Card */
