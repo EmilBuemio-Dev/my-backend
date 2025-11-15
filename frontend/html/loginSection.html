@@ -142,6 +142,7 @@
       z-index: 1000;
       backdrop-filter: blur(5px);
       animation: fadeIn 0.3s ease;
+      overflow-y: auto;
     }
 
     .modal.show {
@@ -166,6 +167,7 @@
       align-items: stretch;
       animation: slideUp 0.4s ease;
       border: 1px solid rgba(255, 255, 255, 0.2);
+      margin: auto;
     }
 
     @keyframes slideUp {
@@ -258,7 +260,6 @@
       font-size: 1.2rem;
     }
 
-    /* Login Form Styles */
     .login-form {
       display: none;
     }
@@ -300,7 +301,7 @@
       gap: 1.2rem;
     }
 
-    input {
+    input, select {
       padding: 0.9rem 1rem;
       border: 2px solid #e0e0e0;
       border-radius: 8px;
@@ -308,7 +309,7 @@
       transition: all 0.3s ease;
     }
 
-    input:focus {
+    input:focus, select:focus {
       outline: none;
       border-color: var(--clr-primary);
       box-shadow: 0 0 0 3px rgba(19, 19, 21, 0.1);
@@ -317,6 +318,13 @@
     input:disabled {
       background: #f5f5f5;
       cursor: not-allowed;
+      color: #999;
+    }
+
+    input[readonly] {
+      background: #f5f5f5;
+      cursor: not-allowed;
+      color: var(--clr-primary);
     }
 
     .otp-row {
@@ -342,10 +350,15 @@
       box-shadow: 0 4px 15px rgba(19, 19, 21, 0.2);
     }
 
-    button[type="submit"]:hover,
-    button[type="button"]:hover {
+    button[type="submit"]:hover:not(:disabled),
+    button[type="button"]:hover:not(:disabled) {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(19, 19, 21, 0.3);
+    }
+
+    button[type="submit"]:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     .otp-row button[type="button"] {
@@ -356,12 +369,14 @@
       color: var(--clr-danger);
       font-size: 0.9rem;
       text-align: center;
+      margin: 0 !important;
     }
 
     .success {
       color: var(--clr-success);
       font-size: 0.9rem;
       text-align: center;
+      margin: 0 !important;
     }
 
     .register-text {
@@ -381,6 +396,44 @@
     .register-link:hover {
       color: var(--clr-success);
       text-decoration: underline;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.3rem;
+      font-weight: 600;
+      color: var(--clr-primary);
+      font-size: 0.95rem;
+    }
+
+    .form-group label .required {
+      color: var(--clr-danger);
+      margin-left: 0.2rem;
+    }
+
+    .form-group input {
+      padding: 0.85rem 0.95rem;
+      font-size: 0.95rem;
+    }
+
+    .form-group .feedback {
+      font-size: 0.85rem;
+      margin-top: 0.2rem;
+      min-height: 1.2rem;
+    }
+
+    .form-group .feedback.error {
+      color: var(--clr-danger);
+    }
+
+    .form-group .feedback.success {
+      color: var(--clr-success);
     }
 
     @media (max-width: 600px) {
@@ -503,7 +556,7 @@
         <p id="employeeError" class="error"></p>
         <p id="employeeSuccess" class="success"></p>
         <p class="register-text" style="text-align: center; margin-top: 1rem; font-size: 0.9rem;">
-          No account? <span id="employeeRegisterLink" class="register-link" style="color: var(--clr-primary); cursor: pointer; font-weight: 600;">Register here</span>
+          No account? <span id="employeeRegisterLink" class="register-link">Register here</span>
         </p>
       </div>
 
@@ -526,73 +579,68 @@
         <p id="clientError" class="error"></p>
         <p id="clientSuccess" class="success"></p>
         <p class="register-text" style="text-align: center; margin-top: 1rem; font-size: 0.9rem;">
-          No account? <span id="clientRegisterLink" class="register-link" style="color: var(--clr-primary); cursor: pointer; font-weight: 600;">Register here</span>
+          No account? <span id="clientRegisterLink" class="register-link">Register here</span>
         </p>
       </div>
     </div>
   </div>
 
-<div class="modal" id="registerModal">
-  <div class="modal-content">
-    <span class="close" id="closeRegister">&times;</span>
-    <h2>Employee Registration</h2>
+  <!-- Employee Registration Modal -->
+  <div class="modal" id="registerModal">
+    <div class="modal-content">
+      <span class="close" id="closeRegister">&times;</span>
+      <h2>Employee Registration</h2>
 
-    <form id="registerForm">
-      <div style="display: flex; flex-direction: column; gap: 1rem;">
-        <!-- Badge Number - First Field -->
-        <div>
-          <label for="badgeNo" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--clr-primary);">SSS NR (00-0000000-0) <span style="color: var(--clr-danger);">*</span></label>
+      <form id="registerForm">
+        <!-- Badge Number -->
+        <div class="form-group">
+          <label for="badgeNo">SSS NR (00-0000000-0) <span class="required">*</span></label>
           <input 
             type="text" 
             id="badgeNo" 
             placeholder="Enter SSS NR (00-0000000-0)" 
             required 
             maxlength="12"
-            style="font-size: 1rem; font-weight: 600;"
           >
-          <p id="badgeNoError" class="error" style="margin-top: 0.5rem;"></p>
-          <p id="badgeNoSuccess" class="success" style="margin-top: 0.5rem;"></p>
+          <div id="badgeNoFeedback" class="feedback"></div>
         </div>
 
-        <!-- Family Name - Read Only -->
-        <div>
-          <label for="familyName" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--clr-primary);">Family Name <span style="color: var(--clr-danger);">*</span></label>
+        <!-- Family Name -->
+        <div class="form-group">
+          <label for="familyName">Family Name <span class="required">*</span></label>
           <input 
             type="text" 
             id="familyName" 
             placeholder="Family Name" 
             readonly
-            style="background-color: #f5f5f5; cursor: not-allowed;"
           >
         </div>
 
-        <!-- First Name - Read Only -->
-        <div>
-          <label for="firstName" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--clr-primary);">First Name <span style="color: var(--clr-danger);">*</span></label>
+        <!-- First Name -->
+        <div class="form-group">
+          <label for="firstName">First Name <span class="required">*</span></label>
           <input 
             type="text" 
             id="firstName" 
             placeholder="First Name" 
             readonly
-            style="background-color: #f5f5f5; cursor: not-allowed;"
           >
         </div>
 
-        <!-- Middle Name - Read Only -->
-        <div>
-          <label for="middleName" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--clr-primary);">Middle Name</label>
+        <!-- Middle Name -->
+        <div class="form-group">
+          <label for="middleName">Middle Name</label>
           <input 
             type="text" 
             id="middleName" 
             placeholder="Middle Name" 
             readonly
-            style="background-color: #f5f5f5; cursor: not-allowed;"
           >
         </div>
 
         <!-- Email -->
-        <div>
-          <label for="registerEmail" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--clr-primary);">Email <span style="color: var(--clr-danger);">*</span></label>
+        <div class="form-group">
+          <label for="registerEmail">Email <span class="required">*</span></label>
           <input 
             type="email" 
             id="registerEmail" 
@@ -600,15 +648,14 @@
             required
           >
         </div>
-      </div>
 
-      <button type="submit" style="margin-top: 1.5rem;" id="registerSubmitBtn" disabled>
-        Register
-      </button>
-      <p id="registerFormError" class="error" style="margin-top: 0.5rem; text-align: center;"></p>
-    </form>
+        <button type="submit" id="registerSubmitBtn" disabled>
+          Register
+        </button>
+        <div id="registerFormFeedback" class="feedback"></div>
+      </form>
+    </div>
   </div>
-</div>
 
   <!-- Change Password Modal -->
   <div class="modal" id="changePasswordModal">
@@ -986,13 +1033,11 @@
             return;
           }
 
-          // Store data locally
           localStorage.setItem("token", data.token);
           localStorage.setItem("name", data.name);
           localStorage.setItem("role", data.role);
           localStorage.setItem("employeeId", data.employeeId || "N/A");
 
-          // Check if password change required
           if (data.requirePasswordChange) {
             changePasswordModal.classList.add("show");
             return;
@@ -1049,148 +1094,157 @@
         }
       });
 
-            // ===== EMPLOYEE REGISTRATION WITH BADGE LOOKUP =====
-        const registerModal = document.getElementById("registerModal");
-        const closeRegister = document.getElementById("closeRegister");
-        const employeeRegisterLink = document.getElementById("employeeRegisterLink");
-        const registerForm = document.getElementById("registerForm");
-        const badgeNoInput = document.getElementById("badgeNo");
-        const familyNameInput = document.getElementById("familyName");
-        const firstNameInput = document.getElementById("firstName");
-        const middleNameInput = document.getElementById("middleName");
-        const registerEmailInput = document.getElementById("registerEmail");
-        const badgeNoErrorP = document.getElementById("badgeNoError");
-        const badgeNoSuccessP = document.getElementById("badgeNoSuccess");
-        const registerFormErrorP = document.getElementById("registerFormError");
-        const registerSubmitBtn = document.getElementById("registerSubmitBtn");
+      // ===== EMPLOYEE REGISTRATION WITH BADGE LOOKUP =====
+      const registerModal = document.getElementById("registerModal");
+      const closeRegister = document.getElementById("closeRegister");
+      const employeeRegisterLink = document.getElementById("employeeRegisterLink");
+      const registerForm = document.getElementById("registerForm");
+      const badgeNoInput = document.getElementById("badgeNo");
+      const familyNameInput = document.getElementById("familyName");
+      const firstNameInput = document.getElementById("firstName");
+      const middleNameInput = document.getElementById("middleName");
+      const registerEmailInput = document.getElementById("registerEmail");
+      const badgeNoFeedback = document.getElementById("badgeNoFeedback");
+      const registerFormFeedback = document.getElementById("registerFormFeedback");
+      const registerSubmitBtn = document.getElementById("registerSubmitBtn");
 
-        // Badge number formatting
-        badgeNoInput.addEventListener("input", function() {
-          this.value = this.value
-            .replace(/[^0-9]/g, "")
-            .replace(/(\d{2})(\d{1,7})(\d{0,1}).*/, function(_, p1, p2, p3) {
-              return p3 ? `${p1}-${p2}-${p3}` : p2 ? `${p1}-${p2}` : p1;
-            });
-        });
+      // Badge number blur event - lookup archive
+      badgeNoInput.addEventListener("blur", async () => {
+        badgeNoFeedback.textContent = "";
+        badgeNoFeedback.className = "feedback";
+        registerFormFeedback.textContent = "";
+        registerFormFeedback.className = "feedback";
+        familyNameInput.value = "";
+        firstNameInput.value = "";
+        middleNameInput.value = "";
+        registerSubmitBtn.disabled = true;
 
-        // Badge number blur event - lookup archive
-        badgeNoInput.addEventListener("blur", async () => {
-          badgeNoErrorP.textContent = "";
-          badgeNoSuccessP.textContent = "";
-          registerFormErrorP.textContent = "";
-          familyNameInput.value = "";
-          firstNameInput.value = "";
-          middleNameInput.value = "";
-          registerSubmitBtn.disabled = true;
+        const badgeNo = badgeNoInput.value.trim();
 
-          const badgeNo = badgeNoInput.value.trim();
+        if (!badgeNo) {
+          badgeNoFeedback.textContent = "Please enter a badge number.";
+          badgeNoFeedback.className = "feedback error";
+          return;
+        }
 
-          if (!badgeNo) {
-            badgeNoErrorP.textContent = "Please enter a badge number.";
+        try {
+          console.log("Searching for badge number:", badgeNo);
+          
+          const res = await fetch(`https://www.mither3security.com/api/archives/search?badgeNo=${encodeURIComponent(badgeNo)}`);
+          const data = await res.json();
+
+          console.log("Archive search response:", data, "Status:", res.status);
+
+          if (!res.ok || !data || data.length === 0) {
+            badgeNoFeedback.textContent = "❌ Badge number not found in archive. Cannot register.";
+            badgeNoFeedback.className = "feedback error";
+            registerSubmitBtn.disabled = true;
             return;
           }
 
+          // Badge found - auto-fill the fields
+          const archive = Array.isArray(data) ? data[0] : data;
+          
+          familyNameInput.value = archive.familyName || "";
+          firstNameInput.value = archive.firstName || "";
+          middleNameInput.value = archive.middleName || "";
+
+          badgeNoFeedback.textContent = "✅ Badge number verified! Fill in your email to complete registration.";
+          badgeNoFeedback.className = "feedback success";
+          registerSubmitBtn.disabled = false;
+          registerEmailInput.focus();
+        } catch (err) {
+          console.error("Badge lookup error:", err);
+          badgeNoFeedback.textContent = "⚠️ Error verifying badge number. Please try again.";
+          badgeNoFeedback.className = "feedback error";
+          registerSubmitBtn.disabled = true;
+        }
+      });
+
+      // Open register modal
+      if (employeeRegisterLink) {
+        employeeRegisterLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          registerModal.classList.add("show");
+          registerForm.reset();
+          badgeNoInput.focus();
+          badgeNoFeedback.textContent = "";
+          badgeNoFeedback.className = "feedback";
+          registerFormFeedback.textContent = "";
+          registerFormFeedback.className = "feedback";
+          registerSubmitBtn.disabled = true;
+        });
+      }
+
+      // Close register modal
+      if (closeRegister) {
+        closeRegister.addEventListener("click", () => {
+          registerModal.classList.remove("show");
+        });
+      }
+
+      window.addEventListener("click", (e) => {
+        if (e.target === registerModal) {
+          registerModal.classList.remove("show");
+        }
+        if (e.target === changePasswordModal) {
+          changePasswordModal.classList.remove("show");
+        }
+      });
+
+      // Register form submission
+      if (registerForm) {
+        registerForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          registerFormFeedback.textContent = "";
+          registerFormFeedback.className = "feedback";
+
+          const familyName = familyNameInput.value.trim();
+          const firstName = firstNameInput.value.trim();
+          const middleName = middleNameInput.value.trim();
+          const email = registerEmailInput.value.trim();
+          const badgeNo = badgeNoInput.value.trim();
+
+          if (!familyName || !firstName || !email || !badgeNo) {
+            registerFormFeedback.textContent = "❌ Please fill in all required fields.";
+            registerFormFeedback.className = "feedback error";
+            return;
+          }
+
+          const data = { familyName, firstName, middleName, email, badgeNo };
+
           try {
-            const res = await fetch(`https://www.mither3security.com/api/archives/search?badgeNo=${encodeURIComponent(badgeNo)}`);
-            const data = await res.json();
+            const res = await fetch("https://www.mither3security.com/api/registers", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
+            });
+
+            console.log("Response status:", res.status);
+            const result = await res.json();
+            console.log("Response body:", result);
 
             if (!res.ok) {
-              badgeNoErrorP.textContent = "❌ Badge number not found in archive. Cannot register.";
-              registerSubmitBtn.disabled = true;
+              registerFormFeedback.textContent = result.msg || "❌ Registration failed!";
+              registerFormFeedback.className = "feedback error";
               return;
             }
 
-            // Badge found - auto-fill the fields
-            familyNameInput.value = data[0]?.familyName || "";
-            firstNameInput.value = data[0]?.firstName || "";
-            middleNameInput.value = data[0]?.middleName || "";
-
-            badgeNoSuccessP.textContent = "✅ Badge number verified! Fill in your email to complete registration.";
-            registerSubmitBtn.disabled = false;
-            registerEmailInput.focus();
-          } catch (err) {
-            console.error("Badge lookup error:", err);
-            badgeNoErrorP.textContent = "⚠️ Error verifying badge number. Please try again.";
-            registerSubmitBtn.disabled = true;
-          }
-        });
-
-        // Open register modal
-        if (employeeRegisterLink) {
-          employeeRegisterLink.addEventListener("click", (e) => {
-            e.preventDefault();
-            registerModal.classList.add("show");
+            registerFormFeedback.textContent = "✅ Registration successful! You can now log in.";
+            registerFormFeedback.className = "feedback success";
             registerForm.reset();
-            badgeNoInput.focus();
-            badgeNoErrorP.textContent = "";
-            badgeNoSuccessP.textContent = "";
-            registerFormErrorP.textContent = "";
             registerSubmitBtn.disabled = true;
-          });
-        }
-
-        // Close register modal
-        if (closeRegister) {
-          closeRegister.addEventListener("click", () => {
-            registerModal.classList.remove("show");
-          });
-        }
-
-        window.addEventListener("click", (e) => {
-          if (e.target === registerModal) {
-            registerModal.classList.remove("show");
+            
+            setTimeout(() => {
+              registerModal.classList.remove("show");
+            }, 2000);
+          } catch (err) {
+            console.error("Register error:", err);
+            registerFormFeedback.textContent = "⚠️ Server error during registration. Please try again.";
+            registerFormFeedback.className = "feedback error";
           }
         });
-
-        // Register form submission
-        if (registerForm) {
-          registerForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            registerFormErrorP.textContent = "";
-
-            const familyName = familyNameInput.value.trim();
-            const firstName = firstNameInput.value.trim();
-            const middleName = middleNameInput.value.trim();
-            const email = registerEmailInput.value.trim();
-            const badgeNo = badgeNoInput.value.trim();
-
-            if (!familyName || !firstName || !email || !badgeNo) {
-              registerFormErrorP.textContent = "❌ Please fill in all required fields.";
-              return;
-            }
-
-            const data = { familyName, firstName, middleName, email, badgeNo };
-
-            try {
-              const res = await fetch("https://www.mither3security.com/api/registers", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data),
-              });
-
-              console.log("Response status:", res.status);
-              const result = await res.json();
-              console.log("Response body:", result);
-
-              if (!res.ok) {
-                registerFormErrorP.textContent = result.msg || "❌ Registration failed!";
-                return;
-              }
-
-              registerFormErrorP.textContent = "✅ Registration successful! You can now log in.";
-              registerForm.reset();
-              registerSubmitBtn.disabled = true;
-              
-              setTimeout(() => {
-                registerModal.classList.remove("show");
-                badgeNoInput.focus();
-              }, 2000);
-            } catch (err) {
-              console.error("Register error:", err);
-              registerFormErrorP.textContent = "⚠️ Server error during registration. Please try again.";
-            }
-          });
-        }
+      }
 
       // ==================== CLIENT LOGIN ====================
       const clientForm = document.getElementById("loginFormClient");
@@ -1272,7 +1326,6 @@
             return;
           }
 
-          // Save full client info + token in localStorage
           const userData = {
             _id: data._id,
             name: data.name,
@@ -1301,7 +1354,6 @@
       const clientRegisterErrorP = document.getElementById("clientRegisterError");
       const clientRegisterSuccessP = document.getElementById("clientRegisterSuccess");
 
-      // Load branches
       async function loadClientBranches() {
         try {
           const res = await fetch("https://www.mither3security.com/api/branches-management");
