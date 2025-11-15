@@ -86,49 +86,77 @@ async function loadDashboardStats() {
 // LOAD COMPLAINTS RATINGS BAR GRAPH
 // ============================================
 
-async function loadComplaintRatingsBarGraph() {
+// ============================================
+// LOAD ATTENDANCE RATE BAR GRAPH
+// ============================================
+
+async function loadAttendanceRateBarGraph() {
   try {
-    const res = await fetch("https://www.mither3security.com/tickets", {
+    const res = await fetch("https://www.mither3security.com/attendance/all", {
       headers: { "Authorization": `Bearer ${token}` }
     });
-    if (!res.ok) throw new Error("Failed to fetch complaints");
+    if (!res.ok) throw new Error("Failed to fetch attendance records");
 
-    const tickets = await res.json();
-    const ratingCounts = {1:0, 2:0, 3:0, 4:0, 5:0};
+    const records = await res.json();
     
-    tickets.forEach(t => {
-      if(t.rating && ratingCounts[t.rating] !== undefined) {
-        ratingCounts[t.rating]++;
+    // Count attendance statuses
+    const attendanceCounts = {
+      onTime: 0,
+      late: 0,
+      absent: 0
+    };
+
+    records.forEach(record => {
+      if (!record.status) return;
+      
+      const status = record.status.toLowerCase();
+      if (status.includes("absent")) {
+        attendanceCounts.absent++;
+      } else if (status.includes("late")) {
+        attendanceCounts.late++;
+      } else if (status.includes("on-time") || status === "on-time") {
+        attendanceCounts.onTime++;
+      } else {
+        // Default to on-time for valid check-ins without "late" or "absent"
+        attendanceCounts.onTime++;
       }
     });
 
-    // Array in order: 5 stars, 4 stars, 3 stars, 2 stars, 1 star
-    const ratings = [
-      ratingCounts[5],
-      ratingCounts[4],
-      ratingCounts[3],
-      ratingCounts[2],
-      ratingCounts[1]
-    ];
+    const total = records.length || 1; // Avoid division by zero
 
-    const maxRating = Math.max(...ratings, 1); // Avoid division by zero
+    // Calculate percentages
+    const onTimePercent = Math.round((attendanceCounts.onTime / total) * 100);
+    const latePercent = Math.round((attendanceCounts.late / total) * 100);
+    const absentPercent = Math.round((attendanceCounts.absent / total) * 100);
 
     setTimeout(() => {
-      document.querySelectorAll('.bar').forEach((bar, index) => {
-        const fillInner = bar.querySelector('.bar-fill-inner');
-        const countSpan = bar.querySelector('.count');
-        const width = (ratings[index] / maxRating) * 100;
-        
-        // Update count display
-        countSpan.textContent = ratings[index];
-        
-        // Animate bar width
-        fillInner.style.width = width + '%';
-      });
+      // Update On-Time bar
+      const onTimeBar = document.querySelector('[data-attendance="on-time"] .bar-fill-inner');
+      const onTimeCount = document.querySelector('[data-attendance="on-time"] .count');
+      const onTimePercSpan = document.querySelector('[data-attendance="on-time"] .percent');
+      if (onTimeBar) onTimeBar.style.width = onTimePercent + '%';
+      if (onTimeCount) onTimeCount.textContent = attendanceCounts.onTime;
+      if (onTimePercSpan) onTimePercSpan.textContent = onTimePercent + '%';
+
+      // Update Late bar
+      const lateBar = document.querySelector('[data-attendance="late"] .bar-fill-inner');
+      const lateCount = document.querySelector('[data-attendance="late"] .count');
+      const latePercSpan = document.querySelector('[data-attendance="late"] .percent');
+      if (lateBar) lateBar.style.width = latePercent + '%';
+      if (lateCount) lateCount.textContent = attendanceCounts.late;
+      if (latePercSpan) latePercSpan.textContent = latePercent + '%';
+
+      // Update Absent bar
+      const absentBar = document.querySelector('[data-attendance="absent"] .bar-fill-inner');
+      const absentCount = document.querySelector('[data-attendance="absent"] .count');
+      const absentPercSpan = document.querySelector('[data-attendance="absent"] .percent');
+      if (absentBar) absentBar.style.width = absentPercent + '%';
+      if (absentCount) absentCount.textContent = attendanceCounts.absent;
+      if (absentPercSpan) absentPercSpan.textContent = absentPercent + '%';
     }, 300);
 
   } catch (err) {
-    console.error("Error loading complaints rating bar graph:", err);
+    console.error("Error loading attendance rate bar graph:", err);
   }
 }
 
@@ -441,52 +469,119 @@ window.addEventListener("click", e => {
 // LOAD ATTENDANCE ALERTS (NOTIFICATIONS)
 // ============================================
 
+// ============================================
+// LOAD ATTENDANCE ALERTS & COMPLAINTS (NOTIFICATIONS)
+// ============================================
+
 async function loadAttendanceAlerts() {
   try {
-    const res = await fetch("https://www.mither3security.com/attendance/all", {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!res.ok) throw new Error("Failed to fetch attendance");
-
-    const records = await res.json();
     const notifList = document.querySelector(".notificationslist");
     notifList.innerHTML = "";
 
     const alerts = [];
 
-    records.forEach(record => {
-      const checkin = new Date(record.checkinTime);
-      const checkout = record.checkoutTime ? new Date(record.checkoutTime) : null;
-      const shiftStart = new Date(checkin); 
-      shiftStart.setHours(7,0,0,0);
-      const shiftEnd = new Date(checkin); 
-      shiftEnd.setHours(19,0,0,0);
+    // ===== LOAD ATTENDANCE ALERTS =====
+    try {
+      const attendanceRes = await fetch("https://www.mither3security.com/attendance/all", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (attendanceRes.ok) {
+        const records = await attendanceRes.json();
+        records.forEach(record => {
+          const checkin = new Date(record.checkinTime);
+          const checkout = record.checkoutTime ? new Date(record.checkoutTime) : null;
+          const shiftStart = new Date(checkin); 
+          shiftStart.setHours(7, 0, 0, 0);
+          const shiftEnd = new Date(checkin); 
+          shiftEnd.setHours(19, 0, 0, 0);
 
-      if (checkin > shiftStart && (checkin - shiftStart)/60000 > 5) {
-        alerts.push({ name: record.employeeName, msg: `Late Time-In at ${checkin.toLocaleTimeString()}` });
+          if (checkin > shiftStart && (checkin - shiftStart) / 60000 > 5) {
+            alerts.push({ 
+              type: "attendance",
+              name: record.employeeName, 
+              msg: `Late Time-In at ${checkin.toLocaleTimeString()}`,
+              severity: "warning"
+            });
+          }
+          if (checkout && checkout < shiftEnd) {
+            alerts.push({ 
+              type: "attendance",
+              name: record.employeeName, 
+              msg: `Early Time-Out at ${checkout.toLocaleTimeString()}`,
+              severity: "warning"
+            });
+          }
+        });
       }
-      if (checkout && checkout < shiftEnd) {
-        alerts.push({ name: record.employeeName, msg: `Early Time-Out at ${checkout.toLocaleTimeString()}` });
-      }
-    });
+    } catch (err) {
+      console.error("Error loading attendance alerts:", err);
+    }
 
+    // ===== LOAD COMPLAINTS/TICKETS =====
+    try {
+      const ticketRes = await fetch("https://www.mither3security.com/tickets", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (ticketRes.ok) {
+        const tickets = await ticketRes.json();
+        
+        // Filter for pending and urgent complaints
+        const pendingTickets = tickets.filter(t => 
+          t.status === "Pending" || t.creatorRole === "client"
+        );
+
+        pendingTickets.forEach(ticket => {
+          const statusLabel = ticket.creatorRole === "client" ? "Urgent" : ticket.status;
+          alerts.push({
+            type: "complaint",
+            name: ticket.creatorName || "Unknown",
+            msg: `${statusLabel} Complaint: ${ticket.subject || "No subject"}`,
+            severity: ticket.creatorRole === "client" ? "urgent" : "info",
+            ticketId: ticket._id
+          });
+        });
+      }
+    } catch (err) {
+      console.error("Error loading complaints:", err);
+    }
+
+    // ===== RENDER ALL ALERTS =====
     if (alerts.length > 0) {
-      alerts.forEach(a => {
+      alerts.forEach((alert, index) => {
         const div = document.createElement("div");
         div.style.padding = "0.8rem";
         div.style.borderBottom = "1px solid #e0e0e0";
-        div.innerHTML = `
-          <p style="margin: 0; color: var(--clr-dark); font-size: 0.85rem;"><b>${a.name}</b> - ${a.msg}</p>
-        `;
+        div.style.borderLeft = alert.severity === "urgent" ? "4px solid #e74c3c" : 
+                                 alert.severity === "warning" ? "4px solid #f39c12" : "4px solid #3498db";
+        
+        let html = `<p style="margin: 0; color: var(--clr-dark); font-size: 0.85rem;"><b>${alert.name}</b> - ${alert.msg}</p>`;
+        
+        // Add view button for complaints
+        if (alert.type === "complaint" && alert.ticketId) {
+          html += `<button class="view-alert-btn" data-id="${alert.ticketId}" style="margin-top: 0.5rem; padding: 0.4rem 0.8rem; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">View</button>`;
+        }
+        
+        div.innerHTML = html;
         notifList.appendChild(div);
       });
+
+      // Add event listeners for view buttons
+      notifList.querySelectorAll(".view-alert-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          openTicketModal(btn.dataset.id);
+        });
+      });
+
       const notifDot = document.getElementById("notifDot");
       if (notifDot) notifDot.classList.add('show');
     } else {
       notifList.innerHTML = '<p style="color: #7d8da1; text-align: center; padding: 2rem;">No new notifications</p>';
+      const notifDot = document.getElementById("notifDot");
+      if (notifDot) notifDot.classList.remove('show');
     }
   } catch (err) {
-    console.error("Error loading attendance alerts:", err);
+    console.error("Error loading notifications:", err);
     const notifList = document.querySelector(".notificationslist");
     notifList.innerHTML = '<p style="color: #7d8da1; text-align: center; padding: 2rem;">Error loading notifications</p>';
   }
@@ -584,7 +679,7 @@ document.querySelectorAll('.theme-toggler span').forEach(span => {
 
 document.addEventListener("DOMContentLoaded", () => {
   loadDashboardStats();
-  loadComplaintRatingsBarGraph();
+  loadAttendanceRateBarGraph();  
   loadComplaintsChart();
   loadTodayComplaints(); 
   loadAttendanceAlerts();

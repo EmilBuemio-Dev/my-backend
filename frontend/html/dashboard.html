@@ -15,7 +15,7 @@
             <div class="top">
                 <div class="logo">
                     <img src="/image/logo.png" alt="Company Logo"
-               style="height:30px; vertical-align:middle; margin-right:2px; margin-bottom:5px;">
+                        style="height:30px; vertical-align:middle; margin-right:2px; margin-bottom:5px;">
                     <h2><span class="Company">MITHER3</span></h2>
                 </div>
             </div>
@@ -114,48 +114,44 @@
                 </div>
             </div>
 
-            <!-- Dashboard Stats -->
-            <div class="dashboard-stats">
-                <div class="complaints-bargraph">
-                    <h2>Complaints Ratings</h2>
-                    <div class="bar-container" id="ratingsContainer">
-                        <div class="bar" data-rating="5">
-                            <span class="label">5 Stars</span>
-                            <div class="bar-fill">
-                                <div class="bar-fill-inner"></div>
-                            </div>
-                            <span class="count">0</span>
-                        </div>
-                        <div class="bar" data-rating="4">
-                            <span class="label">4 Stars</span>
-                            <div class="bar-fill">
-                                <div class="bar-fill-inner"></div>
-                            </div>
-                            <span class="count">0</span>
-                        </div>
-                        <div class="bar" data-rating="3">
-                            <span class="label">3 Stars</span>
-                            <div class="bar-fill">
-                                <div class="bar-fill-inner"></div>
-                            </div>
-                            <span class="count">0</span>
-                        </div>
-                        <div class="bar" data-rating="2">
-                            <span class="label">2 Stars</span>
-                            <div class="bar-fill">
-                                <div class="bar-fill-inner"></div>
-                            </div>
-                            <span class="count">0</span>
-                        </div>
-                        <div class="bar" data-rating="1">
-                            <span class="label">1 Star</span>
-                            <div class="bar-fill">
-                                <div class="bar-fill-inner"></div>
-                            </div>
-                            <span class="count">0</span>
-                        </div>
-                    </div>
+<!-- Replace the Complaints Ratings section with this: -->
+
+<div class="dashboard-stats">
+    <div class="attendance-bargraph">
+        <h2>Attendance Rate</h2>
+        <div class="bar-container" id="attendanceContainer">
+            <!-- On-Time Bar -->
+            <div class="bar" data-attendance="on-time">
+                <span class="label">On-Time</span>
+                <div class="bar-fill">
+                    <div class="bar-fill-inner" style="background: linear-gradient(90deg, #1abc9c, #16a085);"></div>
                 </div>
+                <span class="count">0</span>
+                <span class="percent">0%</span>
+            </div>
+            
+            <!-- Late Bar -->
+            <div class="bar" data-attendance="late">
+                <span class="label">Late</span>
+                <div class="bar-fill">
+                    <div class="bar-fill-inner" style="background: linear-gradient(90deg, #f39c12, #e67e22);"></div>
+                </div>
+                <span class="count">0</span>
+                <span class="percent">0%</span>
+            </div>
+            
+            <!-- Absent Bar -->
+            <div class="bar" data-attendance="absent">
+                <span class="label">Absent</span>
+                <div class="bar-fill">
+                    <div class="bar-fill-inner" style="background: linear-gradient(90deg, #e74c3c, #c0392b);"></div>
+                </div>
+                <span class="count">0</span>
+                <span class="percent">0%</span>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 <!-- Leave Requests Section -->

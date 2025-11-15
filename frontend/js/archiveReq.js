@@ -310,7 +310,7 @@ function viewRecord(id) {
 
   document.getElementById("modalBody").innerHTML = `
     <p><strong>Name:</strong> ${record.familyName ? `${record.familyName}, ${record.firstName || ""} ${record.middleName || ""}`.trim() : "N/A"}</p>
-    <p><strong>Badge No:</strong> ${formatBadgeNo(record.badgeNo) || "N/A"}</p>
+    <p><strong>Badge No:</strong> ${formatBadgeNumber(record.badgeNo) || "N/A"}</p>
     <p><strong>Position:</strong> ${record.position || "N/A"}</p>
     <p><strong>Status:</strong> ${record.status || "Pending"}</p>
     <p><strong>Date Archived:</strong> ${record.createdAt ? new Date(record.createdAt).toLocaleString() : "N/A"}</p>

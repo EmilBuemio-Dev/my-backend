@@ -58,6 +58,16 @@ const viewModal = document.getElementById("viewModal");
 const detailsContainer = document.getElementById("detailsContainer");
 
 // ===== CLIENT MANAGEMENT =====
+// ===== FUNCTION: Get Today's Date in YYYY-MM-DD Format =====
+function getTodayDate() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+// ===== CLIENT MANAGEMENT =====
 let editMode = false; // ✅ track mode
 
 const editBtn = document.getElementById("editBtn");
@@ -65,6 +75,8 @@ editBtn?.addEventListener("click", async () => {
   if (!editMode) {
     editMode = true;
     editBtn.textContent = "Save";
+    const minDate = getTodayDate(); // Get today's date as minimum
+    
     Array.from(branchList.children).forEach(row => {
       const salaryCell = row.querySelector(".salary-cell");
       const expCell = row.querySelector(".exp-cell");
@@ -74,7 +86,8 @@ editBtn?.addEventListener("click", async () => {
       }
       if (expCell) {
         const val = expCell.textContent.trim() === "N/A" ? "" : expCell.textContent.trim();
-        expCell.innerHTML = `<input type="date" class="exp-input" value="${val}">`;
+        // ✅ Add min attribute to disable past dates
+        expCell.innerHTML = `<input type="date" class="exp-input" value="${val}" min="${minDate}">`;
       }
       const actionCell = row.querySelector(".action-cell");
       if (actionCell) {
