@@ -127,10 +127,19 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!res.ok) throw new Error(data.message || "Failed to check-in");
 
       checkinResultDiv.innerHTML = `
-        <p><strong>${data.message}</strong></p>
-        <p><strong>Employee:</strong> ${data.record.employeeName}</p>
-        <p>Check-in Time: ${new Date(data.record.checkinTime).toLocaleString()}</p>
+        <div style="background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 4px;">
+          <p style="margin: 0 0 10px 0;"><strong>✅ ${data.message}</strong></p>
+          <p style="margin: 5px 0;"><strong>Employee:</strong> ${data.record.employeeName}</p>
+          <p style="margin: 5px 0;"><strong>Check-in Time:</strong> ${new Date(data.record.checkinTime).toLocaleString()}</p>
+          <p style="margin: 10px 0 0 0; font-size: 12px; color: #0c5460; background-color: #d1ecf1; padding: 8px; border-radius: 3px; border-left: 4px solid #0c5460;">
+            ⚠️ <strong>Notice:</strong> You can only time-in once per day. Your next time-in will be available tomorrow.
+          </p>
+        </div>
       `;
+      capturedImageInput.value = "";
+      openCameraBtn.disabled = true;
+      openCameraBtn.style.opacity = "0.5";
+      openCameraBtn.style.cursor = "not-allowed";
     } catch (err) {
       console.error("❌ Check-in submission error:", err);
       alert(err.message);
@@ -162,15 +171,55 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!res.ok) throw new Error(data.message || "Failed to check-out");
 
       checkoutResultDiv.innerHTML = `
-        <p><strong>${data.message}</strong></p>
-        <p><strong>Employee:</strong> ${data.record.employeeName}</p>
-        <p>Check-out Time: ${new Date(data.record.checkoutTime).toLocaleString()}</p>
+        <div style="background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 4px;">
+          <p style="margin: 0 0 10px 0;"><strong>✅ ${data.message}</strong></p>
+          <p style="margin: 5px 0;"><strong>Employee:</strong> ${data.record.employeeName}</p>
+          <p style="margin: 5px 0;"><strong>Check-out Time:</strong> ${new Date(data.record.checkoutTime).toLocaleString()}</p>
+          <p style="margin: 10px 0 0 0; font-size: 12px; color: #0c5460; background-color: #d1ecf1; padding: 8px; border-radius: 3px; border-left: 4px solid #0c5460;">
+            ⚠️ <strong>Notice:</strong> Your duty has been recorded. You can time-out only once per day.
+          </p>
+        </div>
       `;
     } catch (err) {
       console.error("❌ Checkout submission error:", err);
       alert(err.message);
     }
   });
+
+  // ==== CHECK IF ALREADY CHECKED IN TODAY ====
+  async function checkTodayCheckin() {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const res = await fetch("https://www.mither3security.com/today-checkin", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.hasCheckedIn) {
+          if (openCameraBtn) {
+            openCameraBtn.disabled = true;
+            openCameraBtn.style.opacity = "0.5";
+            openCameraBtn.style.cursor = "not-allowed";
+          }
+          if (checkinResultDiv) {
+            checkinResultDiv.innerHTML = `
+              <div style="background-color: #fff3cd; border: 1px solid #ffc107; color: #856404; padding: 12px; border-radius: 4px;">
+                <strong>ℹ️ Notice:</strong> You have already timed-in today. You can only time-in once per day.
+              </div>
+            `;
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error checking today's check-in:", err);
+    }
+  }
+
+  // Check on page load
+  checkTodayCheckin();
 
   // ==== TICKET SUBMISSION UPDATE ====
   const ticketForm = document.getElementById('ticketForm');
