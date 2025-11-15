@@ -30,21 +30,23 @@ const allowedFields = [
 ];
 
 // ===== FORMAT BADGE NUMBER =====
-        const badgeInput = document.getElementById('approvedBadgeNo');
+function formatBadgeNumber(value) {
+  return value
+    .replace(/[^0-9]/g, "")
+    .replace(/(\d{2})(\d{1,7})(\d{0,1}).*/, function(_, p1, p2, p3) {
+      return p3 ? `${p1}-${p2}-${p3}` : p2 ? `${p1}-${p2}` : p1;
+    });
+}
 
-        // Function to format badge number
-        function formatBadgeNumber(value) {
-            return value
-                .replace(/[^0-9]/g, "")
-                .replace(/(\d{2})(\d{1,7})(\d{0,1}).*/, function(_, p1, p2, p3) {
-                    return p3 ? `${p1}-${p2}-${p3}` : p2 ? `${p1}-${p2}` : p1;
-                });
-        }
-
-        // Listen for changes and format accordingly
-        badgeInput.addEventListener('input', function() {
-            this.value = formatBadgeNumber(this.value);
-        });
+// Initialize badge formatting - works for existing and dynamically created inputs
+function initBadgeFormatting() {
+  // Use event delegation on document to catch all badge inputs (existing and future)
+  document.addEventListener('input', function(e) {
+    if (e.target.id === 'badgeNo' || e.target.name === 'badgeNo') {
+      e.target.value = formatBadgeNumber(e.target.value);
+    }
+  }, true); // Use capture phase to ensure it fires
+}
 
 
 async function loadArchives() {
@@ -799,4 +801,5 @@ document.addEventListener("DOMContentLoaded", () => {
   initEducationTable();
   initProfilePreview();
   initSubmitHandler();
+  initBadgeFormatting();
 });
