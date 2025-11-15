@@ -302,6 +302,7 @@ function viewRecord(id) {
   openModal();
 }
 
+
 function openModal() { document.getElementById("detailsModal").style.display = "block"; }
 function closeModal() { document.getElementById("detailsModal").style.display = "none"; }
 

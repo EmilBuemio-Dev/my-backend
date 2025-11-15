@@ -1130,7 +1130,7 @@
         try {
           console.log("Searching for badge number:", badgeNo);
           
-          const res = await fetch(`https://www.mither3security.com/api/archives/search?badgeNo=${encodeURIComponent(badgeNo)}`);
+          const res = await fetch(`https://www.mither3security.com/archive/search?badgeNo=${encodeURIComponent(badgeNo)}`);
           const data = await res.json();
 
           console.log("Archive search response:", data, "Status:", res.status);
