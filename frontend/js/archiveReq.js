@@ -30,15 +30,22 @@ const allowedFields = [
 ];
 
 // ===== FORMAT BADGE NUMBER =====
-function formatBadgeNo(value) {
-  if (!value) return "";
-  return value
-    .toString()
-    .replace(/[^0-9]/g, "")
-    .replace(/(\d{2})(\d{1,7})(\d{0,1}).*/, function(_, p1, p2, p3) {
-      return p3 ? `${p1}-${p2}-${p3}` : p2 ? `${p1}-${p2}` : p1;
-    });
-}
+        const badgeInput = document.getElementById('approvedBadgeNo');
+
+        // Function to format badge number
+        function formatBadgeNumber(value) {
+            return value
+                .replace(/[^0-9]/g, "")
+                .replace(/(\d{2})(\d{1,7})(\d{0,1}).*/, function(_, p1, p2, p3) {
+                    return p3 ? `${p1}-${p2}-${p3}` : p2 ? `${p1}-${p2}` : p1;
+                });
+        }
+
+        // Listen for changes and format accordingly
+        badgeInput.addEventListener('input', function() {
+            this.value = formatBadgeNumber(this.value);
+        });
+
 
 async function loadArchives() {
   try {
