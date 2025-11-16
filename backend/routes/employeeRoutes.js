@@ -262,34 +262,108 @@ router.get("/leave-requests/employee/:employeeId", authMiddleware, async (req, r
 // UPDATE employee
 router.patch("/:id", authMiddleware, async (req, res) => {
   try {
-    const { employeeData } = req.body;
-    if (!employeeData?.personalData?.name?.trim()) {
-      return res.status(400).json({ error: "Full Name is required" });
+    // ===== HANDLE BOTH JSON AND FORMDATA =====
+    let employeeData = {};
+
+    // If coming from FormData (file uploads)
+    if (req.body.employeeData && typeof req.body.employeeData === "string") {
+      try {
+        employeeData = JSON.parse(req.body.employeeData);
+      } catch (err) {
+        console.error("Failed to parse employeeData:", err);
+        return res.status(400).json({ error: "Invalid employeeData format" });
+      }
+    } else if (req.body.employeeData && typeof req.body.employeeData === "object") {
+      // If coming from JSON request
+      employeeData = req.body.employeeData;
+    } else {
+      return res.status(400).json({ error: "employeeData is required" });
     }
 
-    // Convert date properly
-    if (employeeData.personalData.dateOfBirth) {
-      const d = new Date(employeeData.personalData.dateOfBirth);
-      if (!isNaN(d)) employeeData.personalData.dateOfBirth = d;
-      else delete employeeData.personalData.dateOfBirth;
+    // Validate at least one update field exists
+    if (Object.keys(employeeData).length === 0) {
+      return res.status(400).json({ error: "No data provided for update" });
     }
 
-    // Fix cell number key
-    if (employeeData.basicInformation.cellNo) {
-      employeeData.basicInformation.celNo = employeeData.basicInformation.cellNo;
-      delete employeeData.basicInformation.cellNo;
-    }
+    // ===== PROCESS BASIC INFORMATION =====
+    if (employeeData.basicInformation) {
+      const basic = employeeData.basicInformation;
 
-    // Prepare dot-notation update to avoid overwriting entire object
-    const updateFields = {};
-    for (const [section, data] of Object.entries(employeeData)) {
-      for (const [key, val] of Object.entries(data)) {
-        if (val && val !== "N/A") {
-          updateFields[`employeeData.${section}.${key}`] = val;
+      // ✅ Ensure status is valid enum
+      if (basic.status && !["Active", "Expired", "Pending"].includes(basic.status)) {
+        basic.status = "Active";
+      }
+
+      // ✅ Handle expiryDate - convert to Date or null
+      if (basic.expiryDate !== undefined) {
+        if (!basic.expiryDate || basic.expiryDate === "N/A" || basic.expiryDate === "") {
+          basic.expiryDate = null;
+        } else if (typeof basic.expiryDate === "string") {
+          const d = new Date(basic.expiryDate);
+          basic.expiryDate = isNaN(d.getTime()) ? null : d;
+        }
+      }
+
+      // ✅ Handle salary - convert to null if N/A
+      if (basic.salary !== undefined) {
+        if (basic.salary === "N/A" || basic.salary === "") {
+          basic.salary = null;
+        } else if (typeof basic.salary === "string") {
+          basic.salary = isNaN(parseFloat(basic.salary)) ? null : parseFloat(basic.salary);
         }
       }
     }
 
+    // ===== PROCESS PERSONAL INFORMATION =====
+    if (employeeData.personalData) {
+      const personal = employeeData.personalData;
+
+      // ✅ Handle dateOfBirth
+      if (personal.dateOfBirth !== undefined) {
+        if (!personal.dateOfBirth || personal.dateOfBirth === "N/A" || personal.dateOfBirth === "") {
+          personal.dateOfBirth = null;
+        } else if (typeof personal.dateOfBirth === "string") {
+          const d = new Date(personal.dateOfBirth);
+          personal.dateOfBirth = isNaN(d.getTime()) ? null : d;
+        }
+      }
+
+      // Ensure name is provided
+      if (!personal.name || personal.name.trim() === "") {
+        return res.status(400).json({ error: "Full Name is required" });
+      }
+    }
+
+    // ===== BUILD DOT-NOTATION UPDATE =====
+    const updateFields = {};
+
+    // Add basic information fields
+    if (employeeData.basicInformation) {
+      for (const [key, val] of Object.entries(employeeData.basicInformation)) {
+        updateFields[`employeeData.basicInformation.${key}`] = val;
+      }
+    }
+
+    // Add personal data fields
+    if (employeeData.personalData) {
+      for (const [key, val] of Object.entries(employeeData.personalData)) {
+        updateFields[`employeeData.personalData.${key}`] = val;
+      }
+    }
+
+    // Add educational background if provided
+    if (employeeData.educationalBackground) {
+      updateFields[`employeeData.educationalBackground`] = employeeData.educationalBackground;
+    }
+
+    // Add credentials if provided
+    if (employeeData.credentials) {
+      for (const [key, val] of Object.entries(employeeData.credentials)) {
+        updateFields[`employeeData.credentials.${key}`] = val;
+      }
+    }
+
+    // ===== PERFORM UPDATE =====
     const updated = await Employee.findByIdAndUpdate(
       req.params.id,
       { $set: updateFields },
@@ -297,10 +371,15 @@ router.patch("/:id", authMiddleware, async (req, res) => {
     );
 
     if (!updated) return res.status(404).json({ error: "Employee not found" });
-    res.status(200).json({ msg: "Employee updated successfully", employee: updated });
+
+    res.status(200).json({ 
+      msg: "Employee updated successfully", 
+      employee: updated 
+    });
+
   } catch (err) {
     console.error("❌ Error updating employee:", err);
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: err.message || "Failed to update employee" });
   }
 });
 

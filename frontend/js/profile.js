@@ -264,7 +264,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // ===== CREDENTIALS + FILES =====
     const formData = new FormData();
-    formData.append("updatedData", JSON.stringify(updated));
+    formData.append("employeeData", JSON.stringify(updated.employeeData || {}));
     credFields.forEach(f => {
       if (fileInputs[f]) formData.append(f, fileInputs[f]);
     });
