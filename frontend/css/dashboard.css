@@ -471,6 +471,9 @@ tbody tr:hover {
     padding: var(--card-padding);
     border-radius: var(--card-border-radius);
     box-shadow: var(--card-box-shadow);
+    display: flex;
+    flex-direction: column;
+    max-height: 600px; /* ✅ Set max height */
 }
 
 .notif-header {
@@ -478,6 +481,7 @@ tbody tr:hover {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
+    flex-shrink: 0; /* Prevent header from shrinking */
 }
 
 .notif-header h2 {
@@ -509,6 +513,29 @@ tbody tr:hover {
 
 .notificationslist {
     min-height: 200px;
+    flex: 1; /* Allow it to grow */
+    overflow-y: auto; /* ✅ Add vertical scroll */
+    overflow-x: hidden; /* Hide horizontal scroll */
+    padding-right: 0.5rem; /* Add small padding for scrollbar */
+}
+
+/* ✅ Custom scrollbar styling (optional but recommended) */
+.notificationslist::-webkit-scrollbar {
+    width: 6px;
+}
+
+.notificationslist::-webkit-scrollbar-track {
+    background: var(--clr-light);
+    border-radius: 10px;
+}
+
+.notificationslist::-webkit-scrollbar-thumb {
+    background: var(--clr-info-dark);
+    border-radius: 10px;
+}
+
+.notificationslist::-webkit-scrollbar-thumb:hover {
+    background: var(--clr-black-variant);
 }
 
 /* Complaints Trends Chart */

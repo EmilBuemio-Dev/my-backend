@@ -46,7 +46,7 @@ function setCircleProgress(circleId, percent, circleLength) {
 }
 
 // ============================================
-// LOAD DASHBOARD STATISTICS
+// LOAD DASHBOARD STATISTICS (FIXED FOR PENDING)
 // ============================================
 
 async function loadDashboardStats() {
@@ -57,24 +57,28 @@ async function loadDashboardStats() {
 
     const total = employees.length;
     const active = employees.filter(e => e.employeeData?.basicInformation?.status === "Active").length;
-    const inactive = employees.filter(e => e.employeeData?.basicInformation?.status === "Inactive").length;
+    // ✅ Changed from "Inactive" to "Pending"
+    const pending = employees.filter(e => e.employeeData?.basicInformation?.status === "Pending").length;
 
     document.getElementById("totalCount").textContent = total;
     document.getElementById("activeCount").textContent = active;
-    document.getElementById("inactiveCount").textContent = inactive;
+    // ✅ Updated to show pending count
+    document.getElementById("inactiveCount").textContent = pending;
 
     const activePercent = total > 0 ? Math.round((active / total) * 100) : 0;
-    const inactivePercent = total > 0 ? Math.round((inactive / total) * 100) : 0;
+    // ✅ Updated to calculate pending percentage
+    const pendingPercent = total > 0 ? Math.round((pending / total) * 100) : 0;
 
     document.getElementById("totalPercent").textContent = "100%";
     document.getElementById("activePercent").textContent = `${activePercent}%`;
-    document.getElementById("inactivePercent").textContent = `${inactivePercent}%`;
+    // ✅ Updated to show pending percentage
+    document.getElementById("inactivePercent").textContent = `${pendingPercent}%`;
 
     const circleLength = 2 * Math.PI * 30;
     setTimeout(() => {
       setCircleProgress("totalCircle", 100, circleLength);
       setCircleProgress("activeCircle", activePercent, circleLength);
-      setCircleProgress("inactiveCircle", inactivePercent, circleLength);
+      setCircleProgress("inactiveCircle", pendingPercent, circleLength);
     }, 100);
 
   } catch (err) {

@@ -20,7 +20,7 @@ async function loadEmployees() {
 
   const name = emp.employeeData?.personalData?.name || "N/A";
   const badgeNo = emp.employeeData?.basicInformation?.badgeNo || "N/A";
-  const status = emp.employeeData?.basicInformation?.status || "Inactive";
+  const status = emp.employeeData?.basicInformation?.status || "Pending";
 
   tr.innerHTML = `
     <td><img src="${profileImg}" alt="profile" style="width:40px; height:40px; border-radius:50%; object-fit:cover;"></td>
