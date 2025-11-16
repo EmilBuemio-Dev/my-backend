@@ -162,12 +162,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     const salaryEl = document.getElementById("salary");
     const expiryDateEl = document.getElementById("expiryDate");
     const statusEl = document.getElementById("status");
+    const shiftEl = document.getElementById("shift");
 
     if (selectedBranch === "toBeSet" || selectedBranch === "") {
       // ✅ Reset to Pending state
       salaryEl.textContent = "N/A";
       expiryDateEl.textContent = "";
       statusEl.textContent = "Pending";
+      
+      // ✅ Reset shift to N/A or clear dropdown
+      if (shiftEl.tagName === "SELECT") {
+        shiftEl.value = "N/A";
+      } else {
+        shiftEl.textContent = "N/A";
+      }
     } else {
       // ✅ Find the branch and auto-fill
       const foundBranch = allBranches.find(b => b.branchData?.branch === selectedBranch);
@@ -182,6 +190,21 @@ document.addEventListener("DOMContentLoaded", async () => {
           expiryDateEl.textContent = isNaN(d) ? "" : d.toLocaleDateString();
         } else {
           expiryDateEl.textContent = "";
+        }
+        
+        // ✅ Set shift from guardShift (day or night)
+        if (shiftEl.tagName === "SELECT") {
+          const dayShift = foundBranch.guardShift?.day;
+          const nightShift = foundBranch.guardShift?.night;
+          
+          // If both exist, default to day shift
+          if (dayShift && dayShift !== "N/A") {
+            shiftEl.value = "day";
+          } else if (nightShift && nightShift !== "N/A") {
+            shiftEl.value = "night";
+          } else {
+            shiftEl.value = "day";
+          }
         }
         
         // Set status to Active
@@ -215,6 +238,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       // Handle branch from select dropdown
       if (f === "branch" && el.tagName === "SELECT") {
         val = el.value === "toBeSet" ? "" : el.value;
+      }
+
+      // Handle shift from select dropdown
+      if (f === "shift" && el.tagName === "SELECT") {
+        val = el.value === "N/A" ? "N/A" : el.value;
       }
 
       // Convert date strings to Date objects
@@ -338,6 +366,36 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Replace the text element with select
         branchEl.parentNode.replaceChild(select, branchEl);
         select.id = "branch"; // Restore the ID for saving
+      }
+
+      // ✅ Convert SHIFT field to dropdown
+      const shiftEl = document.getElementById("shift");
+      if (shiftEl) {
+        const currentShift = shiftEl.textContent.trim();
+        const shiftSelect = document.createElement("select");
+        shiftSelect.id = "shiftSelect";
+        shiftSelect.style.padding = "0.6rem";
+        shiftSelect.style.borderRadius = "6px";
+        shiftSelect.style.border = "1px solid #ddd";
+        shiftSelect.style.fontSize = "0.9rem";
+        shiftSelect.style.backgroundColor = "#f0f8ff";
+        shiftSelect.style.cursor = "pointer";
+
+        // Add shift options
+        const shiftOptions = ["N/A", "day", "night"];
+        shiftOptions.forEach(option => {
+          const opt = document.createElement("option");
+          opt.value = option;
+          opt.textContent = option.charAt(0).toUpperCase() + option.slice(1);
+          shiftSelect.appendChild(opt);
+        });
+
+        // Set current value
+        shiftSelect.value = currentShift.toLowerCase() || "N/A";
+
+        // Replace the text element with select
+        shiftEl.parentNode.replaceChild(shiftSelect, shiftEl);
+        shiftSelect.id = "shift"; // Restore the ID for saving
       }
 
       // Make other fields editable (except salary, expiryDate, status)
@@ -834,7 +892,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // ===== Initialize on Page Load =====
   if (employeeId) {
-    await fetchAllBranches(); // ✅ Fetch branches first
+    await fetchAllBranches(); 
     await fetchEmployeeData();
     await loadWeeklyAttendance();
   }
