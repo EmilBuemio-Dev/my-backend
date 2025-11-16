@@ -40,10 +40,21 @@ router.post("/", authMiddleware, async (req, res) => {
 
     // ✅ Get ticket details if provided
     let ticketSubject = null;
+    let ticketDetails = null;
+
     if (ticketId) {
       const ticket = await Ticket.findById(ticketId);
       if (ticket) {
         ticketSubject = ticket.subject;
+        // ✅ Store ticket details for later reference
+        ticketDetails = {
+          concern: ticket.concern || null,
+          creatorName: ticket.creatorName || null,
+          creatorRole: ticket.creatorRole || null,
+          rating: ticket.rating || null,
+          source: ticket.source || null,
+          createdAt: ticket.createdAt || null,
+        };
       }
     }
 
@@ -55,6 +66,7 @@ router.post("/", authMiddleware, async (req, res) => {
       dueProcess,
       ticketId: ticketId || null,
       ticketSubject,
+      ticketDetails,
       hrComment,
       status: "Pending",
       createdBy: {

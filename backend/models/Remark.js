@@ -30,6 +30,14 @@ const RemarkSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    ticketDetails: {
+      concern: String,
+      creatorName: String,
+      creatorRole: String,
+      rating: String,
+      source: String,
+      createdAt: Date,
+    },
     hrComment: {
       type: String,
       required: true,

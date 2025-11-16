@@ -283,11 +283,34 @@ async function openRemarkModal(remarkId) {
     document.getElementById("viewRemarkStatus").innerText = remark.status;
     document.getElementById("viewRemarkStatus").className = "status " + remark.status.toLowerCase();
     document.getElementById("viewRemarkComment").innerText = remark.hrComment;
-    document.getElementById("viewRemarkTicket").innerText = remark.ticketSubject ? `${remark.ticketSubject}` : "None";
     
     const createdDate = new Date(remark.createdBy.timestamp).toLocaleString();
     document.getElementById("viewRemarkCreatedBy").innerText = remark.createdBy.name || "Unknown";
     document.getElementById("viewRemarkCreatedDate").innerText = createdDate;
+
+    // ===== DISPLAY TICKET DETAILS =====
+    const ticketSection = document.getElementById("ticketDetailsSection");
+    
+    if (remark.ticketId && remark.ticketDetails) {
+      ticketSection.style.display = "block";
+      
+      const ticketDetails = remark.ticketDetails;
+      
+      document.getElementById("ticketSubjectDisplay").innerText = remark.ticketSubject || "N/A";
+      document.getElementById("ticketCreatorDisplay").innerText = ticketDetails.creatorName || "Unknown";
+      document.getElementById("ticketSourceDisplay").innerText = ticketDetails.creatorRole === "client" ? "Client" : "Employee";
+      document.getElementById("ticketConcernDisplay").innerText = ticketDetails.concern || "No concern provided";
+      document.getElementById("ticketRatingDisplay").innerText = ticketDetails.rating || "Not Rated";
+      document.getElementById("ticketDateDisplay").innerText = ticketDetails.createdAt ? new Date(ticketDetails.createdAt).toLocaleString() : "Unknown";
+      
+      // Add button to open full ticket in new modal (optional)
+      const viewFullTicketBtn = document.getElementById("viewFullTicketBtn");
+      viewFullTicketBtn.onclick = () => {
+        openTicketModal(remark.ticketId);
+      };
+    } else {
+      ticketSection.style.display = "none";
+    }
 
     // Show update section only if status is Pending
     const updateSection = document.getElementById("updateSection");

@@ -414,7 +414,7 @@
         </div>
       </div>
       <div class="sidebar">
-        <a href="dashboard.html">
+        <a href="dashboard.html" class="active">
           <span class="material-symbols-outlined">grid_view</span>
           <h3>Dashboard</h3>
         </a>
@@ -590,12 +590,28 @@
         <p><strong>Penalty Level:</strong> <span id="viewRemarkPenalty" class="status"></span></p>
         <p><strong>Due Process:</strong> <span id="viewRemarkDueProcess"></span></p>
         <p><strong>Status:</strong> <span id="viewRemarkStatus" class="status"></span></p>
-        <p><strong>Ticket Attached:</strong> <span id="viewRemarkTicket">None</span></p>
         <p><strong>HR Comment:</strong></p>
         <div style="background: var(--clr-light); padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
           <p id="viewRemarkComment" style="margin: 0;"></p>
         </div>
         <p><strong>Created By:</strong> <span id="viewRemarkCreatedBy"></span> - <span id="viewRemarkCreatedDate"></span></p>
+        <hr>
+        
+        <!-- TICKET DETAILS SECTION -->
+        <div id="ticketDetailsSection" style="display: none; background: #f8f9ff; padding: 1rem; border-radius: 8px; border-left: 4px solid var(--clr-primary); margin: 1rem 0;">
+          <h4 style="margin: 0 0 1rem 0; color: var(--clr-primary); font-size: 1rem;">📎 Attached Ticket Details</h4>
+          <p><strong>Subject:</strong> <span id="ticketSubjectDisplay"></span></p>
+          <p><strong>Created By:</strong> <span id="ticketCreatorDisplay"></span></p>
+          <p><strong>Source:</strong> <span id="ticketSourceDisplay"></span></p>
+          <p><strong>Rating:</strong> <span id="ticketRatingDisplay"></span></p>
+          <p><strong>Date:</strong> <span id="ticketDateDisplay"></span></p>
+          <p><strong>Concern:</strong></p>
+          <div style="background: white; padding: 0.8rem; border-radius: 6px; max-height: 150px; overflow-y: auto;">
+            <p id="ticketConcernDisplay" style="margin: 0; font-size: 0.9rem;"></p>
+          </div>
+          <button class="btn" id="viewFullTicketBtn" style="margin-top: 0.8rem; background: #007bff;">View Full Ticket</button>
+        </div>
+        
         <hr>
         <div id="updateSection" style="display: none;">
           <div class="form-group">
