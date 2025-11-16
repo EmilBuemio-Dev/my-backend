@@ -55,6 +55,8 @@ router.post("/", authMiddleware, async (req, res) => {
           source: ticket.source || null,
           createdAt: ticket.createdAt || null,
         };
+      } else {
+        return res.status(404).json({ message: "Ticket not found" });
       }
     }
 
@@ -127,6 +129,11 @@ router.get("/:id", authMiddleware, async (req, res) => {
 
     if (!remark) {
       return res.status(404).json({ message: "Remark not found" });
+    }
+
+    // ✅ Ensure ticketId is included in response
+    if (remark.ticketId) {
+      remark.ticketId = remark.ticketId._id || remark.ticketId;
     }
 
     res.json(remark);

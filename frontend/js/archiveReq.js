@@ -70,7 +70,7 @@ async function loadArchives() {
 
     renderArchives();
   } catch (err) {
-    console.error("❌ Failed to load archives:", err);
+    console.error("❌ Failed to load records:", err);
   }
 }
 
@@ -306,7 +306,7 @@ function viewRecord(id) {
       <p><strong>Badge No:</strong> ${record.badgeNo || "N/A"}</p>
       <p><strong>Position:</strong> ${record.position || "N/A"}</p>
       <p><strong>Status:</strong> ${record.status || "Pending"}</p>
-      <p><strong>Date Archived:</strong> ${record.createdAt ? new Date(record.createdAt).toLocaleString() : "N/A"}</p>
+      <p><strong>Date Recorded:</strong> ${record.createdAt ? new Date(record.createdAt).toLocaleString() : "N/A"}</p>
       <div class="cred-list"><h3>Credentials</h3>${credList}</div>
     `;
   }
@@ -761,7 +761,7 @@ document.getElementById("multiStepForm")?.addEventListener("submit", async funct
     const statusEl = document.getElementById("submissionStatus");
     if (statusEl) {
       statusEl.innerText = res.ok
-        ? "✅ Credentials archived successfully!"
+        ? "✅ Credentials recorded successfully!"
         : "❌ Failed: " + result.message;
     }
 

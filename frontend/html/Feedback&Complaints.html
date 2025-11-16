@@ -67,6 +67,17 @@
       border-bottom: 1px solid var(--clr-light);
     }
 
+    aside .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    aside .logo img {
+      height: 30px;
+    }
+
+
     aside .logo h2 {
       font-size: 1.3rem;
       color: var(--clr-dark);
@@ -408,13 +419,12 @@
     <aside>
       <div class="top">
         <div class="logo">
-          <img src="/image/logo.png" alt="Company Logo"
-            style="height:30px; vertical-align:middle; margin-right:2px; margin-bottom:5px;">
+          <img src="/image/logo.png" alt="Company Logo">
           <h2><span class="Company">MITHER3</span></h2>
         </div>
       </div>
       <div class="sidebar">
-        <a href="dashboard.html" class="active">
+        <a href="dashboard.html" >
           <span class="material-symbols-outlined">grid_view</span>
           <h3>Dashboard</h3>
         </a>
@@ -515,7 +525,7 @@
         <p><strong>Date:</strong> <span id="modalDate"></span></p>
         <hr>
         <p><strong>Concern:</strong></p>
-        <div id="modalConcern" class="concern-box"></div>
+        <div id="modalConcern" style="background: var(--clr-light); padding: 1rem; border-radius: 8px; margin: 0.5rem 0;"></div>
       </div>
       <div class="modal-footer">
         <button class="btn-cancel" id="closeFooterBtn">Close</button>
@@ -599,16 +609,12 @@
         
         <!-- TICKET DETAILS SECTION -->
         <div id="ticketDetailsSection" style="display: none; background: #f8f9ff; padding: 1rem; border-radius: 8px; border-left: 4px solid var(--clr-primary); margin: 1rem 0;">
-          <h4 style="margin: 0 0 1rem 0; color: var(--clr-primary); font-size: 1rem;">📎 Attached Ticket Details</h4>
+          <h4 style="margin: 0 0 1rem 0; color: var(--clr-primary); font-size: 1rem;">📎 Attached Ticket </h4>
           <p><strong>Subject:</strong> <span id="ticketSubjectDisplay"></span></p>
           <p><strong>Created By:</strong> <span id="ticketCreatorDisplay"></span></p>
           <p><strong>Source:</strong> <span id="ticketSourceDisplay"></span></p>
           <p><strong>Rating:</strong> <span id="ticketRatingDisplay"></span></p>
           <p><strong>Date:</strong> <span id="ticketDateDisplay"></span></p>
-          <p><strong>Concern:</strong></p>
-          <div style="background: white; padding: 0.8rem; border-radius: 6px; max-height: 150px; overflow-y: auto;">
-            <p id="ticketConcernDisplay" style="margin: 0; font-size: 0.9rem;"></p>
-          </div>
           <button class="btn" id="viewFullTicketBtn" style="margin-top: 0.8rem; background: #007bff;">View Full Ticket</button>
         </div>
         

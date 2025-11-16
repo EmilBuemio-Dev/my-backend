@@ -74,10 +74,17 @@ async function loadTickets() {
 // ===== OPEN TICKET MODAL =====
 async function openTicketModal(ticketId) {
   try {
+    if (!ticketId) {
+      alert("Invalid ticket ID");
+      return;
+    }
+
     const res = await fetch(`https://www.mither3security.com/tickets/${ticketId}`, {
       headers: { "Authorization": `Bearer ${token}` },
     });
-    if (!res.ok) throw new Error("Failed to load ticket");
+    if (!res.ok) {
+      throw new Error(`Failed to load ticket - Status: ${res.status}`);
+    }
     const ticket = await res.json();
 
     document.getElementById("modalName").innerText = ticket.creatorName || "Unknown";
@@ -104,7 +111,7 @@ async function openTicketModal(ticketId) {
     document.getElementById("ticketModal").classList.add("show");
   } catch (err) {
     console.error("Error loading ticket:", err);
-    alert("Failed to open ticket modal.");
+    alert("Failed to open ticket modal: " + err.message);
   }
 }
 
@@ -299,7 +306,6 @@ async function openRemarkModal(remarkId) {
       document.getElementById("ticketSubjectDisplay").innerText = remark.ticketSubject || "N/A";
       document.getElementById("ticketCreatorDisplay").innerText = ticketDetails.creatorName || "Unknown";
       document.getElementById("ticketSourceDisplay").innerText = ticketDetails.creatorRole === "client" ? "Client" : "Employee";
-      document.getElementById("ticketConcernDisplay").innerText = ticketDetails.concern || "No concern provided";
       document.getElementById("ticketRatingDisplay").innerText = ticketDetails.rating || "Not Rated";
       document.getElementById("ticketDateDisplay").innerText = ticketDetails.createdAt ? new Date(ticketDetails.createdAt).toLocaleString() : "Unknown";
       
