@@ -113,7 +113,6 @@ async function loadAttendanceRateBarGraph() {
       } else if (status.includes("on-time") || status === "on-time") {
         attendanceCounts.onTime++;
       } else {
-        // Default to on-time for valid check-ins without "late" or "absent"
         attendanceCounts.onTime++;
       }
     });
@@ -474,15 +473,11 @@ async function updateLeaveStatus(leaveId, status) {
     }
 }
 
-
 // Close individual leave modal
 closeLeaveModal.addEventListener("click", () => leaveModal.classList.remove("show"));
 window.addEventListener("click", e => {
     if (e.target === leaveModal) leaveModal.classList.remove("show");
 });
-
-
-
 
 // ============================================
 // LOAD ATTENDANCE ALERTS & COMPLAINTS (NOTIFICATIONS)
@@ -685,8 +680,6 @@ document.querySelectorAll('.theme-toggler span').forEach(span => {
     span.classList.add('active');
   });
 });
-
-
 
 // ============================================
 // INITIALIZE DASHBOARD ON PAGE LOAD

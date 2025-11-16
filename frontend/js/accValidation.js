@@ -448,13 +448,50 @@ async function loadEmployees() {
       // ===== View Button =====
       row.querySelector(".view-btn").onclick = () => renderAccountDetails(acc);
 
-      // ===== Approve Button =====
+// ===== CLEAN DATA HELPER =====
+function cleanEmployeeData(empData) {
+  const cleaned = JSON.parse(JSON.stringify(empData)); // Deep copy
+  
+  // Clean basic information
+  if (cleaned.basicInformation) {
+    // Ensure expiryDate is null or valid Date
+    if (cleaned.basicInformation.expiryDate === "N/A" || 
+        cleaned.basicInformation.expiryDate === "" ||
+        !cleaned.basicInformation.expiryDate) {
+      cleaned.basicInformation.expiryDate = null;
+    }
+    // Ensure status is valid enum
+    if (!["Active", "Expired", "Pending"].includes(cleaned.basicInformation.status)) {
+      cleaned.basicInformation.status = "Active";
+    }
+  }
+  
+  // Clean personal data
+  if (cleaned.personalData) {
+    if (cleaned.personalData.dateOfBirth === "N/A" || 
+        cleaned.personalData.dateOfBirth === "") {
+      cleaned.personalData.dateOfBirth = null;
+    }
+  }
+  
+  // Clean educational background
+  if (Array.isArray(cleaned.educationalBackground)) {
+    cleaned.educationalBackground = cleaned.educationalBackground.map(edu => ({
+      ...edu,
+      inclusiveDate: edu.inclusiveDate === "N/A" || edu.inclusiveDate === "" ? null : edu.inclusiveDate,
+      dateGraduated: edu.dateGraduated === "N/A" || edu.dateGraduated === "" ? null : edu.dateGraduated,
+    }));
+  }
+  
+  return cleaned;
+}
+
+// ===== IN APPROVE BUTTON LOGIC - BEFORE SENDING TO API =====
 row.querySelector(".approve-btn").onclick = async () => {
   try {
     const token = localStorage.getItem("token")?.trim();
     if (!token) return alert("No admin token found.");
 
-    // Fetch the latest account data
     const accountRes = await fetch(`https://www.mither3security.com/accounts/${acc._id}`);
     if (!accountRes.ok) throw new Error(await parseError(accountRes));
     const freshAccount = await accountRes.json();
@@ -472,142 +509,229 @@ row.querySelector(".approve-btn").onclick = async () => {
         .filter(Boolean).join(" ").trim();
       const email = personal.email?.trim();
       const badgeNo = basic.badgeNo || null;
-      const password = generatePassword();
+      const branch = basic.branch?.trim();
 
-      showPasswordModal(fullName, password);
+      if (!branch || branch === "toBeSet" || branch === "") {
+        alert("⚠️ Branch field is not set. Employee will be created with 'Pending' status. Please assign a branch later.");
+        
+        const password = generatePassword();
+        showPasswordModal(fullName, password);
 
-      // --- Step 1: Check if Employee exists ---
-      let employeeId = null;
-      if (!email || email.trim() === "") {
-        alert("This employee has no email address. Please assign a unique email before approving.");
-        return;
-      }
+        if (!email || email.trim() === "") {
+          alert("This employee has no email address. Please assign a unique email before approving.");
+          return;
+        }
 
         const empCheckRes = await fetch(`https://www.mither3security.com/employees?email=${email}`);
         const existingEmp = await empCheckRes.json();
+        let employeeId = null;
+
         if (email && existingEmp.length === 1) {
-        employeeId = existingEmp[0]._id;
-      } else {
-        employeeId = null; // create new employee record instead
-      }
+          employeeId = existingEmp[0]._id;
+        } else {
+          // ✅ CLEAN THE DATA BEFORE SENDING
+          const cleanBasicInfo = { ...basic };
+          cleanBasicInfo.status = "Pending";
+          cleanBasicInfo.expiryDate = null; // Explicitly set to null, not "N/A"
+          
+          const cleanPersonalData = { ...personal };
+          cleanPersonalData.dateOfBirth = null; // Explicitly set to null
 
+          const empRes = await fetch("https://www.mither3security.com/employees", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+            body: JSON.stringify({
+              role: "employee",
+              employeeData: {
+                basicInformation: cleanBasicInfo,
+                personalData: cleanPersonalData,
+                educationalBackground: education,
+                credentials,
+                firearmsIssued,
+              },
+            }),
+          });
+          if (!empRes.ok) throw new Error(await parseError(empRes));
+          const savedEmp = await empRes.json();
+          employeeId = savedEmp.employee._id;
+        }
 
-      // --- Step 2: Create Employee if not exists ---
-      if (!employeeId) {
-        const empRes = await fetch("https://www.mither3security.com/employees", {
+        const userPayload = { 
+          name: fullName, 
+          email, 
+          password, 
+          role: "employee", 
+          status: "Pending", 
+          badgeNumber: badgeNo, 
+          employeeId 
+        };
+        const registerRes = await fetch("https://www.mither3security.com/api/users/register", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-          body: JSON.stringify({
-            role: "employee",
-            employeeData: { basicInformation: basic, personalData: personal, educationalBackground: education, credentials, firearmsIssued },
-          }),
+          body: JSON.stringify(userPayload),
         });
-        if (!empRes.ok) throw new Error(await parseError(empRes));
-        const savedEmp = await empRes.json();
-        employeeId = savedEmp.employee._id;
+        if (!registerRes.ok) throw new Error(await parseError(registerRes));
+
+        if (email) {
+          await fetch("https://www.mither3security.com/api/email/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              to: email,
+              subject: "Your Account Has Been Approved - Mither3 Security",
+              html: `<p>Hi ${fullName},</p><p>Your account is approved but pending branch assignment. Temporary password: <b>${password}</b></p>`,
+            }),
+          });
+        }
+
+        if (acc._id) {
+          await fetch(`https://www.mither3security.com/accounts/${acc._id}`, { method: "DELETE" });
+        }
+
+        alert(`✅ Employee ${fullName} approved with Pending status.`);
+      } 
+      // ===== BRANCH IS ASSIGNED =====
+      else {
+        const password = generatePassword();
+        showPasswordModal(fullName, password);
+
+        if (!email || email.trim() === "") {
+          alert("This employee has no email address. Please assign a unique email before approving.");
+          return;
+        }
+
+        const empCheckRes = await fetch(`https://www.mither3security.com/employees?email=${email}`);
+        const existingEmp = await empCheckRes.json();
+        let employeeId = null;
+
+        if (email && existingEmp.length === 1) {
+          employeeId = existingEmp[0]._id;
+        } else {
+          // ✅ CLEAN THE DATA BEFORE SENDING
+          const cleanBasicInfo = { ...basic };
+          cleanBasicInfo.status = "Active";
+          cleanBasicInfo.expiryDate = null; // Explicitly set to null
+          
+          const cleanPersonalData = { ...personal };
+          cleanPersonalData.dateOfBirth = null; // Explicitly set to null
+
+          const empRes = await fetch("https://www.mither3security.com/employees", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+            body: JSON.stringify({
+              role: "employee",
+              employeeData: { 
+                basicInformation: cleanBasicInfo, 
+                personalData: cleanPersonalData, 
+                educationalBackground: education, 
+                credentials, 
+                firearmsIssued 
+              },
+            }),
+          });
+          if (!empRes.ok) throw new Error(await parseError(empRes));
+          const savedEmp = await empRes.json();
+          employeeId = savedEmp.employee._id;
+        }
+
+        const userPayload = { 
+          name: fullName, 
+          email, 
+          password, 
+          role: "employee", 
+          status: "Active", 
+          badgeNumber: badgeNo, 
+          employeeId 
+        };
+        const registerRes = await fetch("https://www.mither3security.com/api/users/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify(userPayload),
+        });
+        if (!registerRes.ok) throw new Error(await parseError(registerRes));
+
+        if (email) {
+          await fetch("https://www.mither3security.com/api/email/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              to: email,
+              subject: "Your Account Has Been Approved - Mither3 Security",
+              html: `<p>Hi ${fullName},</p><p>Your account is approved. Temporary password: <b>${password}</b></p>`,
+            }),
+          });
+        }
+
+        if (acc._id) {
+          await fetch(`https://www.mither3security.com/accounts/${acc._id}`, { method: "DELETE" });
+        }
+
+        alert(`✅ Employee ${fullName} approved and linked successfully.`);
+      }
+    } 
+    // ===== CLIENT APPROVAL =====
+    else if (freshAccount.role === "client") {
+      const c = freshAccount.clientData || freshAccount.branchData || {};
+      const clientName = c.name || freshAccount.name || "Unnamed Client";
+      const clientBranch = c.branch || "Unknown Branch";
+
+      let clientIdNumber = freshAccount.clientIdNumber || getCachedClientId(acc._id);
+      if (!clientIdNumber) {
+        clientIdNumber = generateClientId();
+        setCachedClientId(acc._id, clientIdNumber);
       }
 
-      // --- Step 3: Register User ---
-      const userPayload = { name: fullName, email, password, role: "employee", status: "Active", badgeNumber: badgeNo, employeeId };
-      const registerRes = await fetch("https://www.mither3security.com/api/users/register", {
+      const clientPayload = {
+        role: "client",
+        clientIdNumber,
+        salary: null,
+        expirationDate: null,
+        contract: c.contract || "",
+        credentials: c.credentials || {},
+        guardShift: c.guardShift || { day: "N/A", night: "N/A" },
+        branchData: {
+          name: clientName,
+          email: c.email || "",
+          branch: clientBranch,
+          password: c.password || "",
+        }
+      };
+
+      const branchRes = await fetch("https://www.mither3security.com/api/branches", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(clientPayload),
+      });
+      if (!branchRes.ok) throw new Error(await parseError(branchRes));
+
+      const userPayload = {
+        name: clientName,
+        email: c.email || "",
+        password: c.password || generatePassword(),
+        role: "client",
+        clientIdNumber,
+        branch: clientBranch,
+      };
+
+      await fetch("https://www.mither3security.com/api/users/register", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify(userPayload),
       });
-      if (!registerRes.ok) throw new Error(await parseError(registerRes));
 
-      // --- Step 4: Send Email Notification ---
-      if (email) {
-        await fetch("https://www.mither3security.com/api/email/send", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            to: email,
-            subject: "Your Account Has Been Approved - Mither3 Security",
-            html: `<p>Hi ${fullName},</p><p>Your account is approved. Temporary password: <b>${password}</b></p>`,
-          }),
-        });
-      }
+      removeCachedClientId(acc._id);
+      alert(`✅ Client ${clientName} approved successfully.`);
 
-
-      // --- Step 5: Remove from pending accounts ---
       if (acc._id) {
         await fetch(`https://www.mither3security.com/accounts/${acc._id}`, { method: "DELETE" });
       }
 
+      loadEmployees();
+      loadClients();
+    }
 
-      alert(`✅ Employee ${fullName} approved and linked successfully.`);
-
-    } 
-    // ===== CLIENT APPROVAL =====
-    // ===== CLIENT APPROVAL =====
-else if (freshAccount.role === "client") {
-  const c = freshAccount.clientData || freshAccount.branchData || {};
-  const clientName = c.name || freshAccount.name || "Unnamed Client";
-  const clientBranch = c.branch || "Unknown Branch";
-
-  // Ensure clientIdNumber exists
-  let clientIdNumber = freshAccount.clientIdNumber || getCachedClientId(acc._id);
-  if (!clientIdNumber) {
-    clientIdNumber = generateClientId();
-    setCachedClientId(acc._id, clientIdNumber);
-  }
-
-  // --- Payload for creating Branch record ---
-const clientPayload = {
-  role: "client",
-  clientIdNumber,
-  salary: null,
-  expirationDate: null,
-  contract: c.contract || "",
-  credentials: c.credentials || {},
-  guardShift: c.guardShift || { day: "N/A", night: "N/A" }, // use proper fallback
-  branchData: {
-    name: clientName,
-    email: c.email || "",
-    branch: clientBranch,
-    password: c.password || "", 
-  }
-};
-
-
-
-  const branchRes = await fetch("https://www.mither3security.com/api/branches", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(clientPayload),
-  });
-  if (!branchRes.ok) throw new Error(await parseError(branchRes));
-
-  // --- Payload for creating User account ---
-  const userPayload = {
-    name: clientName,
-    email: c.email || "",
-    password: c.password || generatePassword(), // fallback in case password is missing
-    role: "client",
-    clientIdNumber,
-    branch: clientBranch,
-  };
-
-  await fetch("https://www.mither3security.com/api/users/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-    body: JSON.stringify(userPayload),
-  });
-
-  removeCachedClientId(acc._id);
-  alert(`✅ Client ${clientName} approved successfully.`);
-
-  // Remove from pending accounts
-  if (acc._id) {
-  await fetch(`https://www.mither3security.com/accounts/${acc._id}`, { method: "DELETE" });
-}
-
-
-  // Refresh UI
-  loadEmployees();
-  loadClients();
-}
+    loadEmployees();
+    loadClients();
 
   } catch (err) {
     console.error(err);

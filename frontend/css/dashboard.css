@@ -272,12 +272,11 @@ main h1 {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;          /* ✅ CENTER horizontally */
-    text-align: center;           /* ✅ CENTER all text */
+    align-items: center;
+    text-align: center;
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-
 
 .LeaveRequests:hover {
     transform: translateY(-4px);
@@ -287,12 +286,12 @@ main h1 {
 .LeaveRequests > span {
     display: inline-flex;
     padding: 0.8rem;
-    background: #fff3cd;
     border-radius: 12px;
     font-size: 1.8rem;
     margin-bottom: 1rem;
-    color: #f39c12;
     width: fit-content;
+    background: #fff3cd;
+    color: #f39c12;
 }
 
 .LeaveRequests h3 {
@@ -369,6 +368,7 @@ tbody tr:hover {
     padding: 0.4rem 1rem;
     background: var(--clr-primary);
     color: white;
+    border: none;
     border-radius: 6px;
     font-size: 0.8rem;
     cursor: pointer;
@@ -604,6 +604,7 @@ tbody tr:hover {
     cursor: pointer;
     font-weight: 500;
     transition: all 0.2s ease;
+    border: none;
 }
 
 .btn.close {
@@ -629,20 +630,6 @@ tbody tr:hover {
 .btn:hover {
     opacity: 0.9;
     transform: translateY(-1px);
-}
-
-.view-leave {
-    padding: 0.4rem 1rem;
-    background: var(--clr-primary);
-    color: white;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: background 0.2s ease;
-}
-
-.view-leave:hover {
-    background: #000;
 }
 
 /* Responsive Design */

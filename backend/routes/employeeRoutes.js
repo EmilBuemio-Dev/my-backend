@@ -4,7 +4,7 @@ import fs from "fs";
 import multer from "multer";
 import { fileURLToPath } from "url";
 import Employee from "../models/Employee.js";
-import Branch from "../models/Branch.js"; // ✅ ADD THIS LINE
+import Branch from "../models/Branch.js";
 import { authMiddleware } from "../middleware/auth.js";
 
 const router = express.Router();
@@ -20,6 +20,30 @@ function sanitizeData(obj) {
     else if (typeof val === "object") sanitizeData(val);
   }
   return obj;
+}
+
+// ===== Proper Sanitization for Employee Data (Before sanitizeData) =====
+function sanitizeEmployeeData(empData) {
+  if (!empData) return empData;
+
+  // Remove/null out date fields that are "N/A" or empty BEFORE general sanitization
+  if (empData.basicInformation) {
+    if (empData.basicInformation.expiryDate === "N/A" || empData.basicInformation.expiryDate === "") {
+      empData.basicInformation.expiryDate = null;
+    }
+    // Ensure status is valid
+    if (!["Active", "Pending"].includes(empData.basicInformation.status)) {
+      empData.basicInformation.status = "Active";
+    }
+  }
+
+  if (empData.personalData) {
+    if (empData.personalData.dateOfBirth === "N/A" || empData.personalData.dateOfBirth === "") {
+      empData.personalData.dateOfBirth = null;
+    }
+  }
+
+  return empData;
 }
 
 function ensureUploadPath(folder) {
@@ -48,16 +72,21 @@ const upload = multer({
   },
 });
 
-// ===== Middleware to convert "N/A" to null =====
+// ===== Middleware to convert "N/A" to null (ONLY for specific date fields) =====
 router.use((req, res, next) => {
   if (req.body && typeof req.body === "object") {
-    const clean = (obj) => {
+    const cleanDates = (obj) => {
       for (const key in obj) {
-        if (obj[key] === "N/A") obj[key] = null;
-        else if (typeof obj[key] === "object" && obj[key] !== null) clean(obj[key]);
+        if (key === "expiryDate" || key === "dateOfBirth") {
+          if (obj[key] === "N/A" || obj[key] === "") {
+            obj[key] = null;
+          }
+        } else if (typeof obj[key] === "object" && obj[key] !== null) {
+          cleanDates(obj[key]);
+        }
       }
     };
-    clean(req.body);
+    cleanDates(req.body);
   }
   next();
 });
@@ -120,9 +149,6 @@ router.post(
   }
 );
 
-
-// ===== Employee Routes =====
-
 // CREATE employee
 router.post("/", async (req, res) => {
   try {
@@ -134,10 +160,16 @@ router.post("/", async (req, res) => {
     employeeData.credentials = employeeData.credentials || {};
     employeeData.firearmsIssued = Array.isArray(employeeData.firearmsIssued) ? employeeData.firearmsIssued : [];
 
+    // ✅ Step 1: Sanitize dates FIRST (before general sanitization)
+    employeeData = sanitizeEmployeeData(employeeData);
+
+    // ✅ Step 2: General sanitization (converts remaining empty values to "N/A")
     sanitizeData(employeeData);
 
     const personal = employeeData.personalData;
-    if (personal.dateOfBirth && isNaN(Date.parse(personal.dateOfBirth))) delete personal.dateOfBirth;
+    if (personal.dateOfBirth && isNaN(Date.parse(personal.dateOfBirth))) {
+      delete personal.dateOfBirth;
+    }
 
     if (!personal.name || personal.name.trim() === "") {
       personal.name = `${personal.familyName || ""}, ${personal.firstName || ""} ${personal.middleName || ""}`.trim().replace(/\s+,/, ",") || "N/A";
@@ -180,15 +212,13 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// ===== GET employees by branchId =====
+// GET employees by branchId
 router.get("/branch/:branchId", async (req, res) => {
   try {
     const { branchId } = req.params;
 
-    // Try to find by _id first
     let employees = await Employee.find({ "employeeData.basicInformation.branch": branchId }).lean();
 
-    // If no matches, try branch name
     if (!employees.length) {
       const branchDoc = await Branch.findById(branchId).lean();
       if (branchDoc) {
@@ -210,7 +240,6 @@ router.get("/branch/:branchId", async (req, res) => {
 });
 
 router.get("/leave-requests/employee/:employeeId", authMiddleware, async (req, res) => {
-
   try {
     const { employeeId } = req.params;
     const employee = await Employee.findById(employeeId).lean();
@@ -274,7 +303,6 @@ router.patch("/:id", authMiddleware, async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 });
-
 
 // DELETE employee
 router.delete("/:id", async (req, res) => {

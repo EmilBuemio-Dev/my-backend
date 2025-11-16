@@ -124,6 +124,7 @@ Object.keys(basicInfoFields).forEach(key => {
 
 // ===== Education Table =====
 const eduTableBody = document.querySelector("#educationTable tbody");
+let addRowBtn = null;
 
 function renderEducationTable(list) {
   eduTableBody.innerHTML = "";
@@ -151,13 +152,6 @@ function createEduRow(edu = {}) {
   return tr;
 }
 
-// Add row button
-const addRowBtn = document.createElement("button");
-addRowBtn.textContent = "Add Row";
-addRowBtn.style.marginTop = "10px";
-addRowBtn.addEventListener("click", () => eduTableBody.appendChild(createEduRow()));
-eduTableBody.parentElement.appendChild(addRowBtn);
-
 // ===== Edit & Save =====
 const editBtn = document.getElementById("editBtn");
 let isEditing = false;
@@ -167,9 +161,38 @@ let isEditing = false;
 editBtn.addEventListener("click", async () => {
   isEditing = !isEditing;
 
-  // Make basic & overview fields editable
-  Object.values(basicInfoFields).forEach(f => f.contentEditable = isEditing);
+  // Make basic & overview fields editable (but NOT shift)
+  Object.keys(basicInfoFields).forEach(key => {
+    if (key !== "shift") {
+      basicInfoFields[key].contentEditable = isEditing;
+    }
+  });
   Object.values(overviewFields).forEach(f => f.contentEditable = isEditing);
+
+  // Make education table rows editable
+  const eduRows = document.querySelectorAll("#educationTable tbody tr td[contenteditable]");
+  eduRows.forEach(cell => cell.contentEditable = isEditing);
+
+  // Show/hide add row button based on edit mode
+  if (isEditing) {
+    if (!addRowBtn) {
+      addRowBtn = document.createElement("button");
+      addRowBtn.textContent = "Add Row";
+      addRowBtn.style.marginTop = "10px";
+      addRowBtn.style.padding = "0.6rem 1rem";
+      addRowBtn.style.background = "var(--clr-primary)";
+      addRowBtn.style.color = "white";
+      addRowBtn.style.border = "none";
+      addRowBtn.style.borderRadius = "6px";
+      addRowBtn.style.cursor = "pointer";
+      addRowBtn.style.fontWeight = "600";
+      addRowBtn.addEventListener("click", () => eduTableBody.appendChild(createEduRow()));
+      eduTableBody.parentElement.appendChild(addRowBtn);
+    }
+    addRowBtn.style.display = "block";
+  } else {
+    if (addRowBtn) addRowBtn.style.display = "none";
+  }
 
   // Handle credentials fields
   Object.keys(credentialsFields).forEach(key => {
@@ -207,6 +230,21 @@ editBtn.addEventListener("click", async () => {
         const val = overviewFields.dob.textContent;
         updatedData.personalData.dateOfBirth = val && val !== "N/A" ? new Date(val) : null;
       } else updatedData.personalData[key] = overviewFields[key].textContent || null;
+    });
+
+    // Educational Background - collect from table rows
+    const eduRows = document.querySelectorAll("#educationTable tbody tr");
+    eduRows.forEach(row => {
+      const cells = row.querySelectorAll("td");
+      if (cells.length >= 4) {
+        const edu = {
+          school: cells[0].textContent.trim(),
+          inclusiveDate: cells[1].textContent.trim(),
+          degree: cells[2].textContent.trim(),
+          dateGraduated: cells[3].textContent.trim()
+        };
+        updatedData.educationalBackground.push(edu);
+      }
     });
 
     // Credentials: handle file uploads first

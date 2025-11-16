@@ -19,12 +19,19 @@ function safeParse(str, fallback) {
   return str ?? fallback;
 }
 
+// ✅ Helper: Check if branch is valid
+function isValidBranch(branch) {
+  if (!branch) return false;
+  const invalidValues = ["toBeSet", "N/A", "", null, undefined];
+  return !invalidValues.includes(branch);
+}
+
 /* CREATE ACCOUNT (employee or client) */
 router.post(
   "/",
   upload.fields([
-    { name: "profileImage", maxCount: 1 }, // employee or client profile
-    { name: "contract", maxCount: 1 },     // client contract
+    { name: "profileImage", maxCount: 1 },
+    { name: "contract", maxCount: 1 },
   ]),
   async (req, res) => {
     try {
@@ -37,7 +44,7 @@ router.post(
         const clientData = {
           name: req.body.name,
           email: req.body.email,
-          password: req.body.password, // hash if needed
+          password: req.body.password,
           branch: req.body.branch,
           guardShift,
           contract: req.files.contract ? `/uploads/contracts/${req.files.contract[0].filename}` : undefined,
@@ -92,31 +99,56 @@ router.post(
   }
 );
 
-/* APPROVE ARCHIVE -> MOVE TO ACCOUNT */
-/* APPROVE ARCHIVE -> MOVE TO ACCOUNT */
+/* ✅ APPROVE ARCHIVE -> MOVE TO ACCOUNT */
 router.post("/approve/:archiveId", upload.single("employeeProfile"), async (req, res) => {
   try {
     const { archiveId } = req.params;
     const archived = await Archive.findById(archiveId);
     if (!archived) return res.status(404).json({ error: "Archive record not found" });
 
+    // ✅ Parse incoming data
     const incomingBasic = safeParse(req.body.basicInformation, {});
-    const incomingPersonal = safeParse(req.body.personalData, {}); // now has familyName, firstName, middleName
+    const incomingPersonal = safeParse(req.body.personalData, {});
     const incomingEducation = safeParse(req.body.educationalBackground, []);
     const incomingFirearms = safeParse(req.body.firearmsIssued, []);
 
+    console.log("📥 INCOMING APPROVAL DATA:");
+    console.log("   Basic info:", JSON.stringify(incomingBasic, null, 2));
+
+    // ✅ GET BRANCH VALUE - USE INCOMING DATA
+    const submittedBranch = incomingBasic.branch;
+    console.log("📌 Branch value:", submittedBranch);
+    console.log("📌 Branch type:", typeof submittedBranch);
+
+    // ✅ DETERMINE STATUS: Valid branch = Approved, Invalid/toBeSet = Pending
+    const hasBranch = isValidBranch(submittedBranch);
+    const accountStatus = hasBranch ? "Approved" : "Pending";
+
+    console.log("✅ STATUS DETERMINATION:");
+    console.log("   hasBranch:", hasBranch);
+    console.log("   Final status:", accountStatus);
+
+    // ✅ MERGE DATA WITH PRIORITY TO INCOMING
     const newAccountData = {
       role: "employee",
-      status: "Approved",
+      status: accountStatus, // ✅ Use determined status
       employeeData: {
-        basicInformation: { ...(archived.basicInformation || {}), ...incomingBasic },
-        personalData: { ...(archived.personalData || {}), ...incomingPersonal },
+        basicInformation: { 
+          ...(archived.basicInformation || {}), 
+          ...incomingBasic,
+          branch: submittedBranch, // ✅ Preserve exact branch value
+        },
+        personalData: { 
+          ...(archived.personalData || {}), 
+          ...incomingPersonal 
+        },
         educationalBackground: incomingEducation.length ? incomingEducation : (archived.educationalBackground || []),
         firearmsIssued: incomingFirearms.length ? incomingFirearms : (archived.firearmsIssued || []),
         credentials: archived.credentials || {},
       },
     };
 
+    // ✅ Add profile image if provided
     if (req.file) {
       newAccountData.employeeData.credentials = {
         ...(newAccountData.employeeData.credentials || {}),
@@ -124,17 +156,29 @@ router.post("/approve/:archiveId", upload.single("employeeProfile"), async (req,
       };
     }
 
+    // ✅ SAVE ACCOUNT
     const newAccount = new Account(newAccountData);
     await newAccount.save();
+
+    console.log("✅ ACCOUNT SAVED:");
+    console.log("   ID:", newAccount._id);
+    console.log("   Status:", newAccount.status);
+    console.log("   Branch:", newAccount.employeeData.basicInformation.branch);
+
+    // ✅ DELETE ARCHIVE RECORD
     await Archive.findByIdAndDelete(archiveId);
 
-    res.status(201).json({ message: "Employee approved successfully", newAccount });
+    res.status(201).json({ 
+      message: "Employee created successfully",
+      newAccount,
+      status: accountStatus,
+      branch: submittedBranch
+    });
   } catch (err) {
     console.error("❌ Error approving employee:", err);
-    res.status(500).json({ error: "Failed to approve employee" });
+    res.status(500).json({ error: err.message || "Failed to approve employee" });
   }
 });
-
 
 /* GET ALL ACCOUNTS */
 router.get("/", async (req, res) => {
@@ -146,46 +190,85 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.put("/:id/approve", async (req, res) => {
+/* ✅ GET PENDING EMPLOYEE ACCOUNTS (no valid branch) */
+router.get("/employees/pending", async (req, res) => {
   try {
-    const { id } = req.params;
-
-    // 1️⃣ Find the account
-    const account = await Account.findById(id);
-    if (!account) return res.status(404).json({ error: "Account not found" });
-
-    // 2️⃣ Only approve employees
-    if (account.role !== "employee") {
-      return res.status(400).json({ error: "Only employee accounts can be approved here." });
-    }
-
-    // 3️⃣ Extract full employee data
-    const employeeData = account.employeeData || {};
-
-    // 4️⃣ Create and save to Employee collection
-    const newEmployee = new Employee({
+    const pendingAccounts = await Account.find({
       role: "employee",
-      status: "Approved",
-      employeeData,
+      status: "Pending",
+      "employeeData.basicInformation.branch": { 
+        $in: [null, "", "toBeSet", "N/A", undefined] 
+      }
     });
-
-    const savedEmployee = await newEmployee.save();
-
-    // 5️⃣ Update account status (optional)
-    account.status = "Approved";
-    await account.save();
-
-    res.status(200).json({
-      msg: "Employee approved and data stored in Employee collection.",
-      employee: savedEmployee,
-    });
+    console.log("📋 Found pending accounts:", pendingAccounts.length);
+    res.json(pendingAccounts);
   } catch (err) {
-    console.error("❌ Error approving employee:", err);
-    res.status(500).json({ error: err.message });
+    console.error("❌ Error fetching pending accounts:", err);
+    res.status(500).json({ error: "Failed to fetch pending accounts" });
   }
 });
 
-// ✅ GET SINGLE ACCOUNT BY ID
+/* ✅ GET APPROVED EMPLOYEE ACCOUNTS (valid branch) */
+router.get("/employees/approved", async (req, res) => {
+  try {
+    const approvedAccounts = await Account.find({
+      role: "employee",
+      status: "Approved",
+      "employeeData.basicInformation.branch": { 
+        $nin: [null, "", "toBeSet", "N/A", undefined] 
+      }
+    });
+    console.log("📋 Found approved accounts:", approvedAccounts.length);
+    res.json(approvedAccounts);
+  } catch (err) {
+    console.error("❌ Error fetching approved accounts:", err);
+    res.status(500).json({ error: "Failed to fetch approved accounts" });
+  }
+});
+
+/* ✅ UPDATE ACCOUNT STATUS AND BRANCH */
+router.patch("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { branch, shift, salary, expiryDate, status } = req.body;
+
+    const account = await Account.findById(id);
+    if (!account) return res.status(404).json({ error: "Account not found" });
+
+    if (account.role !== "employee") {
+      return res.status(400).json({ error: "Only employee accounts can be updated" });
+    }
+
+    // ✅ Update basic information
+    if (account.employeeData?.basicInformation) {
+      if (branch !== undefined && isValidBranch(branch)) {
+        account.employeeData.basicInformation.branch = branch;
+      }
+      if (shift) account.employeeData.basicInformation.shift = shift;
+      if (salary) account.employeeData.basicInformation.salary = salary;
+      if (expiryDate) account.employeeData.basicInformation.expiryDate = expiryDate;
+    }
+
+    // ✅ Update status based on branch validity
+    if (branch !== undefined) {
+      if (isValidBranch(branch)) {
+        account.status = "Approved";
+      } else {
+        account.status = "Pending";
+      }
+    } else if (status) {
+      account.status = status;
+    }
+
+    await account.save();
+    res.json({ message: "Account updated successfully", account });
+  } catch (err) {
+    console.error("❌ Error updating account:", err);
+    res.status(500).json({ error: "Failed to update account" });
+  }
+});
+
+/* ✅ GET SINGLE ACCOUNT BY ID */
 router.get("/:id", async (req, res) => {
   try {
     const account = await Account.findById(req.params.id);
@@ -196,7 +279,6 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch account" });
   }
 });
-
 
 /* DELETE ACCOUNT */
 router.delete("/:id", async (req, res) => {

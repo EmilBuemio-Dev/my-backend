@@ -10,9 +10,9 @@ const educationalBackgroundSchema = new mongoose.Schema({
 
 // === FIREARMS ISSUED ===
 const firearmsIssuedSchema = new mongoose.Schema({
-  kind: { type: String },       // e.g. "9mm Pistol", "Shotgun"
+  kind: { type: String },
   make: { type: String },
-  sn: { type: String }// optional notes or condition
+  sn: { type: String }
 }, { _id: true });
 
 // === CREDENTIALS ===
@@ -37,7 +37,7 @@ const credentialsSchema = new mongoose.Schema({
 const personalDataSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String },
-  dateOfBirth: { type: Date },
+  dateOfBirth: { type: Date, default: null },
   presentAddress: { type: String },
   placeOfBirth: { type: String },
   prevAddress: { type: String },
@@ -59,8 +59,22 @@ const basicInformationSchema = new mongoose.Schema({
   tinNo: { type: String },
   celNo: { type: String },
   shift: { type: String },
-  status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
-  expiryDate: { type: Date },
+  status: { 
+    type: String, 
+    enum: ["Active", "Expired", "Pending"],
+    default: "Active" 
+  },
+  expiryDate: { 
+    type: Date, 
+    default: null,
+    set: function(val) {
+      // Convert "N/A" or empty strings to null
+      if (!val || val === "N/A" || val.toString().trim() === "") {
+        return null;
+      }
+      return val;
+    }
+  },
   badgeNo: { type: String, trim: true },
   salary: { type: String },
   branch: { type: String }
@@ -73,7 +87,7 @@ const employeeSchema = new mongoose.Schema({
     basicInformation: basicInformationSchema,
     personalData: personalDataSchema,
     educationalBackground: [educationalBackgroundSchema],
-    firearmsIssued: [firearmsIssuedSchema],  // ✅ Added here
+    firearmsIssued: [firearmsIssuedSchema],
     credentials: credentialsSchema
   }
 }, { timestamps: true });
