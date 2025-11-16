@@ -84,7 +84,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-
 // ===== GET ALL CLIENT BRANCHES =====
 router.get("/", async (req, res) => {
   try {
@@ -100,21 +99,37 @@ router.get("/:id", async (req, res) => {
   try {
     const branch = await Branch.findById(req.params.id);
     if (!branch) return res.status(404).json({ message: "Branch not found" });
-    res.json(branch);
+    
+    // ✅ Format expiration date properly
+    let formattedBranch = branch.toObject();
+    if (formattedBranch.expirationDate) {
+      const date = new Date(formattedBranch.expirationDate);
+      formattedBranch.expirationDateFormatted = date.toISOString().split('T')[0];
+    }
+    
+    res.json(formattedBranch);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// ===== PATCH UPDATE BRANCH DETAILS =====
+// ===== PATCH UPDATE BRANCH DETAILS (Client Portal) =====
+// Excludes expiration date - clients cannot modify it
 router.patch("/:id", async (req, res) => {
   try {
     const updates = req.body;
+    
+    // ✅ Prevent expiration date from being updated via PATCH
+    if (updates.expirationDate !== undefined) {
+      delete updates.expirationDate;
+    }
+    
     const branch = await Branch.findByIdAndUpdate(
       req.params.id,
       { $set: updates },
       { new: true, runValidators: true }
     );
+    
     if (!branch) return res.status(404).json({ message: "Branch not found" });
     res.json({ message: "Branch updated successfully", branch });
   } catch (err) {
@@ -122,7 +137,8 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
-// ===== UPDATE SALARY & EXPIRATION DATE =====
+// ===== PUT UPDATE SALARY & EXPIRATION DATE (Admin Only) =====
+// This is specifically for admins to update expiration date and salary
 router.put("/:id", async (req, res) => {
   try {
     let { salary, expirationDate } = req.body;
@@ -158,7 +174,6 @@ router.put("/:id", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
 
 // ===== DELETE CLIENT BRANCH =====
 router.delete("/:id", async (req, res) => {

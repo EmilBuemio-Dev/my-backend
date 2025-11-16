@@ -53,6 +53,8 @@ function initLogout() {
   });
 }
 
+// Updated loadBranchOverview function with proper expiration date handling
+
 async function loadBranchOverview() {
   const user = getUser();
   if (!user || !user.branchId) {
@@ -73,7 +75,14 @@ async function loadBranchOverview() {
     document.getElementById("branchContract").value = data.contract || "";
     document.getElementById("branchDayShift").value = data.guardShift?.day || "";
     document.getElementById("branchNightShift").value = data.guardShift?.night || "";
-    document.getElementById("branchExpDate").value = data.expirationDate || "";
+    
+    // ✅ Format and display expiration date (read-only)
+    if (data.expirationDate) {
+      const date = new Date(data.expirationDate);
+      document.getElementById("branchExpDate").value = date.toISOString().split('T')[0];
+    } else {
+      document.getElementById("branchExpDate").value = "";
+    }
 
     // Fill profile card
     document.getElementById("branchNameCard").textContent = data.branchData?.branch || "N/A";
@@ -87,6 +96,12 @@ async function loadBranchOverview() {
     const inputs = document.querySelectorAll("#branchForm input");
     inputs.forEach((input) => input.setAttribute("readonly", true));
 
+    // ✅ Make expiration date permanently readonly
+    const expDateInput = document.getElementById("branchExpDate");
+    expDateInput.setAttribute("readonly", true);
+    expDateInput.style.cursor = "not-allowed";
+    expDateInput.style.opacity = "0.6";
+
     const editBtn = document.getElementById("editBranch");
     let isEditing = false;
 
@@ -98,8 +113,11 @@ async function loadBranchOverview() {
         isEditing = true;
         editBtn.textContent = "Save";
         inputs.forEach((input) => {
-          input.removeAttribute("readonly");
-          input.classList.add("editable");
+          // ✅ Skip expiration date field
+          if (input.id !== "branchExpDate") {
+            input.removeAttribute("readonly");
+            input.classList.add("editable");
+          }
         });
       } else {
         // 🔹 Switch to saving mode
@@ -107,7 +125,7 @@ async function loadBranchOverview() {
         const originalText = editBtn.textContent;
         editBtn.innerHTML = `<span class="loader"></span> Saving...`;
 
-        // Collect form data
+        // Collect form data (exclude expiration date)
         const body = {
           "branchData.branch": document.getElementById("branchName").value,
           "branchData.name": document.getElementById("clientName").value,
@@ -118,7 +136,7 @@ async function loadBranchOverview() {
             day: document.getElementById("branchDayShift").value,
             night: document.getElementById("branchNightShift").value,
           },
-          expirationDate: document.getElementById("branchExpDate").value,
+          // ✅ Do NOT include expirationDate in update
         };
 
         try {
@@ -153,8 +171,10 @@ async function loadBranchOverview() {
           editBtn.disabled = false;
           editBtn.textContent = originalText;
           inputs.forEach((input) => {
-            input.setAttribute("readonly", true);
-            input.classList.remove("editable");
+            if (input.id !== "branchExpDate") {
+              input.setAttribute("readonly", true);
+              input.classList.remove("editable");
+            }
           });
         }
       }

@@ -43,7 +43,7 @@ body {
 =================================*/
 .container {
   display: grid;
-  grid-template-columns: 14rem 30rem auto; /* sidebar | left panel | main */
+  grid-template-columns: 14rem 30rem auto;
   gap: 1.8rem;
   width: 96%;
   margin: 0 auto;
@@ -57,12 +57,15 @@ h1 {
   font-weight: 800;
   font-size: 1.8rem;
 }
+
 h2 {
   font-size: 1.4rem;
 }
+
 h3 {
   font-size: 0.87rem;
 }
+
 h4,
 h5,
 small {
@@ -72,6 +75,7 @@ small {
 p {
   color: var(--clr-black-variant);
 }
+
 b {
   color: var(--clr-dark);
 }
@@ -79,18 +83,21 @@ b {
 .primary {
   color: var(--clr-primary);
 }
+
 .success {
   color: var(--clr-success);
 }
+
 .danger {
   color: var(--clr-danger);
 }
+
 .warning {
   color: var(--clr-warning);
 }
 
 /* ==============================
-   Sidebar (Untouched)
+   Sidebar
 =================================*/
 aside .top {
   background-color: var(--clr-white);
@@ -405,42 +412,6 @@ aside .sidebar a:hover span {
 .guard-table-container .view-status:hover {
   background-color: var(--clr-primary);
   color: var(--clr-white);
-}
-
-/* ==============================
-   Rating Stars
-=================================*/
-.rating {
-  display: flex;
-  gap: 5px;
-  justify-content: flex-start;
-  align-items: center;
-  margin-top: 10px;
-}
-
-.rating input {
-  display: none;
-}
-
-.rating label {
-  font-size: 24px;
-  color: #ccc;
-  cursor: pointer;
-}
-
-.stars {
-  display: flex;
-  flex-direction: row-reverse;
-  gap: 5px;
-}
-
-.rating input:checked ~ label {
-  color: gold;
-}
-
-.rating label:hover,
-.rating label:hover ~ label {
-  color: gold;
 }
 
 /* ==============================

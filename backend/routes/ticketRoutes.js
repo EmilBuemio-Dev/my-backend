@@ -12,7 +12,7 @@ const router = express.Router();
 // ===============================
 router.post("/", authMiddleware, async (req, res) => {
   try {
-    const { subject, concern, reportedEmployeeId, rating } = req.body;
+    const { subject, concern, reportedEmployeeId } = req.body;
 
     // ✅ Ensure the authenticated user is available
     const userId = req.user.id;
@@ -78,7 +78,6 @@ router.post("/", authMiddleware, async (req, res) => {
       concern,
       reportedEmployeeId: reportedEmployeeId || null,
       reportedEmployeeName,
-      rating: creatorRole === "client" ? rating || null : null,
       source: creatorRole === "client" ? "Client" : "Guard",
       status: creatorRole === "client" ? "Urgent" : "Pending",
     });
@@ -97,9 +96,6 @@ router.post("/", authMiddleware, async (req, res) => {
   }
 });
 
-// ===============================
-// GET ALL TICKETS
-// ===============================
 // ===============================
 // GET ALL TICKETS (Supports Filtering)
 // ===============================
@@ -125,7 +121,6 @@ router.get("/", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Failed to fetch tickets", error: err.message });
   }
 });
-
 
 // ===============================
 // GET SINGLE TICKET

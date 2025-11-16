@@ -170,11 +170,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       expiryDateEl.textContent = "";
       statusEl.textContent = "Pending";
       
-      // ✅ Reset shift to N/A or clear dropdown
+      // ✅ Reset shift dropdown to show only N/A
       if (shiftEl.tagName === "SELECT") {
+        shiftEl.innerHTML = "";
+        const nAOpt = document.createElement("option");
+        nAOpt.value = "N/A";
+        nAOpt.textContent = "N/A";
+        shiftEl.appendChild(nAOpt);
         shiftEl.value = "N/A";
-      } else {
-        shiftEl.textContent = "N/A";
       }
     } else {
       // ✅ Find the branch and auto-fill
@@ -192,18 +195,39 @@ document.addEventListener("DOMContentLoaded", async () => {
           expiryDateEl.textContent = "";
         }
         
-        // ✅ Set shift from guardShift (day or night)
+        // ✅ Update shift dropdown with only the branch's shifts
         if (shiftEl.tagName === "SELECT") {
-          const dayShift = foundBranch.guardShift?.day;
-          const nightShift = foundBranch.guardShift?.night;
+          shiftEl.innerHTML = ""; // Clear existing options
           
-          // If both exist, default to day shift
-          if (dayShift && dayShift !== "N/A") {
-            shiftEl.value = "day";
-          } else if (nightShift && nightShift !== "N/A") {
-            shiftEl.value = "night";
+          const dayShiftTime = foundBranch.guardShift?.day;
+          const nightShiftTime = foundBranch.guardShift?.night;
+          
+          // Add Day Shift if it exists
+          if (dayShiftTime && dayShiftTime !== "N/A") {
+            const dayOpt = document.createElement("option");
+            dayOpt.value = `day|${dayShiftTime}`;
+            dayOpt.textContent = `Day, ${dayShiftTime}`;
+            shiftEl.appendChild(dayOpt);
+          }
+          
+          // Add Night Shift if it exists
+          if (nightShiftTime && nightShiftTime !== "N/A") {
+            const nightOpt = document.createElement("option");
+            nightOpt.value = `night|${nightShiftTime}`;
+            nightOpt.textContent = `Night, ${nightShiftTime}`;
+            shiftEl.appendChild(nightOpt);
+          }
+          
+          // If no shifts found, add N/A
+          if ((!dayShiftTime || dayShiftTime === "N/A") && (!nightShiftTime || nightShiftTime === "N/A")) {
+            const nAOpt = document.createElement("option");
+            nAOpt.value = "N/A";
+            nAOpt.textContent = "N/A";
+            shiftEl.appendChild(nAOpt);
+            shiftEl.value = "N/A";
           } else {
-            shiftEl.value = "day";
+            // Select first available shift
+            shiftEl.selectedIndex = 0;
           }
         }
         
@@ -214,20 +238,24 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function saveEmployeeData() {
-    const basicFields = ["pslNo","sssNo","tinNo","celNo","shift","expiryDate","badgeNo","branch","salary","status"];
-    const personalFields = ["fullName","email","dob","presentAddress","birthPlace","previousAddress","citizenship","weight","language","age","height","religion","civilStatus","hairColor","eyeColor"];
-    const credFields = [
-      "barangayClearance","policeClearance","diClearance","nbiClearance",
-      "personalHistory","residenceHistory","maritalStatus","physicalData",
-      "educationData","characterReference","employmentHistory",
-      "neighborhoodInvestigation","militaryRecord"
-    ];
+    const token = localStorage.getItem("token");
+    if (!token) return alert("Not authorized");
 
-    const updated = { employeeData: {} };
+    const formData = new FormData();
+
+    // ===== BUILD EMPLOYEE DATA OBJECT =====
+    const employeeData = {
+      basicInformation: {},
+      personalData: {},
+      credentials: {},
+      educationalBackground: employeeDataCache.employeeData?.educationalBackground || [],
+      firearmsIssued: employeeDataCache.employeeData?.firearmsIssued || [],
+      createdBy: employeeDataCache.employeeData?.createdBy
+    };
 
     // ===== BASIC INFORMATION =====
+    const basicFields = ["pslNo","sssNo","tinNo","celNo","shift","expiryDate","badgeNo","branch","salary","status"];
     const basicOld = employeeDataCache.employeeData?.basicInformation || {};
-    const basicUpdated = {};
 
     basicFields.forEach(f => {
       const el = document.getElementById(f);
@@ -242,16 +270,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       // Handle shift from select dropdown
       if (f === "shift" && el.tagName === "SELECT") {
-        val = el.value === "N/A" ? "N/A" : el.value;
+        const shiftValue = el.value;
+        if (shiftValue.includes("|")) {
+          val = shiftValue.split("|")[1]; // Get the time part (e.g., "8:00AM-8:00PM")
+        } else {
+          val = shiftValue; // If it's just "N/A"
+        }
       }
 
-      // Convert date strings to Date objects
+      // Convert date strings to Date or null
       if (f === "expiryDate" && val) {
         if (val === "" || val === "N/A") {
           val = null;
         } else {
           const d = new Date(val);
-          val = isNaN(d) ? null : d.toISOString();
+          val = isNaN(d) ? null : d;
         }
       }
 
@@ -260,22 +293,30 @@ document.addEventListener("DOMContentLoaded", async () => {
         val = null;
       }
 
-      if (val !== null && val !== "" && val !== basicOld[f === "celNo" ? "celNo" : f]) {
-        basicUpdated[f] = val;
-      }
+      // Always include the field to override
+      employeeData.basicInformation[f] = val;
     });
 
-    if (Object.keys(basicUpdated).length) updated.employeeData.basicInformation = basicUpdated;
-
     // ===== PERSONAL INFORMATION =====
+    const personalFields = ["fullName","email","dob","presentAddress","birthPlace","previousAddress","citizenship","weight","language","age","height","religion","civilStatus","hairColor","eyeColor"];
     const personalOld = employeeDataCache.employeeData?.personalData || {};
-    const personalUpdated = {};
 
     personalFields.forEach(f => {
       const el = document.getElementById(f);
       if (!el) return;
 
-      const val = el.textContent.trim();
+      let val = el.textContent.trim();
+
+      // Handle date fields
+      if (f === "dob" && val) {
+        if (val === "" || val === "N/A") {
+          val = null;
+        } else {
+          const d = new Date(val);
+          val = isNaN(d) ? null : d;
+        }
+      }
+
       const keyMap = {
         fullName: "name",
         dob: "dateOfBirth",
@@ -285,20 +326,27 @@ document.addEventListener("DOMContentLoaded", async () => {
         language: "languageSpoken"
       };
       const key = keyMap[f] || f;
-      if (val !== null && val !== "" && val !== personalOld[key]) personalUpdated[key] = val;
+      
+      // Always include to override
+      employeeData.personalData[key] = val;
     });
 
-    if (Object.keys(personalUpdated).length) updated.employeeData.personalData = personalUpdated;
+    // ===== CREDENTIALS =====
+    const credFields = [
+      "barangayClearance","policeClearance","diClearance","nbiClearance",
+      "personalHistory","residenceHistory","maritalStatus","physicalData",
+      "educationData","characterReference","employmentHistory",
+      "neighborhoodInvestigation","militaryRecord"
+    ];
 
-    // ===== CREDENTIALS + FILES =====
-    const formData = new FormData();
-    formData.append("employeeData", JSON.stringify(updated.employeeData || {}));
     credFields.forEach(f => {
       if (fileInputs[f]) formData.append(f, fileInputs[f]);
     });
 
+    // ===== SEND TO BACKEND =====
+    formData.append("employeeData", JSON.stringify(employeeData));
+
     try {
-      const token = localStorage.getItem("token");
       const res = await fetch(`https://www.mither3security.com/employees/${employeeId}`, {
         method: "PATCH",
         headers: {
@@ -307,10 +355,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         body: formData
       });
 
-      if (!res.ok) throw new Error("Failed to save employee data");
-      const saved = await res.json();
-      alert("Employee data saved successfully!");
-      employeeDataCache = saved.employee || saved.updatedEmployee;
+      const result = await res.json();
+
+      if (!res.ok) {
+        console.error("❌ Update failed:", result);
+        alert("Update failed. Check console.");
+        return;
+      }
+
+      console.log("✅ Update successful:", result);
+      alert("Employee updated successfully!");
+      employeeDataCache = result.employee || result.updatedEmployee;
       fileInputs = {};
       populateProfile(employeeDataCache);
     } catch (err) {
@@ -381,17 +436,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         shiftSelect.style.backgroundColor = "#f0f8ff";
         shiftSelect.style.cursor = "pointer";
 
-        // Add shift options
-        const shiftOptions = ["N/A", "day", "night"];
-        shiftOptions.forEach(option => {
-          const opt = document.createElement("option");
-          opt.value = option;
-          opt.textContent = option.charAt(0).toUpperCase() + option.slice(1);
-          shiftSelect.appendChild(opt);
-        });
+        // Start with placeholder
+        const placeholderOpt = document.createElement("option");
+        placeholderOpt.value = "";
+        placeholderOpt.textContent = "-- Select Branch First --";
+        shiftSelect.appendChild(placeholderOpt);
 
-        // Set current value
-        shiftSelect.value = currentShift.toLowerCase() || "N/A";
+        // Set current value if available
+        shiftSelect.value = currentShift || "";
 
         // Replace the text element with select
         shiftEl.parentNode.replaceChild(shiftSelect, shiftEl);

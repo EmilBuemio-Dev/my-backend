@@ -10,7 +10,6 @@ const TicketSchema = new mongoose.Schema({
   subject: { type: String, required: true },
   concern: { type: String, required: true },
   source: { type: String, default: "Guard" },
-  rating: { type: Number, min: 1, max: 5, default: null }, // ⭐ updated
   status: { type: String, default: "Pending" },
   createdAt: { type: Date, default: Date.now },
 });

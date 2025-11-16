@@ -212,15 +212,6 @@ function initTicketSubmit() {
     const reportedEmployeeSelect = document.getElementById("reportedEmployee");
     const reportedEmployeeId = reportedEmployeeSelect?.value || null;
 
-    // Get selected rating (only for clients)
-    let rating = "Not Rated";
-    if (user.role === "client") {
-      const selectedRating = document.querySelector('input[name="rating"]:checked');
-      if (selectedRating) {
-        rating = selectedRating.value;
-      }
-    }
-
     if (!subject || !concern) {
       alert("Please fill subject and concern.");
       return;
@@ -231,7 +222,6 @@ function initTicketSubmit() {
         subject,
         concern,
         reportedEmployeeId: reportedEmployeeId || null,
-        rating,
         creatorId: user._id,
         creatorEmail: user.email,
       };
@@ -296,15 +286,78 @@ async function loadMyTickets() {
         <td>${ticket.subject}${reported}</td>
         <td>${ticket.status}</td>
         <td>${new Date(ticket.createdAt).toLocaleString()}</td>
-        <td><a href="message.html?id=${ticket._id}" class="view-record">View</a></td>
+        <td><button class="view-record" data-ticket-id="${ticket._id}">View</button></td>
       `;
       tableBody.appendChild(row);
+
+      // Add event listener to view button
+      row.querySelector(".view-record").addEventListener("click", () => {
+        openTicketModal(ticket);
+      });
     });
     
     console.log("Tickets loaded:", tickets.length);
   } catch (err) {
     console.error("Error loading tickets:", err);
   }
+}
+
+// === Open Ticket Modal ===
+function openTicketModal(ticket) {
+  let modal = document.getElementById("ticketDetailsModal");
+  
+  // Create modal if it doesn't exist
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "ticketDetailsModal";
+    modal.className = "modal";
+    modal.innerHTML = `
+      <div class="modal-content">
+        <button class="close-modal">&times;</button>
+        <h2>Ticket Details</h2>
+        <div id="modalDetails"></div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Close button handler
+    modal.querySelector(".close-modal").addEventListener("click", () => {
+      modal.classList.remove("show");
+    });
+
+    // Close on backdrop click
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.classList.remove("show");
+      }
+    });
+  }
+
+  // Populate modal with ticket details
+  const detailsDiv = modal.querySelector("#modalDetails");
+  detailsDiv.innerHTML = `
+    <div class="ticket-detail-item">
+      <strong>Subject:</strong> ${ticket.subject}
+    </div>
+    <div class="ticket-detail-item">
+      <strong>Status:</strong> <span class="status ${ticket.status.toLowerCase()}">${ticket.status}</span>
+    </div>
+    <div class="ticket-detail-item">
+      <strong>Date Submitted:</strong> ${new Date(ticket.createdAt).toLocaleString()}
+    </div>
+    ${ticket.reportedEmployeeName ? `
+      <div class="ticket-detail-item">
+        <strong>Reported Employee:</strong> ${ticket.reportedEmployeeName}
+      </div>
+    ` : ""}
+    <div class="ticket-detail-item">
+      <strong>Concern:</strong>
+      <p class="concern-text">${ticket.concern}</p>
+    </div>
+  `;
+
+  // Show modal
+  modal.classList.add("show");
 }
 
 // === Search button click ===
@@ -344,8 +397,7 @@ function initLogout() {
   logoutBtn.addEventListener("click", () => {
     console.log("Logout clicked");
     localStorage.removeItem("user");
-    // Update this to point to your main login page filename
-    window.location.href = "loginSection.html"; // Change this if your login file has a different name
+    window.location.href = "loginSection.html";
   });
   
   console.log("Logout handler initialized");
