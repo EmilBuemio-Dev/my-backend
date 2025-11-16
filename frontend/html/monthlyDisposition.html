@@ -123,15 +123,6 @@
       margin-bottom: 1rem;
     }
 
-    aside .sidebar .badge {
-      background: var(--clr-danger);
-      color: white;
-      font-size: 0.7rem;
-      padding: 3px 8px;
-      border-radius: 10px;
-      font-weight: 600;
-    }
-
     /* ==== MAIN CONTENT ==== */
     main {
       display: flex;
@@ -276,16 +267,18 @@
     }
 
     th {
-      padding: 1.2rem;
+      padding: 1rem;
       text-align: left;
       font-weight: 600;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       letter-spacing: 0.3px;
-      border-bottom: 2px solid var(--clr-light);
+      border: 1px solid #333;
+      word-wrap: break-word;
+      vertical-align: middle;
     }
 
     tbody tr {
-      border-bottom: 1px solid #e0e0e0;
+      border: 1px solid #ddd;
       transition: background 0.2s ease;
     }
 
@@ -298,10 +291,12 @@
     }
 
     td {
-      padding: 0;
+      padding: 0.8rem;
       color: var(--clr-black-variant);
       vertical-align: top;
-      border: 1px solid #999;
+      border: 1px solid #ddd;
+      word-wrap: break-word;
+      word-break: break-word;
     }
 
     td strong {
@@ -315,30 +310,19 @@
       border-collapse: collapse;
       margin: 0;
       background: white;
+      border: none;
     }
 
     .nested-table td {
-      padding: 0.5rem 0.6rem;
-      font-size: 0.8rem;
-      border: 1px solid #999;
+      padding: 0.4rem;
+      font-size: 0.75rem;
+      border: 1px solid #ccc;
       text-align: center;
+      word-break: break-word;
     }
 
     .nested-table tr {
       height: auto;
-    }
-
-    .nested-table tr:last-child td {
-      border-bottom: 1px solid #999;
-    }
-
-    /* Ensure regular content also displays properly */
-    td > div {
-      padding: 0.6rem;
-      min-height: 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
     /* ==== LOADING STATE ==== */
@@ -374,7 +358,7 @@
       }
 
       th, td {
-        padding: 0.8rem;
+        padding: 0.7rem;
       }
     }
 
@@ -443,7 +427,7 @@
       }
 
       th, td {
-        padding: 0.6rem;
+        padding: 0.5rem;
       }
     }
 
@@ -493,6 +477,10 @@
       .container {
         grid-template-columns: 1fr;
         gap: 0;
+        max-width: 100%;
+        width: 100%;
+        padding: 0;
+        margin: 0;
       }
 
       aside {
@@ -501,15 +489,44 @@
 
       .report-container {
         box-shadow: none;
-        padding: 0;
+        padding: 0.8rem;
+        border-radius: 0;
+        page-break-after: avoid;
       }
 
       table {
         page-break-inside: avoid;
+        width: 100%;
       }
 
       thead {
-        background: var(--clr-primary);
+        background: var(--clr-primary) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      th {
+        background: var(--clr-primary) !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      td {
+        border: 1px solid #999 !important;
+      }
+
+      .nested-table {
+        border: none !important;
+      }
+
+      .nested-table td {
+        border: 1px solid #ccc !important;
+        padding: 0.3rem !important;
+      }
+
+      .report-info {
+        page-break-after: avoid;
       }
     }
   </style>
@@ -608,10 +625,10 @@
   <script>
     // Helper to create nested table with visible rows and columns for each line of info
     function createDetailedNestedTable(dataArray) {
-      if (!dataArray || dataArray.length === 0) return 'N/A';
+      if (!dataArray || dataArray.length === 0) return '<div>N/A</div>';
       
       let html = '<table class="nested-table"><tbody>';
-      dataArray.forEach((item, idx) => {
+      dataArray.forEach((item) => {
         html += '<tr><td>';
         if (typeof item === 'object') {
           html += Object.values(item).join(' | ');
@@ -624,21 +641,9 @@
       return html;
     }
 
-    // Helper to create grid with separate rows for each field
-    function createGridCell(fields) {
-      if (!fields || fields.length === 0) return 'N/A';
-      
-      let html = '<div class="cell-wrapper">';
-      fields.forEach((field, idx) => {
-        html += `<div class="cell-line">${field}</div>`;
-      });
-      html += '</div>';
-      return html;
-    }
-
     // Helper to create nested table for array items (like firearms) with proper row/col structure
     function createArrayNestedTable(items) {
-      if (!items || items.length === 0) return '<table class="nested-table"><tr><td>N/A</td></tr></table>';
+      if (!items || items.length === 0) return '<div>N/A</div>';
       
       let html = '<table class="nested-table"><tbody>';
       items.forEach((item) => {

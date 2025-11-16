@@ -679,3 +679,82 @@ tbody tr:hover {
         grid-template-columns: 1fr;
     }
 }
+
+.view-leave {
+    padding: 0.5rem 1.2rem;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.view-leave:hover {
+    background: linear-gradient(135deg, #2980b9 0%, #1a5a7a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.5);
+}
+
+.view-leave:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+}
+
+.view-leave:disabled {
+    background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.6;
+}
+
+/* Apply same styling to view-record buttons in complaints table */
+.view-record {
+    padding: 0.5rem 1.2rem !important;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 6px !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.view-record:hover {
+    background: linear-gradient(135deg, #2980b9 0%, #1a5a7a 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.5) !important;
+}
+
+.view-record:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3) !important;
+}
+
+/* Animation effect for buttons */
+@keyframes buttonPulse {
+    0% {
+        box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 12px rgba(52, 152, 219, 0.5);
+    }
+    100% {
+        box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+    }
+}
+
+.view-leave:focus,
+.view-record:focus {
+    outline: none;
+    animation: buttonPulse 0.6s ease;
+}

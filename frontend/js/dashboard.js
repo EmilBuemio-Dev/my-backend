@@ -363,8 +363,8 @@ window.addEventListener("click", e => {
     if (e.target === leaveModal) leaveModal.classList.remove("show");
 });
 
-// Load leave requests
-async function loadLeaveRequests() {
+// ✅ LOAD LEAVE COUNT ON PAGE LOAD
+async function loadLeaveCount() {
     try {
         const res = await fetch("https://www.mither3security.com/leave-requests", {
             headers: { Authorization: `Bearer ${token}` }
@@ -374,11 +374,29 @@ async function loadLeaveRequests() {
         const leaves = await res.json();
         leaveCount.textContent = leaves.length;
 
+    } catch (err) {
+        console.error("Error loading leave count:", err);
+        leaveCount.textContent = "0";
+    }
+}
+
+// Load leave requests
+async function loadLeaveRequests() {
+    try {
+        const res = await fetch("https://www.mither3security.com/leave-requests", {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Failed to fetch leave requests");
+
+        const leaves = await res.json();
+        // ✅ Update count when modal opens
+        leaveCount.textContent = leaves.length;
+
         const tbody = document.getElementById("leaveRequestsBody");
         tbody.innerHTML = "";
 
         if (!leaves.length) {
-            tbody.innerHTML = `<tr><td colspan="5" class="no-data">No leave requests found</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" class="no-data">No leave requests found</td></tr>`;
             return;
         }
 
@@ -399,7 +417,7 @@ async function loadLeaveRequests() {
 
     } catch (err) {
         console.error(err);
-        document.getElementById("leaveRequestsBody").innerHTML = `<tr><td colspan="5" class="no-data">Error loading leave requests</td></tr>`;
+        document.getElementById("leaveRequestsBody").innerHTML = `<tr><td colspan="4" class="no-data">Error loading leave requests</td></tr>`;
     }
 }
 
@@ -456,6 +474,8 @@ async function updateLeaveStatus(leaveId, status) {
 
         alert(`Leave ${status.toLowerCase()} successfully`);
         leaveModal.classList.remove("show");
+        // ✅ Reload both count and requests
+        loadLeaveCount();
         loadLeaveRequests();
     } catch (err) {
         console.error(err);
@@ -679,6 +699,8 @@ document.addEventListener("DOMContentLoaded", () => {
   loadDashboardStats();
   loadAttendanceRateBarGraph();  
   loadComplaintsChart();
-  loadTodayComplaints(); 
+  loadTodayComplaints();
+  // ✅ LOAD LEAVE COUNT ON PAGE LOAD
+  loadLeaveCount();
   loadAttendanceAlerts();
 });
