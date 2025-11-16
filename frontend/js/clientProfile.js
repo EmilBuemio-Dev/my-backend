@@ -54,6 +54,7 @@ function initLogout() {
 }
 
 // Updated loadBranchOverview function with proper expiration date handling
+// Updated loadBranchOverview function with proper date handling
 
 async function loadBranchOverview() {
   const user = getUser();
@@ -76,10 +77,25 @@ async function loadBranchOverview() {
     document.getElementById("branchDayShift").value = data.guardShift?.day || "";
     document.getElementById("branchNightShift").value = data.guardShift?.night || "";
     
-    // ✅ Format and display expiration date (read-only)
+    // ✅ Format expiration date properly for input field
     if (data.expirationDate) {
-      const date = new Date(data.expirationDate);
-      document.getElementById("branchExpDate").value = date.toISOString().split('T')[0];
+      try {
+        const date = new Date(data.expirationDate);
+        // Ensure date is valid
+        if (!isNaN(date.getTime())) {
+          // Format as YYYY-MM-DD (required for date input)
+          const year = date.getUTCFullYear();
+          const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+          const day = String(date.getUTCDate()).padStart(2, '0');
+          document.getElementById("branchExpDate").value = `${year}-${month}-${day}`;
+        } else {
+          console.warn("⚠️ Invalid expiration date:", data.expirationDate);
+          document.getElementById("branchExpDate").value = "";
+        }
+      } catch (err) {
+        console.error("❌ Error parsing expiration date:", err);
+        document.getElementById("branchExpDate").value = "";
+      }
     } else {
       document.getElementById("branchExpDate").value = "";
     }

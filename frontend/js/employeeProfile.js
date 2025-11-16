@@ -85,15 +85,14 @@ async function loadEmployeeData() {
     const data = employee.employeeData || {};
 
     // Basic Info
-const basic = data.basicInformation || {};
-Object.keys(basicInfoFields).forEach(key => {
-  if (key === "cellNo") {
-    basicInfoFields[key].textContent = basic.celNo || "N/A"; // ✅ map celNo → cellNo
-  } else {
-    basicInfoFields[key].textContent = basic[key] || "N/A";
-  }
-});
-
+    const basic = data.basicInformation || {};
+    Object.keys(basicInfoFields).forEach(key => {
+      if (key === "cellNo") {
+        basicInfoFields[key].textContent = basic.celNo || "N/A";
+      } else {
+        basicInfoFields[key].textContent = basic[key] || "N/A";
+      }
+    });
 
     // Overview / personal
     const personal = data.personalData || {};
@@ -156,8 +155,6 @@ function createEduRow(edu = {}) {
 const editBtn = document.getElementById("editBtn");
 let isEditing = false;
 
-// ===== Edit & Save with file upload =====
-// ===== Edit & Save with integrated file upload =====
 editBtn.addEventListener("click", async () => {
   isEditing = !isEditing;
 
@@ -197,14 +194,13 @@ editBtn.addEventListener("click", async () => {
   // Handle credentials fields
   Object.keys(credentialsFields).forEach(key => {
     const span = credentialsFields[key];
-    if (key === "profileImage") return; // skip profile image
+    if (key === "profileImage") return;
     if (isEditing) {
-      // Replace span with file input
       const input = document.createElement("input");
       input.type = "file";
       input.accept = ".pdf";
       input.dataset.field = key;
-      input.dataset.value = span.textContent; // keep old value
+      input.dataset.value = span.textContent;
       span.replaceWith(input);
       credentialsFields[key] = input;
     }
@@ -213,7 +209,6 @@ editBtn.addEventListener("click", async () => {
   editBtn.textContent = isEditing ? "SAVE" : "EDIT";
 
   if (!isEditing) {
-    // Collect updated data
     const updatedData = {
       basicInformation: {},
       personalData: {},
@@ -221,10 +216,8 @@ editBtn.addEventListener("click", async () => {
       educationalBackground: []
     };
 
-    // Basic info
     Object.keys(basicInfoFields).forEach(key => updatedData.basicInformation[key] = basicInfoFields[key].textContent.trim() || null);
 
-    // Overview / personal
     Object.keys(overviewFields).forEach(key => {
       if (key === "dob") {
         const val = overviewFields.dob.textContent;
@@ -232,7 +225,6 @@ editBtn.addEventListener("click", async () => {
       } else updatedData.personalData[key] = overviewFields[key].textContent || null;
     });
 
-    // Educational Background - collect from table rows
     const eduRows = document.querySelectorAll("#educationTable tbody tr");
     eduRows.forEach(row => {
       const cells = row.querySelectorAll("td");
@@ -247,7 +239,6 @@ editBtn.addEventListener("click", async () => {
       }
     });
 
-    // Credentials: handle file uploads first
     const uploadPromises = [];
     Object.keys(credentialsFields).forEach(key => {
       const input = credentialsFields[key];
@@ -256,7 +247,6 @@ editBtn.addEventListener("click", async () => {
         formData.append(key, input.files[0]);
         formData.append("name", updatedData.personalData.name || "unknown");
 
-        // Upload file
         const p = fetch("https://www.mither3security.com/employees/upload-credentials", {
           method: "POST",
           body: formData,
@@ -272,7 +262,6 @@ editBtn.addEventListener("click", async () => {
             input.replaceWith(span);
             credentialsFields[key] = span;
           })
-
         .catch(err => {
           console.error("File upload error:", err);
           const span = document.createElement("span");
@@ -284,7 +273,6 @@ editBtn.addEventListener("click", async () => {
 
         uploadPromises.push(p);
       } else {
-        // No file selected, just keep existing text
         updatedData.credentials[key] = input.dataset.value || "N/A";
         const span = document.createElement("span");
         span.id = key;
@@ -294,56 +282,179 @@ editBtn.addEventListener("click", async () => {
       }
     });
 
-    // Wait for all file uploads to finish
     if (uploadPromises.length === 0) {
-  await saveProfileData(updatedData);
-} else {
-  Promise.all(uploadPromises).then(() => saveProfileData(updatedData));
-}
+      await saveProfileData(updatedData);
+    } else {
+      Promise.all(uploadPromises).then(() => saveProfileData(updatedData));
+    }
 
-async function saveProfileData(updatedData) {
-  try {
-    const res = await fetch(`${API_URL}/${employeeId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ employeeData: updatedData }),
-    });
-    const result = await res.json();
-    if (!res.ok) return alert(result.error || "Failed to update profile");
-    alert("Profile updated successfully!");
-    loadEmployeeData();
-  } catch (err) {
-    console.error("Error updating employee:", err);
-    alert("Server error while saving");
-  }
-}
-
+    async function saveProfileData(updatedData) {
+      try {
+        const res = await fetch(`${API_URL}/${employeeId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ employeeData: updatedData }),
+        });
+        const result = await res.json();
+        if (!res.ok) return alert(result.error || "Failed to update profile");
+        alert("Profile updated successfully!");
+        loadEmployeeData();
+      } catch (err) {
+        console.error("Error updating employee:", err);
+        alert("Server error while saving");
+      }
+    }
   }
 });
 
+// ===== ATTENDANCE SECTION =====
+// ===== ATTENDANCE SECTION =====
+async function loadAttendanceData() {
+  try {
+    // Changed from `/employees/attendance/${employeeId}` to correct endpoint
+    const res = await fetch(
+      `https://www.mither3security.com/attendance/${employeeId}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
+    if (!res.ok) {
+      console.error("Failed to fetch attendance. Status:", res.status);
+      const tbody = document.querySelector("#attendanceTable tbody");
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Failed to load attendance records</td></tr>`;
+      return;
+    }
+
+    const data = await res.json();
+    const records = data.records || [];
+
+    renderAttendanceTable(records);
+    calculateAttendanceRate(records);
+  } catch (err) {
+    console.error("Error loading attendance data:", err);
+    const tbody = document.querySelector("#attendanceTable tbody");
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Error loading attendance records</td></tr>`;
+  }
+}
+
+function renderAttendanceTable(records) {
+  const tbody = document.querySelector("#attendanceTable tbody");
+  tbody.innerHTML = "";
+
+  if (records.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">No attendance records found</td></tr>`;
+    return;
+  }
+
+  records.forEach(record => {
+    const row = document.createElement("tr");
+    
+    const checkinDate = new Date(record.checkinTime).toLocaleDateString();
+    const checkinTime = new Date(record.checkinTime).toLocaleTimeString();
+    const checkoutTime = record.checkoutTime 
+      ? new Date(record.checkoutTime).toLocaleTimeString() 
+      : "Not checked out";
+    
+    const statusTag = `<span class="status-tag ${record.status?.toLowerCase().replace(" ", "") || "absent"}">${record.status || "Absent"}</span>`;
+    
+    row.innerHTML = `
+      <td>${checkinDate}</td>
+      <td>${record.shift || "N/A"}</td>
+      <td>${checkinTime}</td>
+      <td>${checkoutTime}</td>
+      <td>${statusTag}</td>
+    `;
+    
+    tbody.appendChild(row);
+  });
+}
+
+function calculateAttendanceRate(records) {
+  if (records.length === 0) {
+    document.getElementById("attendancePercentage").textContent = "0%";
+    return;
+  }
+
+  let onTimeCount = 0;
+  records.forEach(r => {
+    if (r.status && r.status.toLowerCase().includes("on-time")) {
+      onTimeCount++;
+    }
+  });
+
+  const percentage = Math.round((onTimeCount / records.length) * 100);
+  document.getElementById("attendancePercentage").textContent = `${percentage}%`;
+
+  // Render pie chart
+  renderAttendanceChart(records);
+}
+
+function renderAttendanceChart(records) {
+  let onTime = 0, late = 0, absent = 0;
+
+  records.forEach(r => {
+    const status = r.status ? r.status.toLowerCase() : "";
+    if (status.includes("late")) late++;
+    else if (status.includes("absent")) absent++;
+    else if (status.includes("on-time")) onTime++;
+  });
+
+  const ctx = document.getElementById("attendanceChart").getContext("2d");
+  
+  // Destroy previous chart if exists
+  if (window.attendanceChartInstance) {
+    window.attendanceChartInstance.destroy();
+  }
+
+  window.attendanceChartInstance = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: ["On-Time", "Late", "Absent"],
+      datasets: [{
+        data: [onTime, late, absent],
+        backgroundColor: ["#1abc9c", "#f39c12", "#e74c3c"],
+        borderColor: ["#fff", "#fff", "#fff"],
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: {
+            padding: 15,
+            font: { size: 12 }
+          }
+        }
+      }
+    }
+  });
+}
 
 // ===== Initialize =====
-document.addEventListener("DOMContentLoaded", loadEmployeeData);
+document.addEventListener("DOMContentLoaded", () => {
+  loadEmployeeData();
+  loadAttendanceData();
+});
 
 // ===== Tabs Logic =====
-const tabs = document.querySelectorAll(".tab"); // Tab buttons
-const contents = document.querySelectorAll(".tab-content"); // Tab content divs
+const tabs = document.querySelectorAll(".tab");
+const contents = document.querySelectorAll(".tab-content");
 
 tabs.forEach(tab => {
   tab.addEventListener("click", () => {
-    // Remove active from all tabs
     tabs.forEach(t => t.classList.remove("active"));
     tab.classList.add("active");
 
-    // Hide all content
     contents.forEach(c => c.style.display = "none");
 
-    // Show the selected content
-    const target = tab.dataset.target; // Example: <div class="tab" data-target="credentialsContent">
+    const target = tab.dataset.target;
     document.getElementById(target).style.display = "block";
   });
 });

@@ -22,6 +22,7 @@ import registerRoutes from "./routes/registerRoutes.js";
 import emailRoutes from "./routes/emailRoutes.js";
 import branchManagementRoutes from "./routes/branchManagementRoutes.js";
 import leaveRoutes from './routes/leaveRoutes.js';
+import remarksRoutes from "./routes/remarksRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -106,6 +107,7 @@ app.use("/api/registers", registerRoutes);
 app.use("/api/email", emailRoutes);
 app.use("/api/branches-management", branchManagementRoutes);
 app.use('/', leaveRoutes);
+app.use("/remarks", remarksRoutes);
 
 // ===== Health Check Endpoint =====
 app.get("/api/health", (req, res) => {

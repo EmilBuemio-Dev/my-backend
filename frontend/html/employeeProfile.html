@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Employee Profile</title>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
   <style>
     :root {
       --clr-light: #f5f7fa;
@@ -375,21 +375,19 @@
     /* ==== ATTENDANCE WRAPPER ==== */
     .attendance-wrapper {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 2fr 1fr;
       gap: 1.5rem;
       margin-top: 1rem;
     }
 
-    .attendance-history,
-    .attendance-rate-card {
+    .attendance-history {
       background: var(--clr-white);
       border-radius: var(--card-border-radius);
       padding: var(--card-padding);
       box-shadow: var(--card-box-shadow);
     }
 
-    .attendance-history h3,
-    .attendance-rate-card h3 {
+    .attendance-history h3 {
       color: var(--clr-primary);
       border-bottom: 2px solid var(--clr-primary);
       padding-bottom: 0.5rem;
@@ -399,10 +397,24 @@
     }
 
     .attendance-rate-card {
+      background: var(--clr-white);
+      border-radius: var(--card-border-radius);
+      padding: var(--card-padding);
+      box-shadow: var(--card-box-shadow);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+    }
+
+    .attendance-rate-card h3 {
+      color: var(--clr-primary);
+      border-bottom: 2px solid var(--clr-primary);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      width: 100%;
     }
 
     .chart-container {
@@ -410,7 +422,6 @@
       width: 200px;
       height: 200px;
       margin: 1rem auto;
-      cursor: pointer;
     }
 
     .attendance-percentage {
@@ -444,92 +455,6 @@
     .status-tag.absent {
       background: #ffebee;
       color: #c62828;
-    }
-
-    /* ==== MODAL ==== */
-    .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(3px);
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-
-    .modal.show {
-      display: flex;
-    }
-
-    .modal-content {
-      background: var(--clr-white);
-      border-radius: var(--card-border-radius);
-      padding: 2rem;
-      max-width: 900px;
-      width: 95%;
-      max-height: 90vh;
-      overflow-y: auto;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-      position: relative;
-      animation: slideUp 0.3s ease-out;
-    }
-
-    @keyframes slideUp {
-      from {
-        transform: translateY(20px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
-    }
-
-    .modal-content h3 {
-      font-size: 1.3rem;
-      color: var(--clr-primary);
-      margin-bottom: 1.5rem;
-      border-bottom: 2px solid var(--clr-primary);
-      padding-bottom: 0.8rem;
-      font-weight: 600;
-    }
-
-    .close {
-      position: absolute;
-      top: 1.5rem;
-      right: 1.5rem;
-      font-size: 1.8rem;
-      color: var(--clr-info-dark);
-      cursor: pointer;
-      transition: color 0.2s ease;
-      background: none;
-      border: none;
-    }
-
-    .close:hover {
-      color: var(--clr-danger);
-    }
-
-    .monthly-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-    }
-
-    .monthly-table td,
-    .monthly-table th {
-      border: 1px solid #ddd;
-      padding: 0.4rem 0.7rem;
-      text-align: center;
-      font-size: 0.85rem;
-    }
-
-    .monthly-table thead {
-      background: var(--clr-light);
-      position: sticky;
-      top: 0;
-      z-index: 10;
     }
 
     /* ==== RESPONSIVE ==== */
@@ -779,15 +704,14 @@
       </div>
 
       <div class="tab-content" id="attendanceSection" style="display:none;">
-        <h4>Attendance Records</h4>
         <div class="attendance-wrapper">
           <div class="attendance-history">
-            <h3>Weekly Attendance History</h3>
+            <h3>Attendance History</h3>
             <table id="attendanceTable">
               <thead>
                 <tr>
                   <th>Date</th>
-                  <th>Shift Time</th>
+                  <th>Shift</th>
                   <th>Time In</th>
                   <th>Time Out</th>
                   <th>Status</th>
@@ -807,25 +731,6 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Monthly Report Modal -->
-  <div id="monthlyReportModal" class="modal">
-    <div class="modal-content">
-      <button class="close" id="closeMonthlyModal">&times;</button>
-      <h3>Monthly Attendance History</h3>
-      <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
-        <button id="downloadMonthlyAttendance" style="padding:0.7rem 1.5rem; background:var(--clr-primary); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:600; transition:all 0.2s ease;" onmouseover="this.style.background='#000'" onmouseout="this.style.background='var(--clr-primary)'">Download CSV</button>
-      </div>
-      <div style="overflow-x:auto;">
-        <table id="monthlyAttendanceTable" class="monthly-table">
-          <thead></thead>
-          <tbody>
-            <tr><td colspan="21" style="text-align:center;">Loading...</td></tr>
-          </tbody>
-        </table>
       </div>
     </div>
   </div>

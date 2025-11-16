@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Ticketing Dashboard - Mither3</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>Feedback & Complaints - Mither3</title>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <style>
     :root {
@@ -51,7 +50,7 @@
       min-height: 100vh;
     }
 
-    /* Sidebar Styles */
+    /* Sidebar */
     aside {
       background: var(--clr-white);
       border-radius: var(--card-border-radius);
@@ -66,11 +65,6 @@
     aside .top {
       padding: 1.5rem;
       border-bottom: 1px solid var(--clr-light);
-    }
-
-    aside .logo {
-      display: flex;
-      align-items: center;
     }
 
     aside .logo h2 {
@@ -94,7 +88,6 @@
       padding: 0.9rem 1.5rem;
       color: var(--clr-info-dark);
       transition: all 0.2s ease;
-      position: relative;
     }
 
     aside .sidebar a:hover {
@@ -116,173 +109,128 @@
 
     aside .sidebar a.logout {
       margin-top: auto;
+      margin-bottom: 1rem;
     }
 
-    aside .sidebar .badge {
-      background: var(--clr-danger);
-      color: white;
-      font-size: 0.7rem;
-      padding: 3px 8px;
-      border-radius: 10px;
-      font-weight: 600;
-    }
-
-    aside .sidebar .material-symbols-outlined {
-      font-size: 1.2rem;
-    }
-
-    /* Main Content */
+    /* Main */
     main {
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
     }
 
-    main h1 {
-      color: var(--clr-dark);
-      font-size: 2rem;
-      font-weight: 700;
-    }
-
-    /* Applicants Section */
-    .applicants-section {
+    /* Section */
+    .section {
       background: var(--clr-white);
       padding: var(--card-padding);
       border-radius: var(--card-border-radius);
       box-shadow: var(--card-box-shadow);
     }
 
-    .applicants-section h2 {
-      color: var(--clr-dark);
-      margin-bottom: 1.5rem;
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
-
-    /* Filter Bar */
-    .filter-bar {
+    /* Tabs */
+    .tabs-header {
       display: flex;
       gap: 1rem;
+      border-bottom: 2px solid var(--clr-light);
       margin-bottom: 1.5rem;
-      flex-wrap: wrap;
     }
 
-    .filter-bar input {
-      flex: 1;
-      min-width: 200px;
-      padding: 0.8rem;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-      font-size: 0.9rem;
-      transition: border 0.2s ease;
-    }
-
-    .filter-bar input:focus {
-      outline: none;
-      border-color: var(--clr-primary);
-    }
-
-    .filter-bar button {
+    .tab-btn {
       padding: 0.8rem 1.5rem;
-      background-color: var(--clr-primary);
+      background: none;
+      border: none;
+      color: var(--clr-info-dark);
+      cursor: pointer;
+      font-weight: 600;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s ease;
+      font-size: 0.95rem;
+    }
+
+    .tab-btn.active {
+      color: var(--clr-primary);
+      border-bottom-color: var(--clr-primary);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Add Remark Button */
+    .add-remark-btn {
+      align-self: flex-start;
+      padding: 0.8rem 1.5rem;
+      background: var(--clr-primary);
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      font-weight: 500;
+      font-weight: 600;
       transition: all 0.2s ease;
+      margin-bottom: 1.5rem;
     }
 
-    .filter-bar button:hover {
-      background-color: #000;
+    .add-remark-btn:hover {
+      background: #000;
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
-    /* Table Styles */
+    /* Table */
     .table-container {
       max-height: 600px;
       overflow-y: auto;
-      overflow-x: auto;
       border-radius: 8px;
-      background-color: var(--clr-white);
     }
 
-    .table-container table {
+    table {
       width: 100%;
       border-collapse: collapse;
-      background-color: var(--clr-white);
     }
 
-    .table-container thead {
-      background-color: var(--clr-light);
+    thead {
+      background: var(--clr-light);
       position: sticky;
       top: 0;
-      z-index: 10;
     }
 
-    .table-container th,
-    .table-container td {
+    th, td {
       padding: 1rem;
       border-bottom: 1px solid #e0e0e0;
-      color: var(--clr-dark);
       text-align: left;
     }
 
-    .table-container th {
+    th {
       font-weight: 600;
       font-size: 0.85rem;
       color: var(--clr-dark);
     }
 
-    .table-container tbody tr {
-      transition: background 0.2s ease;
-    }
-
-    .table-container tbody tr:hover {
+    tbody tr:hover {
       background: var(--clr-light);
     }
 
-    .table-container tr:last-child td {
-      border-bottom: none;
-    }
-
-    .view-record {
-      display: inline-block;
-      padding: 0.5rem 1rem;
-      border: 1px solid var(--clr-primary);
-      border-radius: 6px;
-      color: white;
-      background-color: var(--clr-primary);
-      text-decoration: none;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      cursor: pointer;
-      font-size: 0.8rem;
-    }
-
-    .view-record:hover {
-      background-color: #000;
-      border-color: #000;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-
-    /* Status Badges */
+    /* Status Badge */
     .status {
       padding: 0.3rem 0.8rem;
       border-radius: 20px;
       font-size: 0.8rem;
-      font-weight: 500;
+      font-weight: 600;
       display: inline-block;
     }
 
-    .status.urgent {
+    .status.urgent,
+    .status.grave {
       background: #ffebee;
       color: #c62828;
     }
 
-    .status.completed {
+    .status.completed,
+    .status.resolved {
       background: #e8f5e9;
       color: #2e7d32;
     }
@@ -292,7 +240,35 @@
       color: #1565c0;
     }
 
-    /* Modal Styles */
+    .status.light {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .status.least-grave {
+      background: #fce4ec;
+      color: #c2185b;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--clr-primary);
+      border-radius: 6px;
+      background: var(--clr-primary);
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.8rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      background: #000;
+      transform: translateY(-2px);
+    }
+
+    /* Modal */
     .modal {
       display: none;
       position: fixed;
@@ -304,7 +280,6 @@
       background: rgba(0, 0, 0, 0.5);
       align-items: center;
       justify-content: center;
-      backdrop-filter: blur(2px);
     }
 
     .modal.show {
@@ -318,101 +293,70 @@
       border-radius: var(--card-border-radius);
       padding: 2rem;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-      animation: fadeIn 0.3s ease-in-out;
-      display: flex;
-      flex-direction: column;
       max-height: 90vh;
       overflow-y: auto;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(-20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
     }
 
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid #e0e0e0;
       margin-bottom: 1.5rem;
+      border-bottom: 1px solid #e0e0e0;
       padding-bottom: 1rem;
     }
 
     .modal-header h3 {
       margin: 0;
       font-size: 1.3rem;
-      font-weight: 600;
       color: var(--clr-dark);
     }
 
     .close-btn {
-      cursor: pointer;
-      font-size: 28px;
-      color: var(--clr-info-dark);
       background: none;
       border: none;
-      transition: color 0.2s ease;
+      font-size: 28px;
+      cursor: pointer;
+      color: var(--clr-info-dark);
     }
 
     .close-btn:hover {
       color: var(--clr-dark);
     }
 
-    .modal-body {
+    .form-group {
+      margin-bottom: 1rem;
       display: flex;
       flex-direction: column;
-      gap: 0.8rem;
-      flex: 1;
-      overflow-y: auto;
     }
 
-    .modal-body p {
-      margin: 0;
-      font-size: 0.95rem;
-      line-height: 1.6;
-      color: var(--clr-black-variant);
-    }
-
-    .modal-body p strong {
-      color: var(--clr-dark);
+    .form-group label {
+      margin-bottom: 0.5rem;
       font-weight: 600;
-    }
-
-    .modal-body hr {
-      margin: 0.8rem 0;
-      border: 0;
-      border-top: 1px solid #e0e0e0;
-    }
-
-    .concern-box {
-      background: var(--clr-light);
-      padding: 1rem;
-      border-radius: 8px;
-      max-height: 200px;
-      overflow-y: auto;
-      font-size: 0.95rem;
-      line-height: 1.6;
-      color: var(--clr-black-variant);
-    }
-
-    .employee-link {
-      color: var(--clr-primary);
-      text-decoration: none;
-      font-weight: 600;
-      transition: all 0.2s ease;
-      cursor: pointer;
-    }
-
-    .employee-link:hover {
-      text-decoration: underline;
       color: var(--clr-dark);
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: inherit;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--clr-primary);
+      box-shadow: 0 0 0 3px rgba(19, 19, 21, 0.1);
     }
 
     .modal-footer {
@@ -424,64 +368,24 @@
       border-top: 1px solid #e0e0e0;
     }
 
-    .btn {
-      padding: 0.6rem 1.5rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      font-size: 0.9rem;
-    }
-
-    .btn.complete {
-      background-color: #007bff;
+    .btn-submit {
+      background: #007bff;
       color: white;
+      padding: 0.8rem 1.5rem;
     }
 
-    .btn.complete:hover:not(:disabled) {
-      background-color: #0056b3;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    .btn-submit:hover {
+      background: #0056b3;
     }
 
-    .btn.complete:disabled {
-      background-color: #cccccc;
-      cursor: not-allowed;
-    }
-
-    .btn.close {
-      background-color: #6c757d;
+    .btn-cancel {
+      background: #6c757d;
       color: white;
+      padding: 0.8rem 1.5rem;
     }
 
-    .btn.close:hover {
-      background-color: #545b62;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-
-
-    .right .top {
-      background: var(--clr-white);
-      padding: 1rem;
-      border-radius: var(--card-border-radius);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: var(--card-box-shadow);
-    }
-
-    /* Responsive Design */
-    @media (max-width: 1200px) {
-      .container {
-        grid-template-columns: 250px 1fr;
-      }
-
-      .right {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-      }
+    .btn-cancel:hover {
+      background: #545b62;
     }
 
     @media (max-width: 768px) {
@@ -490,94 +394,25 @@
       }
 
       aside {
-        position: relative;
         height: auto;
-      }
-
-      aside .sidebar {
-        flex-direction: row;
-        overflow-x: auto;
-        padding: 0.5rem;
-      }
-
-      aside .sidebar a {
-        padding: 0.5rem 1rem;
-        white-space: nowrap;
-      }
-
-      .right {
-        grid-template-columns: 1fr;
       }
 
       .modal-content {
         width: 95%;
-        padding: 1.5rem;
-      }
-
-      .table-container th,
-      .table-container td {
-        padding: 0.8rem;
-        font-size: 0.8rem;
-      }
-
-      .filter-bar {
-        flex-direction: column;
-      }
-
-      .filter-bar input,
-      .filter-bar button {
-        width: 100%;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .container {
-        width: 100%;
-        padding: 0.5rem;
-      }
-
-      .applicants-section {
-        padding: 1rem;
-      }
-
-      .table-container th,
-      .table-container td {
-        padding: 0.5rem;
-        font-size: 0.75rem;
-      }
-
-      .view-record {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.75rem;
-      }
-
-      .modal-content {
-        padding: 1rem;
-      }
-
-      .modal-header h3 {
-        font-size: 1.1rem;
-      }
-
-      .modal-body p {
-        font-size: 0.9rem;
       }
     }
   </style>
 </head>
-
 <body>
   <div class="container">
     <aside>
       <div class="top">
         <div class="logo">
-          <h2>
-            <img src="../../image/logo.png" style="height:30px; vertical-align:middle; margin-right:8px;">
-            <span class="Company">MITHER3</span>
-          </h2>
+          <img src="/image/logo.png" alt="Company Logo"
+            style="height:30px; vertical-align:middle; margin-right:2px; margin-bottom:5px;">
+          <h2><span class="Company">MITHER3</span></h2>
         </div>
       </div>
-
       <div class="sidebar">
         <a href="dashboard.html">
           <span class="material-symbols-outlined">grid_view</span>
@@ -594,7 +429,7 @@
         <a href="#" class="active">
           <span class="material-symbols-outlined">chat</span>
           <h3>Feedback/Complaints</h3>
-          <span class="badge">3</span>
+          <span class="badge" id="complaintsBadge">0</span>
         </a>
         <a href="account.html">
           <span class="material-symbols-outlined">manage_accounts</span>
@@ -616,34 +451,60 @@
     </aside>
 
     <main>
-      <div class="applicants-section">
-        <h2>Feedback & Complaints</h2>
-        <div class="table-container">
-          <table id="ticketsTable">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Subject</th>
-                <th>Source</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Details</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+      <div class="section">
+        <div class="tabs-header">
+          <button class="tab-btn active" data-tab="feedback-tab">Feedback & Complaints</button>
+          <button class="tab-btn" data-tab="remarks-tab">Remarks</button>
+        </div>
+
+        <!-- FEEDBACK TAB -->
+        <div id="feedback-tab" class="tab-content active">
+          <div class="table-container">
+            <table id="ticketsTable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Subject</th>
+                  <th>Source</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- REMARKS TAB -->
+        <div id="remarks-tab" class="tab-content">
+          <button class="add-remark-btn" id="addRemarkBtn">+ Add Remark</button>
+          <div class="table-container">
+            <table id="remarksTable">
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>Penalty Level</th>
+                  <th>Due Process</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </main>
+  </div>
 
-
-
-  <!-- ====== MODAL FOR TICKET DETAILS ====== -->
+  <!-- TICKET MODAL -->
   <div id="ticketModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
         <h3>Ticket Details</h3>
-        <button class="close-btn" id="closeBtn">&times;</button>
+        <button class="close-btn" id="closeTicketBtn">&times;</button>
       </div>
       <div class="modal-body">
         <p><strong>Name:</strong> <span id="modalName"></span></p>
@@ -651,46 +512,112 @@
         <p><strong>Reported Employee:</strong> <span id="modalReportedEmployee">N/A</span></p>
         <p><strong>Source:</strong> <span id="modalSource"></span></p>
         <p><strong>Status:</strong> <span id="modalStatus"></span></p>
-        <p><strong>Rating:</strong> <span id="modalRating"></span></p>
         <p><strong>Date:</strong> <span id="modalDate"></span></p>
         <hr>
         <p><strong>Concern:</strong></p>
         <div id="modalConcern" class="concern-box"></div>
       </div>
       <div class="modal-footer">
-        <button class="btn close" id="closeFooterBtn">Close</button>
-        <button class="btn complete" id="markCompletedBtn">Mark as Completed</button>
+        <button class="btn-cancel" id="closeFooterBtn">Close</button>
+        <button class="btn-submit" id="markCompletedBtn">Mark as Completed</button>
       </div>
     </div>
   </div>
 
-  <script>
-    // Modal control - updated to work with new close button IDs
-    const modal = document.getElementById("ticketModal");
-    const closeBtn = document.getElementById("closeBtn");
-    const closeFooterBtn = document.getElementById("closeFooterBtn");
+  <!-- ADD REMARK MODAL -->
+  <div id="addRemarkModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Add New Remark</h3>
+        <button class="close-btn" id="closeRemarkBtn">&times;</button>
+      </div>
+      <form id="remarkForm">
+        <div class="form-group">
+          <label for="employeeSelect">Employee *</label>
+          <select id="employeeSelect" required>
+            <option value="">-- Select Employee --</option>
+          </select>
+        </div>
 
-    closeBtn.addEventListener("click", () => {
-      modal.classList.remove("show");
-    });
+        <div class="form-group">
+          <label for="penaltyLevel">Penalty Level *</label>
+          <select id="penaltyLevel" required>
+            <option value="">-- Select Penalty Level --</option>
+            <option value="Light">Light</option>
+            <option value="Least Grave">Least Grave</option>
+            <option value="Grave">Grave</option>
+          </select>
+        </div>
 
-    closeFooterBtn.addEventListener("click", () => {
-      modal.classList.remove("show");
-    });
+        <div class="form-group">
+          <label for="dueProcess">Due Process *</label>
+          <select id="dueProcess" required>
+            <option value="">-- Select Due Process --</option>
+            <option value="Notice">Notice</option>
+            <option value="Appearance">Appearance</option>
+          </select>
+        </div>
 
-    window.addEventListener("click", (e) => {
-      if (e.target === modal) modal.classList.remove("show");
-    });
+        <div class="form-group">
+          <label for="ticketSelect">Attach Ticket (Optional)</label>
+          <select id="ticketSelect">
+            <option value="">-- No Ticket --</option>
+          </select>
+        </div>
 
-    // Make openTicketModal compatible with new modal structure
-    const originalOpenModal = window.openTicketModal;
-    window.openTicketModal = function(ticketId) {
-      originalOpenModal(ticketId);
-      modal.classList.add("show");
-    };
-  </script>
+        <div class="form-group">
+          <label for="hrComment">HR Comment *</label>
+          <textarea id="hrComment" required placeholder="Enter your comment here..."></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" id="cancelRemarkBtn">Cancel</button>
+          <button type="submit" class="btn-submit">Submit Remark</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- VIEW REMARK MODAL -->
+  <div id="viewRemarkModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Remark Details</h3>
+        <button class="close-btn" id="closeViewRemarkBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Employee:</strong> <span id="viewRemarkEmployee"></span></p>
+        <p><strong>Penalty Level:</strong> <span id="viewRemarkPenalty" class="status"></span></p>
+        <p><strong>Due Process:</strong> <span id="viewRemarkDueProcess"></span></p>
+        <p><strong>Status:</strong> <span id="viewRemarkStatus" class="status"></span></p>
+        <p><strong>Ticket Attached:</strong> <span id="viewRemarkTicket">None</span></p>
+        <p><strong>HR Comment:</strong></p>
+        <div style="background: var(--clr-light); padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+          <p id="viewRemarkComment" style="margin: 0;"></p>
+        </div>
+        <p><strong>Created By:</strong> <span id="viewRemarkCreatedBy"></span> - <span id="viewRemarkCreatedDate"></span></p>
+        <hr>
+        <div id="updateSection" style="display: none;">
+          <div class="form-group">
+            <label for="updateStatus">Update Status</label>
+            <select id="updateStatus">
+              <option value="Pending">Pending</option>
+              <option value="Resolved">Resolved</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="resolutionNotes">Resolution Notes (Optional)</label>
+            <textarea id="resolutionNotes" placeholder="Add resolution notes..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="closeViewRemarkFooterBtn">Close</button>
+        <button class="btn-submit" id="updateRemarkBtn" style="display: none;">Update Remark</button>
+      </div>
+    </div>
+  </div>
 
   <script src="../js/Feedback&Complaints.js"></script>
-  <script src="../js/auth.js"></script>
 </body>
 </html>
