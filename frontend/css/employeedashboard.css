@@ -58,6 +58,17 @@ aside .top {
   border-bottom: 1px solid var(--clr-light);
 }
 
+aside .logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+aside .logo img {
+  height: 30px;
+}
+
+
 aside .logo h2 {
   font-size: 1.3rem;
   color: var(--clr-dark);

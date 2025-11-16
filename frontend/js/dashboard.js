@@ -26,16 +26,6 @@ if (logoutBtn) {
 // UTILITY FUNCTIONS
 // ============================================
 
-function updateComplaintsBadge(count) {
-  const badge = document.getElementById('complaintsBadge');
-  if (count > 0) {
-    badge.textContent = count;
-    badge.classList.add('show');
-  } else {
-    badge.classList.remove('show');
-  }
-}
-
 function setCircleProgress(circleId, percent, circleLength) {
   const circle = document.getElementById(circleId);
   if (circle) {
@@ -314,10 +304,6 @@ async function loadTodayComplaints() {
     const complaints = await res.json();
     const today = new Date().toISOString().split("T")[0];
     const todaysComplaints = complaints.filter(c => new Date(c.createdAt).toISOString().split("T")[0] === today);
-
-    // Update badge with urgent/pending count
-    const urgentCount = complaints.filter(c => c.creatorRole === "client" || c.status === "Pending").length;
-    updateComplaintsBadge(urgentCount);
 
     const tbody = document.getElementById("complaints-body");
     tbody.innerHTML = "";

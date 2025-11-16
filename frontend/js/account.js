@@ -236,24 +236,6 @@ async function syncAccountsToUsers() {
   }
 }
 
-// === Delete User ===
-async function deleteUser(id) {
-  if (!confirm("Are you sure you want to delete this user?")) return;
-  try {
-    const res = await fetch(`${API_URL}/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    const result = await res.json();
-    alert(result.msg || "User deleted");
-    loadUsers();
-  } catch (err) {
-    console.error("❌ Delete user error:", err);
-    alert("Server error");
-  }
-}
-
 // === Initial Load ===
 loadUsers();
 syncAccountsToUsers();
