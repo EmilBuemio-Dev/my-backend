@@ -310,9 +310,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!res.ok) throw new Error("Failed to save employee data");
       const saved = await res.json();
       alert("Employee data saved successfully!");
-      employeeDataCache = saved.employee;
+      employeeDataCache = saved.employee || saved.updatedEmployee;
       fileInputs = {};
-      populateProfile(saved.employee);
+      populateProfile(employeeDataCache);
     } catch (err) {
       console.error(err);
       alert("Error saving data. Check console for details.");
@@ -892,7 +892,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // ===== Initialize on Page Load =====
   if (employeeId) {
-    await fetchAllBranches(); 
+    await fetchAllBranches(); // ✅ Fetch branches first
     await fetchEmployeeData();
     await loadWeeklyAttendance();
   }
