@@ -7,6 +7,8 @@ import Employee from "../models/Employee.js";
 import Branch from "../models/Branch.js";
 import { authMiddleware } from "../middleware/auth.js";
 
+
+const parseForm = multer().none();
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -259,127 +261,117 @@ router.get("/leave-requests/employee/:employeeId", authMiddleware, async (req, r
   }
 });
 
-// UPDATE employee
-router.patch("/:id", authMiddleware, async (req, res) => {
+router.patch("/:id", authMiddleware, parseForm, async (req, res) => {
   try {
-    // ===== HANDLE BOTH JSON AND FORMDATA =====
+    const id = req.params.id;
+
+    // --- 1. Ensure employee exists ---
+    const employee = await Employee.findById(id);
+    if (!employee) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    // --- 2. Parse JSON safely ---
     let employeeData = {};
 
-    // If coming from FormData (file uploads)
-    if (req.body.employeeData && typeof req.body.employeeData === "string") {
+    if (req.body.employeeData) {
       try {
-        employeeData = JSON.parse(req.body.employeeData);
+        employeeData = JSON.parse(req.body.employeeData);  // ← FIXED
       } catch (err) {
-        console.error("Failed to parse employeeData:", err);
-        return res.status(400).json({ error: "Invalid employeeData format" });
+        return res.status(400).json({ error: "Invalid JSON in employeeData" });
       }
-    } else if (req.body.employeeData && typeof req.body.employeeData === "object") {
-      // If coming from JSON request
-      employeeData = req.body.employeeData;
     } else {
-      return res.status(400).json({ error: "employeeData is required" });
+      return res.status(400).json({ error: "employeeData field is missing" });
     }
 
-    // Validate at least one update field exists
-    if (Object.keys(employeeData).length === 0) {
-      return res.status(400).json({ error: "No data provided for update" });
-    }
-
-    // ===== PROCESS BASIC INFORMATION =====
-    if (employeeData.basicInformation) {
-      const basic = employeeData.basicInformation;
-
-      // ✅ Ensure status is valid enum
-      if (basic.status && !["Active", "Expired", "Pending"].includes(basic.status)) {
-        basic.status = "Active";
-      }
-
-      // ✅ Handle expiryDate - convert to Date or null
-      if (basic.expiryDate !== undefined) {
-        if (!basic.expiryDate || basic.expiryDate === "N/A" || basic.expiryDate === "") {
-          basic.expiryDate = null;
-        } else if (typeof basic.expiryDate === "string") {
-          const d = new Date(basic.expiryDate);
-          basic.expiryDate = isNaN(d.getTime()) ? null : d;
-        }
-      }
-
-      // ✅ Handle salary - convert to null if N/A
-      if (basic.salary !== undefined) {
-        if (basic.salary === "N/A" || basic.salary === "") {
-          basic.salary = null;
-        } else if (typeof basic.salary === "string") {
-          basic.salary = isNaN(parseFloat(basic.salary)) ? null : parseFloat(basic.salary);
-        }
-      }
-    }
-
-    // ===== PROCESS PERSONAL INFORMATION =====
-    if (employeeData.personalData) {
-      const personal = employeeData.personalData;
-
-      // ✅ Handle dateOfBirth
-      if (personal.dateOfBirth !== undefined) {
-        if (!personal.dateOfBirth || personal.dateOfBirth === "N/A" || personal.dateOfBirth === "") {
-          personal.dateOfBirth = null;
-        } else if (typeof personal.dateOfBirth === "string") {
-          const d = new Date(personal.dateOfBirth);
-          personal.dateOfBirth = isNaN(d.getTime()) ? null : d;
-        }
-      }
-
-      // Ensure name is provided
-      if (!personal.name || personal.name.trim() === "") {
-        return res.status(400).json({ error: "Full Name is required" });
-      }
-    }
-
-    // ===== BUILD DOT-NOTATION UPDATE =====
+    // --- 3. Prepare update fields ---
     const updateFields = {};
 
-    // Add basic information fields
+    // Basic Information
     if (employeeData.basicInformation) {
-      for (const [key, val] of Object.entries(employeeData.basicInformation)) {
-        updateFields[`employeeData.basicInformation.${key}`] = val;
-      }
+      updateFields["employeeData.basicInformation"] = {
+        ...employee.employeeData.basicInformation.toObject(),
+        ...employeeData.basicInformation,
+      };
     }
 
-    // Add personal data fields
+    // Personal Data
     if (employeeData.personalData) {
-      for (const [key, val] of Object.entries(employeeData.personalData)) {
-        updateFields[`employeeData.personalData.${key}`] = val;
-      }
+      updateFields["employeeData.personalData"] = {
+        ...employee.employeeData.personalData.toObject(),
+        ...employeeData.personalData,
+      };
     }
 
-    // Add educational background if provided
-    if (employeeData.educationalBackground) {
-      updateFields[`employeeData.educationalBackground`] = employeeData.educationalBackground;
+    // Government IDs
+    if (employeeData.governmentIds) {
+      updateFields["employeeData.governmentIds"] = {
+        ...employee.employeeData.governmentIds.toObject(),
+        ...employeeData.governmentIds,
+      };
     }
 
-    // Add credentials if provided
-    if (employeeData.credentials) {
-      for (const [key, val] of Object.entries(employeeData.credentials)) {
-        updateFields[`employeeData.credentials.${key}`] = val;
-      }
+    // Contact Info
+    if (employeeData.contactInfo) {
+      updateFields["employeeData.contactInfo"] = {
+        ...employee.employeeData.contactInfo.toObject(),
+        ...employeeData.contactInfo,
+      };
     }
 
-    // ===== PERFORM UPDATE =====
-    const updated = await Employee.findByIdAndUpdate(
-      req.params.id,
+    // Emergency Contact
+    if (employeeData.emergencyContact) {
+      updateFields["employeeData.emergencyContact"] = {
+        ...employee.employeeData.emergencyContact.toObject(),
+        ...employeeData.emergencyContact,
+      };
+    }
+
+    // Work Information
+    if (employeeData.workInformation) {
+      updateFields["employeeData.workInformation"] = {
+        ...employee.employeeData.workInformation.toObject(),
+        ...employeeData.workInformation,
+      };
+    }
+
+    // Work History
+    if (employeeData.workHistory) {
+      updateFields["employeeData.workHistory"] = employeeData.workHistory;
+    }
+
+    // Created By
+    if (employeeData.createdBy) {
+      updateFields["employeeData.createdBy"] = {
+        ...employee.employeeData.createdBy.toObject(),
+        ...employeeData.createdBy,
+      };
+    }
+
+    // Updated By
+    updateFields["employeeData.updatedBy"] = {
+      user: req.user._id,
+      name: req.user.name,
+      timestamp: Date.now(),
+    };
+
+    // --- 4. Apply update ---
+    const updatedEmployee = await Employee.findByIdAndUpdate(
+      id,
       { $set: updateFields },
-      { new: true, runValidators: true }
+      { new: true }
     );
 
-    if (!updated) return res.status(404).json({ error: "Employee not found" });
-
-    res.status(200).json({ 
-      msg: "Employee updated successfully", 
-      employee: updated 
+    // --- 5. Response ---
+    res.json({
+      message: "Employee updated successfully",
+      updatedEmployee,
+      updateFields,
     });
 
   } catch (err) {
     console.error("❌ Error updating employee:", err);
-    res.status(400).json({ error: err.message || "Failed to update employee" });
+    res.status(500).json({ error: "Internal server error during update" });
   }
 });
 
