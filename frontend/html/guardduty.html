@@ -69,6 +69,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      position: relative;
     }
 
     aside .logo {
@@ -81,6 +82,44 @@
       font-size: 1.2rem;
       color: var(--clr-dark);
       margin: 0;
+    }
+
+    /* ==== NOTIFICATION BELL ==== */
+    .notification-bell {
+      position: relative;
+      width: 40px;
+      height: 40px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 24px;
+      transition: transform 0.2s ease;
+    }
+
+    .notification-bell:hover {
+      transform: scale(1.1);
+    }
+
+    .notification-dot {
+      display: none;
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      width: 12px;
+      height: 12px;
+      background: #e74c3c;
+      border-radius: 50%;
+      border: 2px solid white;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7);
+      }
+      50% {
+        box-shadow: 0 0 0 10px rgba(231, 76, 60, 0);
+      }
     }
 
     aside .sidebar {
@@ -397,6 +436,14 @@
       animation: slideUp 0.3s ease-out;
     }
 
+    #remarksModal .modal-content {
+      max-width: 600px;
+    }
+
+    #ticketDetailsModal .modal-content {
+      max-width: 600px;
+    }
+
     @keyframes slideUp {
       from {
         transform: translateY(20px);
@@ -524,6 +571,132 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
+    /* ==== REMARKS STYLES ==== */
+    .remark-card {
+      background: var(--clr-light);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-left: 4px solid var(--clr-primary);
+      transition: all 0.2s ease;
+    }
+
+    .remark-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .remark-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.8rem;
+    }
+
+    .penalty-badge {
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .penalty-badge.light {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .penalty-badge.least-grave {
+      background: #fce4ec;
+      color: #c2185b;
+    }
+
+    .penalty-badge.grave {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    .remark-date {
+      font-size: 0.85rem;
+      color: var(--clr-info-dark);
+    }
+
+    .remark-body {
+      font-size: 0.9rem;
+      color: var(--clr-dark);
+    }
+
+    .remark-body p {
+      margin-bottom: 0.5rem;
+    }
+
+    .comment-box {
+      background: white;
+      padding: 0.8rem;
+      border-radius: 6px;
+      margin: 0.5rem 0 1rem 0;
+      border-left: 3px solid var(--clr-warning);
+      font-size: 0.9rem;
+      color: var(--clr-black-variant);
+    }
+
+    .view-ticket-btn {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .view-ticket-btn:hover {
+      background: #0056b3;
+      transform: translateY(-2px);
+    }
+
+    .status-badge {
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .status-badge.pending {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    .status-badge.resolved {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .status-badge.completed {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .status-badge.urgent {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    /* Ticket Modal Styles */
+    #ticketDetailsModal .modal-content p {
+      margin: 0.5rem 0;
+    }
+
+    #ticketDetailsModal .modal-content hr {
+      margin: 1rem 0;
+      border: none;
+      border-top: 1px solid #e0e0e0;
+    }
+
     /* ==== RESPONSIVE ==== */
     @media (max-width: 1200px) {
       .container {
@@ -610,6 +783,10 @@
           <img src="../../image/logo.png" style="height:30px; vertical-align:middle;">
           <h2>MITHER3</h2>
         </div>
+        <button id="notificationBell" class="notification-bell" title="View Remarks">
+          <span class="material-symbols-outlined">notifications</span>
+          <div id="notificationDot" class="notification-dot"></div>
+        </button>
       </div>
 
       <div class="sidebar">
@@ -743,6 +920,37 @@
           </table>
         </div>
       </section>
+    </div>
+  </div>
+
+  <!-- REMARKS MODAL -->
+  <div id="remarksModal" class="modal">
+    <div class="modal-content">
+      <button class="close" id="closeRemarksBtn">&times;</button>
+      <h3>📋 Notifications</h3>
+      <div id="remarksContainer">
+        <!-- Remarks will be loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- TICKET DETAILS MODAL -->
+  <div id="ticketDetailsModal" class="modal">
+    <div class="modal-content">
+      <button class="close" id="closeTicketDetailsBtn">&times;</button>
+      <h3>Ticket Details</h3>
+      <div class="modal-body">
+        <p><strong>Name:</strong> <span id="ticketModalName"></span></p>
+        <p><strong>Subject:</strong> <span id="ticketModalSubject"></span></p>
+        <p><strong>Source:</strong> <span id="ticketModalSource"></span></p>
+        <p><strong>Status:</strong> <span id="ticketModalStatus" class="status-badge"></span></p>
+        <p><strong>Date:</strong> <span id="ticketModalDate"></span></p>
+        <hr>
+        <p><strong>Concern:</strong></p>
+        <div style="background: var(--clr-light); padding: 1rem; border-radius: 8px;">
+          <p id="ticketModalConcern" style="margin: 0;"></p>
+        </div>
+      </div>
     </div>
   </div>
 

@@ -20,6 +20,147 @@ document.addEventListener("DOMContentLoaded", () => {
   if (checkinTimeInput) checkinTimeInput.value = `${h}:${m}`;
   if (checkoutTimeInput) checkoutTimeInput.value = `${h}:${m}`;
 
+  // ====== NOTIFICATION SYSTEM ======
+  const notificationBell = document.getElementById("notificationBell");
+  const notificationDot = document.getElementById("notificationDot");
+  const remarksModal = document.getElementById("remarksModal");
+  const closeRemarksBtn = document.getElementById("closeRemarksBtn");
+  const remarksContainer = document.getElementById("remarksContainer");
+  const token = localStorage.getItem("token");
+  const employeeId = localStorage.getItem("employeeId");
+
+  // ===== LOAD REMARKS =====
+  async function loadRemarks() {
+    if (!token || !employeeId) return;
+
+    try {
+      const res = await fetch(`https://www.mither3security.com/remarks/employee/${employeeId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!res.ok) throw new Error("Failed to load remarks");
+      const data = await res.json();
+      const remarks = data.remarks || [];
+
+      // Show notification dot if there are any remarks
+      if (remarks.length > 0) {
+        notificationDot.style.display = "block";
+      }
+
+      // Store remarks globally for modal display
+      window.employeeRemarks = remarks;
+    } catch (err) {
+      console.error("Error loading remarks:", err);
+    }
+  }
+
+  // ===== DISPLAY REMARKS IN MODAL =====
+  function displayRemarks() {
+    const remarks = window.employeeRemarks || [];
+    remarksContainer.innerHTML = "";
+
+    if (remarks.length === 0) {
+      remarksContainer.innerHTML = `
+        <div style="text-align: center; padding: 2rem; color: #7d8da1;">
+          <p style="font-size: 1rem;">No remarks filed against you.</p>
+        </div>
+      `;
+      return;
+    }
+
+    remarks.forEach((remark, index) => {
+      const remarkCard = document.createElement("div");
+      remarkCard.className = "remark-card";
+      remarkCard.innerHTML = `
+        <div class="remark-header">
+          <span class="penalty-badge ${remark.penaltyLevel.toLowerCase().replace(" ", "-")}">${remark.penaltyLevel}</span>
+          <span class="remark-date">${new Date(remark.createdAt).toLocaleDateString()}</span>
+        </div>
+        <div class="remark-body">
+          <p><strong>Due Process:</strong> ${remark.dueProcess}</p>
+          <p><strong>Status:</strong> <span class="status-badge ${remark.status.toLowerCase()}">${remark.status}</span></p>
+          <p><strong>HR Comment:</strong></p>
+          <div class="comment-box">${remark.hrComment}</div>
+          ${remark.ticketId ? `<button class="view-ticket-btn" onclick="viewTicketFromRemark('${remark.ticketId}')">📎 View Attached Ticket</button>` : ''}
+        </div>
+      `;
+      remarksContainer.appendChild(remarkCard);
+    });
+  }
+
+  // ===== NOTIFICATION BELL CLICK =====
+  notificationBell?.addEventListener("click", () => {
+    displayRemarks();
+    remarksModal.classList.add("show");
+  });
+
+  // ===== CLOSE REMARKS MODAL =====
+  closeRemarksBtn?.addEventListener("click", () => {
+    remarksModal.classList.remove("show");
+  });
+
+  // Close on background click
+  remarksModal?.addEventListener("click", (e) => {
+    if (e.target === remarksModal) {
+      remarksModal.classList.remove("show");
+    }
+  });
+
+  // ===== VIEW FULL TICKET FROM REMARK =====
+  window.viewTicketFromRemark = async function(ticketId) {
+    try {
+      const res = await fetch(`https://www.mither3security.com/tickets/${ticketId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!res.ok) throw new Error("Failed to load ticket");
+      const ticket = await res.json();
+
+      // Show ticket in modal
+      showTicketModal(ticket);
+    } catch (err) {
+      console.error("Error loading ticket:", err);
+      alert("Failed to load ticket details");
+    }
+  };
+
+  // ===== SHOW TICKET MODAL =====
+  function showTicketModal(ticket) {
+    const ticketModal = document.getElementById("ticketDetailsModal");
+    if (!ticketModal) return;
+
+    document.getElementById("ticketModalName").innerText = ticket.creatorName || "Unknown";
+    document.getElementById("ticketModalSubject").innerText = ticket.subject || "No subject";
+    document.getElementById("ticketModalSource").innerText = ticket.creatorRole === "client" ? "Client" : "Employee";
+    
+    let displayStatus = ticket.status === "Completed" ? "Completed" : (ticket.creatorRole === "client" ? "Urgent" : ticket.status || "Pending");
+    document.getElementById("ticketModalStatus").innerText = displayStatus;
+    document.getElementById("ticketModalStatus").className = "status-badge " + displayStatus.toLowerCase();
+
+    document.getElementById("ticketModalDate").innerText = ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : "Unknown";
+    document.getElementById("ticketModalConcern").innerText = ticket.concern || "No concern";
+
+    ticketModal.classList.add("show");
+  }
+
+  // ===== CLOSE TICKET MODAL =====
+  const closeTicketModalBtn = document.getElementById("closeTicketDetailsBtn");
+  const ticketDetailsModal = document.getElementById("ticketDetailsModal");
+
+  closeTicketModalBtn?.addEventListener("click", () => {
+    ticketDetailsModal?.classList.remove("show");
+  });
+
+  ticketDetailsModal?.addEventListener("click", (e) => {
+    if (e.target === ticketDetailsModal) {
+      ticketDetailsModal.classList.remove("show");
+    }
+  });
+
+  // Load remarks on page load and refresh every 30 seconds
+  loadRemarks();
+  setInterval(loadRemarks, 30000);
+
   // ====== CHECK-IN SCRIPT ======
   const checkinForm = document.getElementById("checkinForm");
   const checkinResultDiv = document.getElementById("checkinResult");
