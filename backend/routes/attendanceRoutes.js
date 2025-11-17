@@ -38,7 +38,6 @@ function parseShiftTimeToDate(shiftStr) {
   return shiftDate;
 }
 
-
 // ===== Middleware: Verify Token =====
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
@@ -80,15 +79,13 @@ router.post("/checkin", authenticateToken, upload.single("checkinImage"), async 
       });
     }
 
-    const shiftStart = parseShiftTime(`${shiftMatch[1]}:${shiftMatch[2]} ${shiftMatch[3]}`);
+    const shiftStart = parseShiftTimeToDate(`${shiftMatch[1]}:${shiftMatch[2]} ${shiftMatch[3]}`);
     if (!shiftStart) return res.status(400).json({ message: "Failed to parse shift start time." });
 
     // ===== USE PH TIME =====
     const now = getNowInPH();
-    const shiftStartDate = new Date(now);
-    shiftStartDate.setHours(shiftStart.hour, shiftStart.minute, 0, 0);
 
-    const diffMinutes = (now - shiftStartDate) / 60000;
+    const diffMinutes = (now - shiftStart) / 60000;
     console.log(`🕐 Now (PH): ${now.toLocaleString()}`);
     console.log(`🕐 Shift Start: ${shiftStartDate.toLocaleString()}`);
     console.log(`⏱ Difference (mins): ${diffMinutes}`);
@@ -186,10 +183,10 @@ router.post("/checkout", authenticateToken, async (req, res) => {
     
     if (matches.length >= 2) {
       const endTimeMatch = matches[1];
-      const shiftEndTime = parseShiftTime(`${endTimeMatch[1]}:${endTimeMatch[2]} ${endTimeMatch[3]}`);
+      const shiftEndTime = parseShiftTimeToDate(`${endTimeMatch[1]}:${endTimeMatch[2]} ${endTimeMatch[3]}`);
       
       if (shiftEndTime) {
-        const shiftEnd = new Date(now);
+        const shiftEnd = shiftEndTime; 
         shiftEnd.setHours(shiftEndTime.hour, shiftEndTime.minute, 0, 0);
 
         // Check if leaving early
