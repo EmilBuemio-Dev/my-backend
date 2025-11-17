@@ -71,7 +71,7 @@ async function loadTickets() {
   }
 }
 
-// ===== OPEN TICKET MODAL =====
+// ===== OPEN TICKET MODAL ===== (FIXED WITH CLICKABLE EMPLOYEE)
 async function openTicketModal(ticketId) {
   try {
     if (!ticketId) {
@@ -89,6 +89,32 @@ async function openTicketModal(ticketId) {
 
     document.getElementById("modalName").innerText = ticket.creatorName || "Unknown";
     document.getElementById("modalSubject").innerText = ticket.subject || "No subject";
+    
+    // ✅ FIXED: Make reported employee name clickable
+    const reportedEmployeeElement = document.getElementById("modalReportedEmployee");
+    
+    if (ticket.reportedEmployeeId && ticket.reportedEmployeeName) {
+      // Create clickable link
+      reportedEmployeeElement.innerHTML = `
+        <a href="#" 
+           data-employee-id="${ticket.reportedEmployeeId}" 
+           style="color: #007bff; text-decoration: underline; cursor: pointer;"
+           class="employee-link">
+          ${ticket.reportedEmployeeName}
+        </a>
+      `;
+      
+      // Add click event to redirect to employee profile
+      const employeeLink = reportedEmployeeElement.querySelector('.employee-link');
+      employeeLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        const employeeId = e.target.dataset.employeeId;
+        window.location.href = `../html/profile.html?id=${employeeId}`;
+      });
+    } else {
+      reportedEmployeeElement.innerText = "N/A";
+    }
+    
     document.getElementById("modalSource").innerText = ticket.creatorRole === "client" ? "Client" : "Employee";
     
     let displayStatus = ticket.status === "Completed" ? "Completed" : (ticket.creatorRole === "client" ? "Urgent" : ticket.status || "Pending");
@@ -274,8 +300,7 @@ document.getElementById("remarkForm").addEventListener("submit", async (e) => {
   }
 });
 
-// ===== VIEW REMARK MODAL =====
-// ===== VIEW REMARK MODAL ===== (FIXED VERSION)
+// ===== VIEW REMARK MODAL ===== (WITH CLICKABLE EMPLOYEE)
 async function openRemarkModal(remarkId) {
   try {
     const res = await fetch(`https://www.mither3security.com/remarks/${remarkId}`, {
@@ -284,7 +309,28 @@ async function openRemarkModal(remarkId) {
     if (!res.ok) throw new Error("Failed to load remark");
     const remark = await res.json();
 
-    document.getElementById("viewRemarkEmployee").innerText = remark.employeeName || "Unknown";
+    // ✅ Make employee name clickable
+    const employeeElement = document.getElementById("viewRemarkEmployee");
+    if (remark.employeeId) {
+      employeeElement.innerHTML = `
+        <a href="#" 
+           data-employee-id="${remark.employeeId}" 
+           style="color: #007bff; text-decoration: underline; cursor: pointer;"
+           class="employee-link">
+          ${remark.employeeName || "Unknown"}
+        </a>
+      `;
+      
+      const employeeLink = employeeElement.querySelector('.employee-link');
+      employeeLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        const employeeId = e.target.dataset.employeeId;
+        window.location.href = `../html/profile.html?id=${employeeId}`;
+      });
+    } else {
+      employeeElement.innerText = remark.employeeName || "Unknown";
+    }
+
     document.getElementById("viewRemarkPenalty").innerText = remark.penaltyLevel;
     document.getElementById("viewRemarkPenalty").className = "status " + remark.penaltyLevel.toLowerCase().replace(" ", "-");
     document.getElementById("viewRemarkDueProcess").innerText = remark.dueProcess;
@@ -296,11 +342,10 @@ async function openRemarkModal(remarkId) {
     document.getElementById("viewRemarkCreatedBy").innerText = remark.createdBy.name || "Unknown";
     document.getElementById("viewRemarkCreatedDate").innerText = createdDate;
 
-    // ===== DISPLAY TICKET DETAILS (FIXED) =====
+    // ===== DISPLAY TICKET DETAILS =====
     const ticketSection = document.getElementById("ticketDetailsSection");
     
     if (remark.ticketId) {
-      // Fetch the full ticket details
       try {
         const ticketRes = await fetch(`https://www.mither3security.com/tickets/${remark.ticketId}`, {
           headers: { "Authorization": `Bearer ${token}` },
@@ -311,25 +356,12 @@ async function openRemarkModal(remarkId) {
           
           ticketSection.style.display = "block";
           
-          // Display ticket information
           document.getElementById("ticketSubjectDisplay").innerText = ticketDetails.subject || "N/A";
           document.getElementById("ticketCreatorDisplay").innerText = ticketDetails.creatorName || "Unknown";
           document.getElementById("ticketSourceDisplay").innerText = ticketDetails.creatorRole === "client" ? "Client" : "Employee";
-          
-          // Display reported employee if exists
-          const reportedEmployee = ticketDetails.reportedEmployeeName || "N/A";
-          document.getElementById("ticketReportedEmployeeDisplay").innerText = reportedEmployee;
-          
           document.getElementById("ticketRatingDisplay").innerText = ticketDetails.rating || "Not Rated";
           document.getElementById("ticketDateDisplay").innerText = ticketDetails.createdAt ? new Date(ticketDetails.createdAt).toLocaleString() : "Unknown";
           
-          // Display concern/description
-          const concernDisplay = document.getElementById("ticketConcernDisplay");
-          if (concernDisplay) {
-            concernDisplay.innerText = ticketDetails.concern || "No concern provided";
-          }
-          
-          // Add button to open full ticket in new modal
           const viewFullTicketBtn = document.getElementById("viewFullTicketBtn");
           if (viewFullTicketBtn) {
             viewFullTicketBtn.onclick = () => {

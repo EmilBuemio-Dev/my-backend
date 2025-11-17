@@ -271,98 +271,63 @@ router.patch("/:id", authMiddleware, parseForm, async (req, res) => {
       return res.status(404).json({ error: "Employee not found" });
     }
 
-    // --- 2. Parse JSON safely ---
     let employeeData = {};
 
     if (req.body.employeeData) {
-      try {
-        employeeData = JSON.parse(req.body.employeeData);  // ← FIXED
-      } catch (err) {
-        return res.status(400).json({ error: "Invalid JSON in employeeData" });
+      // ✅ If employeeData is a string, parse it. If already object, use directly
+      if (typeof req.body.employeeData === "string") {
+        try {
+          employeeData = JSON.parse(req.body.employeeData);
+        } catch (err) {
+          return res.status(400).json({ error: "Invalid JSON in employeeData" });
+        }
+      } else if (typeof req.body.employeeData === "object") {
+        employeeData = req.body.employeeData;
+      } else {
+        return res.status(400).json({ error: "employeeData must be an object or JSON string" });
       }
     } else {
       return res.status(400).json({ error: "employeeData field is missing" });
     }
 
-    // --- 3. Prepare update fields ---
+    // --- 2. Prepare update fields ---
     const updateFields = {};
 
-    // Basic Information
-    if (employeeData.basicInformation) {
-      updateFields["employeeData.basicInformation"] = {
-        ...employee.employeeData.basicInformation.toObject(),
-        ...employeeData.basicInformation,
-      };
-    }
+    // Merge subfields if they exist
+    const subfields = [
+      "basicInformation",
+      "personalData",
+      "governmentIds",
+      "contactInfo",
+      "emergencyContact",
+      "workInformation",
+      "workHistory",
+      "createdBy"
+    ];
 
-    // Personal Data
-    if (employeeData.personalData) {
-      updateFields["employeeData.personalData"] = {
-        ...employee.employeeData.personalData.toObject(),
-        ...employeeData.personalData,
-      };
-    }
+    subfields.forEach(field => {
+      if (employeeData[field]) {
+        updateFields[`employeeData.${field}`] = {
+          ...employee.employeeData[field]?.toObject?.() || employee.employeeData[field] || {},
+          ...employeeData[field],
+        };
+      }
+    });
 
-    // Government IDs
-    if (employeeData.governmentIds) {
-      updateFields["employeeData.governmentIds"] = {
-        ...employee.employeeData.governmentIds.toObject(),
-        ...employeeData.governmentIds,
-      };
-    }
-
-    // Contact Info
-    if (employeeData.contactInfo) {
-      updateFields["employeeData.contactInfo"] = {
-        ...employee.employeeData.contactInfo.toObject(),
-        ...employeeData.contactInfo,
-      };
-    }
-
-    // Emergency Contact
-    if (employeeData.emergencyContact) {
-      updateFields["employeeData.emergencyContact"] = {
-        ...employee.employeeData.emergencyContact.toObject(),
-        ...employeeData.emergencyContact,
-      };
-    }
-
-    // Work Information
-    if (employeeData.workInformation) {
-      updateFields["employeeData.workInformation"] = {
-        ...employee.employeeData.workInformation.toObject(),
-        ...employeeData.workInformation,
-      };
-    }
-
-    // Work History
-    if (employeeData.workHistory) {
-      updateFields["employeeData.workHistory"] = employeeData.workHistory;
-    }
-
-    // Created By
-    if (employeeData.createdBy) {
-      updateFields["employeeData.createdBy"] = {
-        ...employee.employeeData.createdBy.toObject(),
-        ...employeeData.createdBy,
-      };
-    }
-
-    // Updated By
+    // Always update updatedBy
     updateFields["employeeData.updatedBy"] = {
       user: req.user._id,
       name: req.user.name,
-      timestamp: Date.now(),
+      timestamp: new Date(),
     };
 
-    // --- 4. Apply update ---
+    // --- 3. Apply update ---
     const updatedEmployee = await Employee.findByIdAndUpdate(
       id,
       { $set: updateFields },
       { new: true }
     );
 
-    // --- 5. Response ---
     res.json({
       message: "Employee updated successfully",
       updatedEmployee,
@@ -374,6 +339,7 @@ router.patch("/:id", authMiddleware, parseForm, async (req, res) => {
     res.status(500).json({ error: "Internal server error during update" });
   }
 });
+
 
 // DELETE employee
 router.delete("/:id", async (req, res) => {
