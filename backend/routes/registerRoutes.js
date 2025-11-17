@@ -1,16 +1,44 @@
 import express from "express";
 import Register from "../models/Register.js";
-import Archive from "../models/Archive.js"; // ✅ Added for automatic update
+import Archive from "../models/Archive.js";
 
 const router = express.Router();
 
-// Create new registration
+// Create new registration with duplicate validation
 router.post("/", async (req, res) => {
   try {
+    const { badgeNo, email } = req.body;
+
+    // Validate required fields
+    if (!badgeNo || !email) {
+      return res.status(400).json({ msg: "Badge number and email are required." });
+    }
+
+    // Check if badge number already exists in Register collection
+    const existingBadge = await Register.findOne({ badgeNo });
+    if (existingBadge) {
+      return res.status(409).json({ 
+        msg: "This SSS number is already registered. Please use a different SSS number." 
+      });
+    }
+
+    // Check if email already exists in Register collection
+    const existingEmail = await Register.findOne({ email });
+    if (existingEmail) {
+      return res.status(409).json({ 
+        msg: "This email is already registered. Please use a different email." 
+      });
+    }
+
+    // If no duplicates, proceed with registration
     const registerData = req.body;
     const newRegister = new Register(registerData);
     await newRegister.save();
-    res.status(201).json({ msg: "Registration successful", register: newRegister });
+    
+    res.status(201).json({ 
+      msg: "Registration successful", 
+      register: newRegister 
+    });
   } catch (err) {
     console.error("Registration error:", err);
     res.status(500).json({ msg: "Server error during registration" });
@@ -28,7 +56,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// ✅ Search by name and badge number + auto status update
+// Search by name and badge number + auto status update
 router.get("/search", async (req, res) => {
   try {
     const { familyName, firstName, middleName, badgeNo } = req.query;
@@ -56,14 +84,14 @@ router.get("/search", async (req, res) => {
       return res.status(404).json({ msg: "No matching employee found." });
     }
 
-    // ✅ Automatically update status in Archive if found
+    // Automatically update status in Archive if found
     const archiveUpdate = await Archive.findOneAndUpdate(
       { familyName, firstName, badgeNo },
       { status: "Registered" },
       { new: true }
     );
 
-    // ✅ Also update Register collection’s status (optional)
+    // Also update Register collection's status (optional)
     register.status = "Registered";
     await register.save();
 

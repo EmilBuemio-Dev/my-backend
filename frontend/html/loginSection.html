@@ -1094,157 +1094,210 @@
         }
       });
 
-      // ===== EMPLOYEE REGISTRATION WITH BADGE LOOKUP =====
-      const registerModal = document.getElementById("registerModal");
-      const closeRegister = document.getElementById("closeRegister");
-      const employeeRegisterLink = document.getElementById("employeeRegisterLink");
-      const registerForm = document.getElementById("registerForm");
-      const badgeNoInput = document.getElementById("badgeNo");
-      const familyNameInput = document.getElementById("familyName");
-      const firstNameInput = document.getElementById("firstName");
-      const middleNameInput = document.getElementById("middleName");
-      const registerEmailInput = document.getElementById("registerEmail");
-      const badgeNoFeedback = document.getElementById("badgeNoFeedback");
-      const registerFormFeedback = document.getElementById("registerFormFeedback");
-      const registerSubmitBtn = document.getElementById("registerSubmitBtn");
+      // ===== EMPLOYEE REGISTRATION WITH BADGE LOOKUP AND DUPLICATE VALIDATION =====
+const registerModal = document.getElementById("registerModal");
+const closeRegister = document.getElementById("closeRegister");
+const employeeRegisterLink = document.getElementById("employeeRegisterLink");
+const registerForm = document.getElementById("registerForm");
+const badgeNoInput = document.getElementById("badgeNo");
+const familyNameInput = document.getElementById("familyName");
+const firstNameInput = document.getElementById("firstName");
+const middleNameInput = document.getElementById("middleName");
+const registerEmailInput = document.getElementById("registerEmail");
+const badgeNoFeedback = document.getElementById("badgeNoFeedback");
+const registerFormFeedback = document.getElementById("registerFormFeedback");
+const registerSubmitBtn = document.getElementById("registerSubmitBtn");
 
-      // Badge number blur event - lookup archive
-      badgeNoInput.addEventListener("blur", async () => {
-        badgeNoFeedback.textContent = "";
-        badgeNoFeedback.className = "feedback";
-        registerFormFeedback.textContent = "";
-        registerFormFeedback.className = "feedback";
-        familyNameInput.value = "";
-        firstNameInput.value = "";
-        middleNameInput.value = "";
-        registerSubmitBtn.disabled = true;
+// Badge number formatting
+badgeNoInput.addEventListener("input", function() {
+  this.value = this.value
+    .replace(/[^0-9]/g, "")
+    .replace(/(\d{2})(\d{1,7})(\d{0,1}).*/, function(_, p1, p2, p3) {
+      return p3 ? `${p1}-${p2}-${p3}` : p2 ? `${p1}-${p2}` : p1;
+    });
+});
 
-        const badgeNo = badgeNoInput.value.trim();
+// Badge number blur event - lookup archive and check for duplicates
+badgeNoInput.addEventListener("blur", async () => {
+  badgeNoFeedback.textContent = "";
+  badgeNoFeedback.className = "feedback";
+  registerFormFeedback.textContent = "";
+  registerFormFeedback.className = "feedback";
+  familyNameInput.value = "";
+  firstNameInput.value = "";
+  middleNameInput.value = "";
+  registerSubmitBtn.disabled = true;
 
-        if (!badgeNo) {
-          badgeNoFeedback.textContent = "Please enter a badge number.";
-          badgeNoFeedback.className = "feedback error";
-          return;
-        }
+  const badgeNo = badgeNoInput.value.trim();
 
-        try {
-          console.log("Searching for badge number:", badgeNo);
-          
-          const res = await fetch(`https://www.mither3security.com/archive/search?badgeNo=${encodeURIComponent(badgeNo)}`);
-          const data = await res.json();
+  if (!badgeNo) {
+    badgeNoFeedback.textContent = "Please enter a badge number.";
+    badgeNoFeedback.className = "feedback error";
+    return;
+  }
 
-          console.log("Archive search response:", data, "Status:", res.status);
+  try {
+    console.log("Searching for badge number:", badgeNo);
+    
+    // First, check if badge number already exists in Register collection
+    const checkDuplicateRes = await fetch(`https://www.mither3security.com/api/registers?badgeNo=${encodeURIComponent(badgeNo)}`);
+    const duplicateData = await checkDuplicateRes.json();
 
-          if (!res.ok || !data || data.length === 0) {
-            badgeNoFeedback.textContent = "❌ Badge number not found in records. Cannot register.";
-            badgeNoFeedback.className = "feedback error";
-            registerSubmitBtn.disabled = true;
-            return;
-          }
+    if (checkDuplicateRes.ok && duplicateData && duplicateData.length > 0) {
+      badgeNoFeedback.textContent = "❌ This SSS number is already registered. You cannot register again.";
+      badgeNoFeedback.className = "feedback error";
+      registerSubmitBtn.disabled = true;
+      return;
+    }
 
-          // Badge found - auto-fill the fields
-          const archive = Array.isArray(data) ? data[0] : data;
-          
-          familyNameInput.value = archive.familyName || "";
-          firstNameInput.value = archive.firstName || "";
-          middleNameInput.value = archive.middleName || "";
+    // If not duplicate, search in Archive
+    const archiveRes = await fetch(`https://www.mither3security.com/archive/search?badgeNo=${encodeURIComponent(badgeNo)}`);
+    const archiveData = await archiveRes.json();
 
-          badgeNoFeedback.textContent = "✅ Badge number verified! Fill in your email to complete registration.";
-          badgeNoFeedback.className = "feedback success";
-          registerSubmitBtn.disabled = false;
-          registerEmailInput.focus();
-        } catch (err) {
-          console.error("Badge lookup error:", err);
-          badgeNoFeedback.textContent = "⚠️ Error verifying badge number. Please try again.";
-          badgeNoFeedback.className = "feedback error";
-          registerSubmitBtn.disabled = true;
-        }
+    console.log("Archive search response:", archiveData, "Status:", archiveRes.status);
+
+    if (!archiveRes.ok || !archiveData || archiveData.length === 0) {
+      badgeNoFeedback.textContent = "❌ Badge number not found in records. Cannot register.";
+      badgeNoFeedback.className = "feedback error";
+      registerSubmitBtn.disabled = true;
+      return;
+    }
+
+    // Badge found - auto-fill the fields
+    const archive = Array.isArray(archiveData) ? archiveData[0] : archiveData;
+    
+    familyNameInput.value = archive.familyName || "";
+    firstNameInput.value = archive.firstName || "";
+    middleNameInput.value = archive.middleName || "";
+
+    badgeNoFeedback.textContent = "✅ Badge number verified! Fill in your email to complete registration.";
+    badgeNoFeedback.className = "feedback success";
+    registerSubmitBtn.disabled = false;
+    registerEmailInput.focus();
+  } catch (err) {
+    console.error("Badge lookup error:", err);
+    badgeNoFeedback.textContent = "⚠️ Error verifying badge number. Please try again.";
+    badgeNoFeedback.className = "feedback error";
+    registerSubmitBtn.disabled = true;
+  }
+});
+
+// Email blur event - check for duplicate email
+registerEmailInput.addEventListener("blur", async () => {
+  const email = registerEmailInput.value.trim();
+
+  if (!email) {
+    return; // Don't validate empty email on blur
+  }
+
+  try {
+    // Check if email already exists in Register collection
+    const checkEmailRes = await fetch(`https://www.mither3security.com/api/registers?email=${encodeURIComponent(email)}`);
+    const emailData = await checkEmailRes.json();
+
+    if (checkEmailRes.ok && emailData && emailData.length > 0) {
+      registerFormFeedback.textContent = "❌ This email is already registered. Please use a different email.";
+      registerFormFeedback.className = "feedback error";
+      registerSubmitBtn.disabled = true;
+      return;
+    }
+
+    registerFormFeedback.textContent = "";
+    registerFormFeedback.className = "feedback";
+    registerSubmitBtn.disabled = false;
+  } catch (err) {
+    console.error("Email validation error:", err);
+    registerFormFeedback.textContent = "⚠️ Error validating email. Please try again.";
+    registerFormFeedback.className = "feedback error";
+  }
+});
+
+// Open register modal
+if (employeeRegisterLink) {
+  employeeRegisterLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    registerModal.classList.add("show");
+    registerForm.reset();
+    badgeNoInput.focus();
+    badgeNoFeedback.textContent = "";
+    badgeNoFeedback.className = "feedback";
+    registerFormFeedback.textContent = "";
+    registerFormFeedback.className = "feedback";
+    registerSubmitBtn.disabled = true;
+  });
+}
+
+// Close register modal
+if (closeRegister) {
+  closeRegister.addEventListener("click", () => {
+    registerModal.classList.remove("show");
+  });
+}
+
+window.addEventListener("click", (e) => {
+  if (e.target === registerModal) {
+    registerModal.classList.remove("show");
+  }
+});
+
+// Register form submission with validation
+if (registerForm) {
+  registerForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    registerFormFeedback.textContent = "";
+    registerFormFeedback.className = "feedback";
+
+    const familyName = familyNameInput.value.trim();
+    const firstName = firstNameInput.value.trim();
+    const middleName = middleNameInput.value.trim();
+    const email = registerEmailInput.value.trim();
+    const badgeNo = badgeNoInput.value.trim();
+
+    if (!familyName || !firstName || !email || !badgeNo) {
+      registerFormFeedback.textContent = "❌ Please fill in all required fields.";
+      registerFormFeedback.className = "feedback error";
+      return;
+    }
+
+    const registrationData = { familyName, firstName, middleName, email, badgeNo };
+
+    try {
+      const res = await fetch("https://www.mither3security.com/api/registers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(registrationData),
       });
 
-      // Open register modal
-      if (employeeRegisterLink) {
-        employeeRegisterLink.addEventListener("click", (e) => {
-          e.preventDefault();
-          registerModal.classList.add("show");
-          registerForm.reset();
-          badgeNoInput.focus();
-          badgeNoFeedback.textContent = "";
-          badgeNoFeedback.className = "feedback";
-          registerFormFeedback.textContent = "";
-          registerFormFeedback.className = "feedback";
+      console.log("Response status:", res.status);
+      const result = await res.json();
+      console.log("Response body:", result);
+
+      if (!res.ok) {
+        registerFormFeedback.textContent = "❌ " + (result.msg || "Registration failed!");
+        registerFormFeedback.className = "feedback error";
+        
+        // Disable submit button if duplicate error
+        if (res.status === 409) {
           registerSubmitBtn.disabled = true;
-        });
-      }
-
-      // Close register modal
-      if (closeRegister) {
-        closeRegister.addEventListener("click", () => {
-          registerModal.classList.remove("show");
-        });
-      }
-
-      window.addEventListener("click", (e) => {
-        if (e.target === registerModal) {
-          registerModal.classList.remove("show");
         }
-        if (e.target === changePasswordModal) {
-          changePasswordModal.classList.remove("show");
-        }
-      });
-
-      // Register form submission
-      if (registerForm) {
-        registerForm.addEventListener("submit", async (e) => {
-          e.preventDefault();
-          registerFormFeedback.textContent = "";
-          registerFormFeedback.className = "feedback";
-
-          const familyName = familyNameInput.value.trim();
-          const firstName = firstNameInput.value.trim();
-          const middleName = middleNameInput.value.trim();
-          const email = registerEmailInput.value.trim();
-          const badgeNo = badgeNoInput.value.trim();
-
-          if (!familyName || !firstName || !email || !badgeNo) {
-            registerFormFeedback.textContent = "❌ Please fill in all required fields.";
-            registerFormFeedback.className = "feedback error";
-            return;
-          }
-
-          const data = { familyName, firstName, middleName, email, badgeNo };
-
-          try {
-            const res = await fetch("https://www.mither3security.com/api/registers", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(data),
-            });
-
-            console.log("Response status:", res.status);
-            const result = await res.json();
-            console.log("Response body:", result);
-
-            if (!res.ok) {
-              registerFormFeedback.textContent = result.msg || "❌ Registration failed!";
-              registerFormFeedback.className = "feedback error";
-              return;
-            }
-
-            registerFormFeedback.textContent = "Registration successful! Check your email for account activation details.";
-            registerFormFeedback.className = "feedback success";
-            registerForm.reset();
-            registerSubmitBtn.disabled = true;
-            
-            setTimeout(() => {
-              registerModal.classList.remove("show");
-            }, 2000);
-          } catch (err) {
-            console.error("Register error:", err);
-            registerFormFeedback.textContent = "Server error during registration. Please try again.";
-            registerFormFeedback.className = "feedback error";
-          }
-        });
+        return;
       }
+
+      registerFormFeedback.textContent = "✅ Registration successful! Check your email for account activation details.";
+      registerFormFeedback.className = "feedback success";
+      registerForm.reset();
+      registerSubmitBtn.disabled = true;
+      
+      setTimeout(() => {
+        registerModal.classList.remove("show");
+      }, 2000);
+    } catch (err) {
+      console.error("Register error:", err);
+      registerFormFeedback.textContent = "❌ Server error during registration. Please try again.";
+      registerFormFeedback.className = "feedback error";
+    }
+  });
+}
 
       // ==================== CLIENT LOGIN ====================
       const clientForm = document.getElementById("loginFormClient");
