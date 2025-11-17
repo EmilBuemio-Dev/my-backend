@@ -1094,7 +1094,7 @@
         }
       });
 
-      // ===== EMPLOYEE REGISTRATION WITH BADGE LOOKUP AND DUPLICATE VALIDATION =====
+      // ===== EMPLOYEE REGISTRATION WITH FIXED 3-LAYER VALIDATION =====
 const registerModal = document.getElementById("registerModal");
 const closeRegister = document.getElementById("closeRegister");
 const employeeRegisterLink = document.getElementById("employeeRegisterLink");
@@ -1117,7 +1117,7 @@ badgeNoInput.addEventListener("input", function() {
     });
 });
 
-// Badge number blur event - lookup archive and check for duplicates
+// Badge number blur event - 3-LAYER VALIDATION
 badgeNoInput.addEventListener("blur", async () => {
   badgeNoFeedback.textContent = "";
   badgeNoFeedback.className = "feedback";
@@ -1137,43 +1137,55 @@ badgeNoInput.addEventListener("blur", async () => {
   }
 
   try {
-    console.log("Searching for badge number:", badgeNo);
+    console.log("🔍 Starting 3-layer validation for badge number:", badgeNo);
     
-    // First, check if badge number already exists in Register collection
-    const checkDuplicateRes = await fetch(`https://www.mither3security.com/api/registers?badgeNo=${encodeURIComponent(badgeNo)}`);
+    // ===== LAYER 1: Check if badge number already exists in Register collection (duplicate registration) =====
+    console.log("LAYER 1: Checking Register collection for duplicates...");
+    const checkDuplicateRes = await fetch(
+      `https://www.mither3security.com/api/registers?badgeNo=${encodeURIComponent(badgeNo)}`
+    );
     const duplicateData = await checkDuplicateRes.json();
 
-    if (checkDuplicateRes.ok && duplicateData && duplicateData.length > 0) {
+    if (checkDuplicateRes.ok && Array.isArray(duplicateData) && duplicateData.length > 0) {
       badgeNoFeedback.textContent = "❌ This SSS number is already registered. You cannot register again.";
       badgeNoFeedback.className = "feedback error";
       registerSubmitBtn.disabled = true;
+      console.log("❌ LAYER 1 FAILED: Badge already registered");
       return;
     }
+    console.log("✅ LAYER 1 PASSED: Badge not in Register collection");
 
-    // If not duplicate, search in Archive
-    const archiveRes = await fetch(`https://www.mither3security.com/archive/search?badgeNo=${encodeURIComponent(badgeNo)}`);
+    // ===== LAYER 2: Check if badge number exists in Archive collection (must exist in company records) =====
+    console.log("LAYER 2: Checking Archive collection for employee records...");
+    const archiveRes = await fetch(
+      `https://www.mither3security.com/archive/search?badgeNo=${encodeURIComponent(badgeNo)}`
+    );
     const archiveData = await archiveRes.json();
 
     console.log("Archive search response:", archiveData, "Status:", archiveRes.status);
 
     if (!archiveRes.ok || !archiveData || archiveData.length === 0) {
-      badgeNoFeedback.textContent = "❌ Badge number not found in records. Cannot register.";
+      badgeNoFeedback.textContent = "❌ SSS number not found in employee records. Cannot register.";
       badgeNoFeedback.className = "feedback error";
       registerSubmitBtn.disabled = true;
+      console.log("❌ LAYER 2 FAILED: Badge not found in Archive");
       return;
     }
+    console.log("✅ LAYER 2 PASSED: Badge found in Archive");
 
-    // Badge found - auto-fill the fields
+    // ===== LAYER 3: Badge found in Archive - auto-fill the fields =====
+    console.log("LAYER 3: Badge validation successful, filling employee details...");
     const archive = Array.isArray(archiveData) ? archiveData[0] : archiveData;
     
     familyNameInput.value = archive.familyName || "";
     firstNameInput.value = archive.firstName || "";
     middleNameInput.value = archive.middleName || "";
 
-    badgeNoFeedback.textContent = "✅ Badge number verified! Fill in your email to complete registration.";
+    badgeNoFeedback.textContent = "✅ SSS number verified! Fill in your email to complete registration.";
     badgeNoFeedback.className = "feedback success";
     registerSubmitBtn.disabled = false;
     registerEmailInput.focus();
+    console.log("✅ LAYER 3 PASSED: All validations successful");
   } catch (err) {
     console.error("Badge lookup error:", err);
     badgeNoFeedback.textContent = "⚠️ Error verifying badge number. Please try again.";
@@ -1182,28 +1194,36 @@ badgeNoInput.addEventListener("blur", async () => {
   }
 });
 
-// Email blur event - check for duplicate email
+// Email blur event - CHECK IF EMAIL EXISTS IN REGISTER COLLECTION
 registerEmailInput.addEventListener("blur", async () => {
   const email = registerEmailInput.value.trim();
 
   if (!email) {
-    return; // Don't validate empty email on blur
+    registerFormFeedback.textContent = "";
+    registerFormFeedback.className = "feedback";
+    return;
   }
 
   try {
+    console.log("📧 Checking if email already exists in Register collection...");
+    
     // Check if email already exists in Register collection
-    const checkEmailRes = await fetch(`https://www.mither3security.com/api/registers?email=${encodeURIComponent(email)}`);
+    const checkEmailRes = await fetch(
+      `https://www.mither3security.com/api/registers?email=${encodeURIComponent(email)}`
+    );
     const emailData = await checkEmailRes.json();
 
-    if (checkEmailRes.ok && emailData && emailData.length > 0) {
+    if (checkEmailRes.ok && Array.isArray(emailData) && emailData.length > 0) {
+      console.log("❌ EMAIL VALIDATION FAILED: Email already registered");
       registerFormFeedback.textContent = "❌ This email is already registered. Please use a different email.";
       registerFormFeedback.className = "feedback error";
       registerSubmitBtn.disabled = true;
       return;
     }
 
-    registerFormFeedback.textContent = "";
-    registerFormFeedback.className = "feedback";
+    console.log("✅ EMAIL VALIDATION PASSED: Email not registered yet");
+    registerFormFeedback.textContent = "✅ Email is available.";
+    registerFormFeedback.className = "feedback success";
     registerSubmitBtn.disabled = false;
   } catch (err) {
     console.error("Email validation error:", err);
@@ -1240,7 +1260,7 @@ window.addEventListener("click", (e) => {
   }
 });
 
-// Register form submission with validation
+// Register form submission with comprehensive validation
 if (registerForm) {
   registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -1253,8 +1273,17 @@ if (registerForm) {
     const email = registerEmailInput.value.trim();
     const badgeNo = badgeNoInput.value.trim();
 
+    // Final validation before submission
     if (!familyName || !firstName || !email || !badgeNo) {
       registerFormFeedback.textContent = "❌ Please fill in all required fields.";
+      registerFormFeedback.className = "feedback error";
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      registerFormFeedback.textContent = "❌ Please enter a valid email address.";
       registerFormFeedback.className = "feedback error";
       return;
     }
@@ -1262,24 +1291,41 @@ if (registerForm) {
     const registrationData = { familyName, firstName, middleName, email, badgeNo };
 
     try {
+      console.log("📤 Submitting registration:", registrationData);
+      
       const res = await fetch("https://www.mither3security.com/api/registers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(registrationData),
       });
 
-      console.log("Response status:", res.status);
       const result = await res.json();
+      console.log("Response status:", res.status);
       console.log("Response body:", result);
 
       if (!res.ok) {
-        registerFormFeedback.textContent = "❌ " + (result.msg || "Registration failed!");
-        registerFormFeedback.className = "feedback error";
+        // More descriptive error messages based on response codes
+        let errorMsg = result.msg || "Registration failed!";
         
-        // Disable submit button if duplicate error
         if (res.status === 409) {
-          registerSubmitBtn.disabled = true;
+          if (result.code === "BADGE_ALREADY_REGISTERED") {
+            errorMsg = "This SSS number is already registered.";
+          } else if (result.code === "EMAIL_ALREADY_REGISTERED") {
+            errorMsg = "This email is already registered.";
+          }
+        } else if (res.status === 404) {
+          if (result.code === "BADGE_NOT_IN_ARCHIVE") {
+            errorMsg = "SSS number not found in employee records.";
+          }
+        } else if (res.status === 400) {
+          if (result.code === "NAME_MISMATCH") {
+            errorMsg = "The name provided does not match the employee record.";
+          }
         }
+
+        registerFormFeedback.textContent = "❌ " + errorMsg;
+        registerFormFeedback.className = "feedback error";
+        registerSubmitBtn.disabled = true;
         return;
       }
 
