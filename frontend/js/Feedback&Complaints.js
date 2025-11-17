@@ -275,6 +275,7 @@ document.getElementById("remarkForm").addEventListener("submit", async (e) => {
 });
 
 // ===== VIEW REMARK MODAL =====
+// ===== VIEW REMARK MODAL ===== (FIXED VERSION)
 async function openRemarkModal(remarkId) {
   try {
     const res = await fetch(`https://www.mither3security.com/remarks/${remarkId}`, {
@@ -295,26 +296,53 @@ async function openRemarkModal(remarkId) {
     document.getElementById("viewRemarkCreatedBy").innerText = remark.createdBy.name || "Unknown";
     document.getElementById("viewRemarkCreatedDate").innerText = createdDate;
 
-    // ===== DISPLAY TICKET DETAILS =====
+    // ===== DISPLAY TICKET DETAILS (FIXED) =====
     const ticketSection = document.getElementById("ticketDetailsSection");
     
-    if (remark.ticketId && remark.ticketDetails) {
-      ticketSection.style.display = "block";
-      
-      const ticketDetails = remark.ticketDetails;
-      
-      document.getElementById("ticketSubjectDisplay").innerText = remark.ticketSubject || "N/A";
-      document.getElementById("ticketCreatorDisplay").innerText = 
-         ticketDetails.reportedEmployeeName || "N/A";
-      document.getElementById("ticketSourceDisplay").innerText = ticketDetails.creatorRole === "client" ? "Client" : "Employee";
-      document.getElementById("ticketRatingDisplay").innerText = ticketDetails.rating || "Not Rated";
-      document.getElementById("ticketDateDisplay").innerText = ticketDetails.createdAt ? new Date(ticketDetails.createdAt).toLocaleString() : "Unknown";
-      
-      // Add button to open full ticket in new modal (optional)
-      const viewFullTicketBtn = document.getElementById("viewFullTicketBtn");
-      viewFullTicketBtn.onclick = () => {
-        openTicketModal(remark.ticketId);
-      };
+    if (remark.ticketId) {
+      // Fetch the full ticket details
+      try {
+        const ticketRes = await fetch(`https://www.mither3security.com/tickets/${remark.ticketId}`, {
+          headers: { "Authorization": `Bearer ${token}` },
+        });
+        
+        if (ticketRes.ok) {
+          const ticketDetails = await ticketRes.json();
+          
+          ticketSection.style.display = "block";
+          
+          // Display ticket information
+          document.getElementById("ticketSubjectDisplay").innerText = ticketDetails.subject || "N/A";
+          document.getElementById("ticketCreatorDisplay").innerText = ticketDetails.creatorName || "Unknown";
+          document.getElementById("ticketSourceDisplay").innerText = ticketDetails.creatorRole === "client" ? "Client" : "Employee";
+          
+          // Display reported employee if exists
+          const reportedEmployee = ticketDetails.reportedEmployeeName || "N/A";
+          document.getElementById("ticketReportedEmployeeDisplay").innerText = reportedEmployee;
+          
+          document.getElementById("ticketRatingDisplay").innerText = ticketDetails.rating || "Not Rated";
+          document.getElementById("ticketDateDisplay").innerText = ticketDetails.createdAt ? new Date(ticketDetails.createdAt).toLocaleString() : "Unknown";
+          
+          // Display concern/description
+          const concernDisplay = document.getElementById("ticketConcernDisplay");
+          if (concernDisplay) {
+            concernDisplay.innerText = ticketDetails.concern || "No concern provided";
+          }
+          
+          // Add button to open full ticket in new modal
+          const viewFullTicketBtn = document.getElementById("viewFullTicketBtn");
+          if (viewFullTicketBtn) {
+            viewFullTicketBtn.onclick = () => {
+              openTicketModal(remark.ticketId);
+            };
+          }
+        } else {
+          ticketSection.style.display = "none";
+        }
+      } catch (ticketErr) {
+        console.error("Error fetching ticket details:", ticketErr);
+        ticketSection.style.display = "none";
+      }
     } else {
       ticketSection.style.display = "none";
     }

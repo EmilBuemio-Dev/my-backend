@@ -13,25 +13,32 @@ router.post("/", authMiddleware, async (req, res) => {
   try {
     const { employeeId, penaltyLevel, dueProcess, ticketId, hrComment } = req.body;
 
+    // ✅ Validate required fields
     if (!employeeId || !penaltyLevel || !dueProcess || !hrComment) {
       return res.status(400).json({
         message: "Missing required fields: employeeId, penaltyLevel, dueProcess, hrComment",
       });
     }
 
+    // ✅ Validate penalty level
     if (!["Light", "Least Grave", "Grave"].includes(penaltyLevel)) {
       return res.status(400).json({ message: "Invalid penalty level" });
     }
 
+    // ✅ Validate due process
     if (!["Notice", "Appearance"].includes(dueProcess)) {
       return res.status(400).json({ message: "Invalid due process type" });
     }
 
+    // ✅ Get employee details
     const employee = await Employee.findById(employeeId);
-    if (!employee) return res.status(404).json({ message: "Employee not found" });
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
 
     const employeeName = employee.employeeData?.personalData?.name || "Unknown";
 
+    // ✅ Get ticket details if provided
     let ticketSubject = null;
     let ticketDetails = null;
 
@@ -39,11 +46,11 @@ router.post("/", authMiddleware, async (req, res) => {
       const ticket = await Ticket.findById(ticketId);
       if (ticket) {
         ticketSubject = ticket.subject;
+        // ✅ Store ticket details for later reference
         ticketDetails = {
           concern: ticket.concern || null,
           creatorName: ticket.creatorName || null,
           creatorRole: ticket.creatorRole || null,
-          reportedEmployeeName: ticket.reportedEmployeeName || null, // <-- added
           rating: ticket.rating || null,
           source: ticket.source || null,
           createdAt: ticket.createdAt || null,
@@ -53,6 +60,7 @@ router.post("/", authMiddleware, async (req, res) => {
       }
     }
 
+    // ✅ Create remark
     const newRemark = new Remark({
       employeeId,
       employeeName,
@@ -90,13 +98,14 @@ router.post("/", authMiddleware, async (req, res) => {
 // ===============================
 router.get("/", authMiddleware, async (req, res) => {
   try {
+    // ✅ Only admin/hr can view all remarks
     if (req.user.role !== "admin" && req.user.role !== "hr") {
       return res.status(403).json({ message: "Access denied" });
     }
 
     const remarks = await Remark.find()
       .populate("employeeId", "employeeData.personalData.name")
-      .populate("ticketId", "subject reportedEmployeeName creatorName creatorRole rating source createdAt")
+      .populate("ticketId", "subject")
       .sort({ createdAt: -1 });
 
     res.json(remarks);
@@ -118,28 +127,16 @@ router.get("/:id", authMiddleware, async (req, res) => {
       .populate("employeeId")
       .populate("ticketId");
 
-    if (!remark) return res.status(404).json({ message: "Remark not found" });
-
-    // Build ticketDetails for front-end
-    let ticketDetails = null;
-    if (remark.ticketId) {
-      ticketDetails = {
-        _id: remark.ticketId._id,
-        subject: remark.ticketId.subject,
-        creatorName: remark.ticketId.creatorName,
-        creatorRole: remark.ticketId.creatorRole,
-        reportedEmployeeName: remark.ticketId.reportedEmployeeName,
-        rating: remark.ticketId.rating,
-        source: remark.ticketId.source,
-        createdAt: remark.ticketId.createdAt,
-      };
+    if (!remark) {
+      return res.status(404).json({ message: "Remark not found" });
     }
 
-    res.json({
-      ...remark._doc,
-      ticketDetails,
-      ticketSubject: remark.ticketId?.subject || null,
-    });
+    // ✅ Ensure ticketId is included in response
+    if (remark.ticketId) {
+      remark.ticketId = remark.ticketId._id || remark.ticketId;
+    }
+
+    res.json(remark);
   } catch (err) {
     console.error("Error fetching remark:", err);
     res.status(500).json({
@@ -155,7 +152,10 @@ router.get("/:id", authMiddleware, async (req, res) => {
 router.get("/employee/:employeeId", authMiddleware, async (req, res) => {
   try {
     const { employeeId } = req.params;
-    const remarks = await Remark.find({ employeeId }).sort({ createdAt: -1 });
+
+    const remarks = await Remark.find({ employeeId })
+      .sort({ createdAt: -1 });
+
     res.json({ remarks });
   } catch (err) {
     console.error("Error fetching employee remarks:", err);
@@ -173,10 +173,12 @@ router.patch("/:id", authMiddleware, async (req, res) => {
   try {
     const { status, resolutionNotes } = req.body;
 
+    // ✅ Validate status
     if (status && !["Pending", "Resolved"].includes(status)) {
       return res.status(400).json({ message: "Invalid status" });
     }
 
+    // ✅ Only admin/hr can update
     if (req.user.role !== "admin" && req.user.role !== "hr") {
       return res.status(403).json({ message: "Access denied" });
     }
@@ -198,7 +200,9 @@ router.patch("/:id", authMiddleware, async (req, res) => {
       { new: true }
     );
 
-    if (!updatedRemark) return res.status(404).json({ message: "Remark not found" });
+    if (!updatedRemark) {
+      return res.status(404).json({ message: "Remark not found" });
+    }
 
     res.json({
       message: "Remark updated successfully",
@@ -218,10 +222,16 @@ router.patch("/:id", authMiddleware, async (req, res) => {
 // ===============================
 router.delete("/:id", authMiddleware, async (req, res) => {
   try {
-    if (req.user.role !== "admin") return res.status(403).json({ message: "Access denied" });
+    // ✅ Only admin can delete
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
 
     const deleted = await Remark.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ message: "Remark not found" });
+
+    if (!deleted) {
+      return res.status(404).json({ message: "Remark not found" });
+    }
 
     res.status(200).json({ message: "Remark deleted successfully" });
   } catch (err) {
