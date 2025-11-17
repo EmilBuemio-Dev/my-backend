@@ -14,10 +14,8 @@ function getNowInPH() {
   return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
 }
 
-// ===== PARSE SHIFT TIME HELPER =====
-function parseShiftTime(timeStr) {
-  // Matches: "8:00AM", "08:00AM", "8:00 AM", "08:00 AM", etc.
-  const match = timeStr.match(/(\d{1,2}):(\d{2})\s*([AP]M)/i);
+function parseShiftTimeToDate(shiftStr) {
+  const match = shiftStr.match(/(\d{1,2}):(\d{2})\s*([AP]M)/i);
   if (!match) return null;
 
   let hour = parseInt(match[1], 10);
@@ -27,8 +25,19 @@ function parseShiftTime(timeStr) {
   if (period === "PM" && hour !== 12) hour += 12;
   if (period === "AM" && hour === 12) hour = 0;
 
-  return { hour, minute };
+  const now = getNowInPH();
+  const shiftDate = new Date(now);
+
+  shiftDate.setHours(hour, minute, 0, 0);
+
+  // IMPORTANT FIX: midnight shift belongs to next day if current time is late night
+  if (hour === 0 && now.getHours() >= 22) {
+    shiftDate.setDate(shiftDate.getDate() + 1);
+  }
+
+  return shiftDate;
 }
+
 
 // ===== Middleware: Verify Token =====
 function authenticateToken(req, res, next) {
