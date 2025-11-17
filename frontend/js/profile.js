@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (photoElement) {
       photoElement.src = creds.profileImage
         ? `https://www.mither3security.com${creds.profileImage}`
-        : "../../image/profile.png";
+        : "../defaultProfile/Default_pfp.jpg";
     }
 
     const setText = (id, value, isDate = false) => {
@@ -513,7 +513,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       employees.forEach(emp => {
         const profileImg = emp.employeeData?.credentials?.profileImage
           ? `https://www.mither3security.com/${emp.employeeData.credentials.profileImage.replace(/^\/?/, "")}`
-          : "../../image/profile.png";
+          : "../defaultProfile/Default_pfp.jpg";
         const name = emp.employeeData?.personalData?.name || "N/A";
         const badgeNo = emp.employeeData?.basicInformation?.badgeNo || "N/A";
         const status = emp.employeeData?.basicInformation?.status || "Inactive";
@@ -585,7 +585,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <img src="${
               firstEmp.employeeData?.credentials?.profileImage
                 ? `https://www.mither3security.com/${firstEmp.employeeData.credentials.profileImage.replace(/^\/?/, "")}`
-                : "../../image/profile.png"
+                : "../defaultProfile/Default_pfp.jpg"
             }" class="compare-photo">
 
             <p><strong>Branch:</strong> ${firstEmp.employeeData?.basicInformation?.branch || "N/A"}</p>
@@ -627,7 +627,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <img src="${
               secondEmp.employeeData?.credentials?.profileImage
                 ? `https://www.mither3security.com/${secondEmp.employeeData.credentials.profileImage.replace(/^\/?/, "")}`
-                : "../../image/profile.png"
+                : "../defaultProfile/Default_pfp.jpg"
             }" class="compare-photo">
 
             <p><strong>Branch:</strong> ${secondEmp.employeeData?.basicInformation?.branch || "N/A"}</p>

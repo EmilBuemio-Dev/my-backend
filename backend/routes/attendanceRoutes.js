@@ -146,7 +146,7 @@ router.post("/checkout", authenticateToken, async (req, res) => {
     record.checkoutTime = new Date(); // Store as UTC
 
     // ===== Determine shift end from employee shift =====
-    const empShift = employee.employeeData?.basicInformation?.shift || "Day, 8:00AM-8:00PM";
+    const empShift = employee.employeeData?.basicInformation?.shift || "Day Shift";
     const shiftTimesMatch = empShift.match(/(\d{1,2}:\d{2}[AP]M)-(\d{1,2}:\d{2}[AP]M)/);
 
     if (shiftTimesMatch) {
@@ -164,7 +164,7 @@ router.post("/checkout", authenticateToken, async (req, res) => {
 
       // Check if leaving early
       if (now < shiftEnd) {
-        record.status = record.status ? record.status + ", Early Leave" : "Early Leave";
+        record.status = record.status ? record.status + ", Early Out" : "Early Out";
       }
     }
 
@@ -193,7 +193,7 @@ router.get("/attendance", authenticateToken, async (req, res) => {
   }
 });
 
-// ===== GET /attendance/all (HR/Admin view) =====
+// ===== GET /attendance/all (HR/Admin view - used for weekly report) =====
 router.get("/attendance/all", async (req, res) => {
   try {
     const records = await Attendance.find().sort({ createdAt: -1 });

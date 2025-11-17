@@ -118,6 +118,7 @@
             <div class="dashboard-stats">
                 <div class="attendance-bargraph">
                     <h2>Attendance Rate</h2>
+                    <p class="attendance-hint">Click to view weekly report</p>
                     <div class="chart-wrapper">
                         <canvas id="attendanceChart"></canvas>
                     </div>
@@ -133,6 +134,38 @@
                         </div>
                     </div>
                     <small>Updated Today</small>
+                </div>
+            </div>
+
+            <!-- Weekly Attendance Report Modal -->
+            <div id="weeklyAttendanceModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Weekly Attendance Report</h3>
+                        <p id="weekDateRange">Loading...</p>
+                    </div>
+                    <div class="modal-body">
+                        <div class="table-container weekly-report-container">
+                            <table class="weekly-report-table">
+                                <thead>
+                                    <tr>
+                                        <th>Employee Name</th>
+                                        <th class="on-time-col">On-Time</th>
+                                        <th class="late-col">Late</th>
+                                        <th class="absent-col">Absent</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="weeklyReportBody">
+                                    <tr>
+                                        <td colspan="4" class="no-data">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn close" id="closeWeeklyModal">Close</button>
+                    </div>
                 </div>
             </div>
 

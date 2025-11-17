@@ -160,12 +160,12 @@ async function loadClients() {
   const clientId = client.clientIdNumber || "N/A";
   const salary = client.salary != null ? client.salary : "N/A";
   const expDate = client.expirationDate ? new Date(client.expirationDate).toISOString().split("T")[0] : "N/A";
-  const profileImg = client.credentials?.profileImage || "../../image/default-profile.png";
+  const profileImg = client.credentials?.profileImage || "../defaultProfile/Default_pfp.jpg";
 
   const row = document.createElement("tr");
   row.setAttribute("data-id", client._id);
   row.innerHTML = `
-    <td><img src="${profileImg}" class="profile-circle"></td>
+    <td><img src="../defaultProfile/Default_pfp.jpg" class="profile-circle"></td>
     <td>${name}</td>
     <td>${branch}</td>
     <td class="salary-cell">${salary}</td>
@@ -190,7 +190,7 @@ function showClientProfile(client) {
   const credentials = c.credentials || {};
 
   document.getElementById("clientProfileImg").src =
-    credentials.profileImage || "../../image/default-profile.png";
+    credentials.profileImage || "../defaultProfile/Default_pfp.jpg";
 
   document.getElementById("clientProfileName").textContent = c.name || client.name || "N/A";
   document.getElementById("clientProfileBranch").textContent = c.branch || "Branch: N/A";

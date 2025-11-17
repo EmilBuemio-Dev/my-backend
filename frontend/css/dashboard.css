@@ -242,13 +242,27 @@ main h1 {
     padding: var(--card-padding);
     border-radius: var(--card-border-radius);
     box-shadow: var(--card-box-shadow);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.attendance-bargraph:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .attendance-bargraph h2 {
     color: var(--clr-dark);
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.5rem;
     font-size: 1.2rem;
     font-weight: 600;
+}
+
+.attendance-hint {
+    color: var(--clr-info-dark);
+    font-size: 0.75rem;
+    margin-bottom: 1rem;
+    font-style: italic;
 }
 
 .chart-wrapper {
@@ -332,9 +346,51 @@ main h1 {
     overflow-y: auto;
 }
 
+.weekly-report-container {
+    max-height: 500px;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
+}
+
+.weekly-report-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--clr-light);
+}
+
+.weekly-report-table tbody .total-row {
+    position: sticky;
+    bottom: 0;
+    background: linear-gradient(180deg, var(--clr-light) 0%, #e0e0e0 100%);
+    font-weight: 700;
+    border-top: 2px solid #999;
+    border-bottom: 2px solid #999;
+    z-index: 15;
+}
+
+.weekly-report-table tbody .total-row td {
+    padding: 1rem;
+    text-align: center;
+    color: var(--clr-dark);
+}
+
+.weekly-report-table tbody .total-row .on-time-cell {
+    color: #27ae60;
+    font-weight: 700;
+}
+
+.weekly-report-table tbody .total-row .late-cell {
+    color: #d68910;
+    font-weight: 700;
+}
+
+.weekly-report-table tbody .total-row .absent-cell {
+    color: #c0392b;
+    font-weight: 700;
 }
 
 thead {
@@ -354,6 +410,28 @@ th {
     font-weight: 600;
     color: var(--clr-dark);
     font-size: 0.85rem;
+    text-align: center;
+}
+
+.on-time-col, .late-col, .absent-col {
+    text-align: center;
+}
+
+.on-time-cell, .late-cell, .absent-cell {
+    text-align: center;
+    font-weight: 600;
+}
+
+.on-time-cell {
+    color: #27ae60;
+}
+
+.late-cell {
+    color: #d68910;
+}
+
+.absent-cell {
+    color: #c0392b;
 }
 
 td {
@@ -473,7 +551,7 @@ tbody tr:hover {
     box-shadow: var(--card-box-shadow);
     display: flex;
     flex-direction: column;
-    max-height: 600px; /* ✅ Set max height */
+    max-height: 600px;
 }
 
 .notif-header {
@@ -481,7 +559,7 @@ tbody tr:hover {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
-    flex-shrink: 0; /* Prevent header from shrinking */
+    flex-shrink: 0;
 }
 
 .notif-header h2 {
@@ -513,13 +591,12 @@ tbody tr:hover {
 
 .notificationslist {
     min-height: 200px;
-    flex: 1; /* Allow it to grow */
-    overflow-y: auto; /* ✅ Add vertical scroll */
-    overflow-x: hidden; /* Hide horizontal scroll */
-    padding-right: 0.5rem; /* Add small padding for scrollbar */
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 0.5rem;
 }
 
-/* ✅ Custom scrollbar styling (optional but recommended) */
 .notificationslist::-webkit-scrollbar {
     width: 6px;
 }
@@ -596,6 +673,13 @@ tbody tr:hover {
 .modal-header h3 {
     font-size: 1.3rem;
     color: var(--clr-dark);
+    margin-bottom: 0.5rem;
+}
+
+.modal-header p {
+    margin: 0;
+    color: var(--clr-info-dark);
+    font-size: 0.9rem;
 }
 
 .modal-body p {
@@ -713,7 +797,6 @@ tbody tr:hover {
     opacity: 0.6;
 }
 
-/* Apply same styling to view-record buttons in complaints table */
 .view-record {
     padding: 0.5rem 1.2rem !important;
     background: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important;
@@ -740,7 +823,6 @@ tbody tr:hover {
     box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3) !important;
 }
 
-/* Animation effect for buttons */
 @keyframes buttonPulse {
     0% {
         box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);

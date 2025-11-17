@@ -16,7 +16,7 @@ async function loadEmployees() {
 
   const profileImg = emp.employeeData?.credentials?.profileImage
     ? `https://www.mither3security.com/${emp.employeeData.credentials.profileImage.replace(/^\/?/, "")}`
-    : "../../image/profile.png";
+    : "../defaultProfile/Default_pfp.jpg";
 
   const name = emp.employeeData?.personalData?.name || "N/A";
   const badgeNo = emp.employeeData?.basicInformation?.badgeNo || "N/A";

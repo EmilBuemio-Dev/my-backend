@@ -36,7 +36,7 @@ function setCircleProgress(circleId, percent, circleLength) {
 }
 
 // ============================================
-// LOAD DASHBOARD STATISTICS (FIXED FOR PENDING)
+// LOAD DASHBOARD STATISTICS
 // ============================================
 
 async function loadDashboardStats() {
@@ -47,21 +47,17 @@ async function loadDashboardStats() {
 
     const total = employees.length;
     const active = employees.filter(e => e.employeeData?.basicInformation?.status === "Active").length;
-    // ✅ Changed from "Inactive" to "Pending"
     const pending = employees.filter(e => e.employeeData?.basicInformation?.status === "Pending").length;
 
     document.getElementById("totalCount").textContent = total;
     document.getElementById("activeCount").textContent = active;
-    // ✅ Updated to show pending count
     document.getElementById("inactiveCount").textContent = pending;
 
     const activePercent = total > 0 ? Math.round((active / total) * 100) : 0;
-    // ✅ Updated to calculate pending percentage
     const pendingPercent = total > 0 ? Math.round((pending / total) * 100) : 0;
 
     document.getElementById("totalPercent").textContent = "100%";
     document.getElementById("activePercent").textContent = `${activePercent}%`;
-    // ✅ Updated to show pending percentage
     document.getElementById("inactivePercent").textContent = `${pendingPercent}%`;
 
     const circleLength = 2 * Math.PI * 30;
@@ -89,7 +85,6 @@ async function loadAttendanceRateBarGraph() {
 
     const records = await res.json();
     
-    // Count attendance statuses
     const attendanceCounts = {
       onTime: 0,
       late: 0,
@@ -113,7 +108,6 @@ async function loadAttendanceRateBarGraph() {
 
     const total = records.length || 1;
 
-    // Create Pie Chart
     const ctx = document.getElementById('attendanceChart').getContext('2d');
     
     new Chart(ctx, {
@@ -123,9 +117,9 @@ async function loadAttendanceRateBarGraph() {
         datasets: [{
           data: [attendanceCounts.onTime, attendanceCounts.late, attendanceCounts.absent],
           backgroundColor: [
-            '#1abc9c', // On-Time (Green)
-            '#f39c12', // Late (Orange)
-            '#e74c3c'  // Absent (Red)
+            '#1abc9c',
+            '#f39c12',
+            '#e74c3c'
           ],
           borderColor: '#fff',
           borderWidth: 3,
@@ -173,7 +167,104 @@ async function loadAttendanceRateBarGraph() {
 }
 
 // ============================================
-// LOAD COMPLAINTS CHART (TRENDS)
+// LOAD WEEKLY ATTENDANCE REPORT
+// ============================================
+
+async function loadWeeklyAttendanceReport() {
+  try {
+    const attendanceModal = document.getElementById("weeklyAttendanceModal");
+    const tbody = document.getElementById("weeklyReportBody");
+    
+    tbody.innerHTML = '<tr><td colspan="4" class="no-data">Loading weekly report...</td></tr>';
+    attendanceModal.classList.add("show");
+
+    const res = await fetch("https://www.mither3security.com/attendance/all", {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Failed to fetch attendance records");
+
+    const records = await res.json();
+
+    // Get week date range (Monday to Sunday)
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+    const weekStart = new Date(today.setDate(diff));
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+
+    // Filter records for this week
+    const weekRecords = records.filter(r => {
+      const recordDate = new Date(r.checkinTime);
+      return recordDate >= weekStart && recordDate <= weekEnd;
+    });
+
+    // Group by employee
+    const employeeStats = {};
+    weekRecords.forEach(record => {
+      const empName = record.employeeName || "Unknown";
+      if (!employeeStats[empName]) {
+        employeeStats[empName] = { onTime: 0, late: 0, absent: 0 };
+      }
+
+      const status = record.status.toLowerCase();
+      if (status.includes("absent")) {
+        employeeStats[empName].absent++;
+      } else if (status.includes("late")) {
+        employeeStats[empName].late++;
+      } else {
+        employeeStats[empName].onTime++;
+      }
+    });
+
+    // Calculate totals
+    let totalOnTime = 0, totalLate = 0, totalAbsent = 0;
+    Object.values(employeeStats).forEach(stats => {
+      totalOnTime += stats.onTime;
+      totalLate += stats.late;
+      totalAbsent += stats.absent;
+    });
+
+    tbody.innerHTML = "";
+
+    // Add employee rows
+    Object.entries(employeeStats).forEach(([empName, stats]) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${empName}</td>
+        <td class="on-time-cell">${stats.onTime}</td>
+        <td class="late-cell">${stats.late}</td>
+        <td class="absent-cell">${stats.absent}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Add total row (static footer)
+    const totalRow = document.createElement("tr");
+    totalRow.classList.add("total-row");
+    totalRow.innerHTML = `
+      <td><strong>TOTAL</strong></td>
+      <td class="on-time-cell"><strong>${totalOnTime}</strong></td>
+      <td class="late-cell"><strong>${totalLate}</strong></td>
+      <td class="absent-cell"><strong>${totalAbsent}</strong></td>
+    `;
+    tbody.appendChild(totalRow);
+
+    // Update date range display
+    const weekDateRange = document.getElementById("weekDateRange");
+    const startStr = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const endStr = weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    weekDateRange.textContent = `${startStr} - ${endStr}`;
+
+  } catch (err) {
+    console.error("Error loading weekly attendance report:", err);
+    const tbody = document.getElementById("weeklyReportBody");
+    tbody.innerHTML = `<tr><td colspan="4" class="no-data">Error loading report</td></tr>`;
+  }
+}
+
+// ============================================
+// LOAD COMPLAINTS CHART
 // ============================================
 
 async function loadComplaintsChart() {
@@ -185,32 +276,29 @@ async function loadComplaintsChart() {
 
     const tickets = await res.json();
 
-    // Initialize counts for each day of the week (Sun=0, Mon=1,...)
     const weekCounts = [0,0,0,0,0,0,0];
 
     tickets.forEach(ticket => {
       if (!ticket.createdAt) return;
 
       const date = new Date(ticket.createdAt);
-      const day = date.getDay(); // 0=Sunday, 1=Monday ...
+      const day = date.getDay();
       weekCounts[day]++;
     });
 
-    // Map to labels starting from Monday
     const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const data = [
-      weekCounts[1], // Monday
-      weekCounts[2], // Tuesday
-      weekCounts[3], // Wednesday
-      weekCounts[4], // Thursday
-      weekCounts[5], // Friday
-      weekCounts[6], // Saturday
-      weekCounts[0]  // Sunday
+      weekCounts[1],
+      weekCounts[2],
+      weekCounts[3],
+      weekCounts[4],
+      weekCounts[5],
+      weekCounts[6],
+      weekCounts[0]
     ];
 
     const ctx = document.getElementById('complaintschart').getContext('2d');
     
-    // Create gradient
     const gradient = ctx.createLinearGradient(0, 0, 0, 280);
     gradient.addColorStop(0, 'rgba(52, 152, 219, 0.4)');
     gradient.addColorStop(1, 'rgba(52, 152, 219, 0.01)');
@@ -349,6 +437,31 @@ const approveLeaveBtn = document.getElementById("approveLeaveBtn");
 const disapproveLeaveBtn = document.getElementById("disapproveLeaveBtn");
 const leaveCount = document.getElementById("leaveCount");
 
+// ============================================
+// ATTENDANCE CARD CLICK - OPEN WEEKLY REPORT
+// ============================================
+
+const attendanceCard = document.querySelector(".attendance-bargraph");
+if (attendanceCard) {
+  attendanceCard.style.cursor = "pointer";
+  attendanceCard.addEventListener("click", () => {
+    loadWeeklyAttendanceReport();
+  });
+}
+
+const closeWeeklyModal = document.getElementById("closeWeeklyModal");
+if (closeWeeklyModal) {
+  closeWeeklyModal.addEventListener("click", () => {
+    document.getElementById("weeklyAttendanceModal").classList.remove("show");
+  });
+}
+
+window.addEventListener("click", e => {
+  if (e.target.id === "weeklyAttendanceModal") {
+    document.getElementById("weeklyAttendanceModal").classList.remove("show");
+  }
+});
+
 // Open leave requests modal
 leaveCard.addEventListener("click", () => {
     loadLeaveRequests();
@@ -389,7 +502,6 @@ async function loadLeaveRequests() {
         if (!res.ok) throw new Error("Failed to fetch leave requests");
 
         const leaves = await res.json();
-        // ✅ Update count when modal opens
         leaveCount.textContent = leaves.length;
 
         const tbody = document.getElementById("leaveRequestsBody");
@@ -440,7 +552,6 @@ async function openLeaveModal(leaveId) {
         document.getElementById("leaveReason").innerText = leave.reason || "N/A";
         document.getElementById("leaveStatus").innerText = leave.status || "N/A";
 
-        // Show approve/disapprove only for admin/HR
         if (role === "admin" || role === "hr") {
             approveLeaveBtn.style.display = "inline-block";
             disapproveLeaveBtn.style.display = "inline-block";
@@ -474,7 +585,6 @@ async function updateLeaveStatus(leaveId, status) {
 
         alert(`Leave ${status.toLowerCase()} successfully`);
         leaveModal.classList.remove("show");
-        // ✅ Reload both count and requests
         loadLeaveCount();
         loadLeaveRequests();
     } catch (err) {
@@ -483,14 +593,13 @@ async function updateLeaveStatus(leaveId, status) {
     }
 }
 
-// Close individual leave modal
 closeLeaveModal.addEventListener("click", () => leaveModal.classList.remove("show"));
 window.addEventListener("click", e => {
     if (e.target === leaveModal) leaveModal.classList.remove("show");
 });
 
 // ============================================
-// LOAD ATTENDANCE ALERTS & COMPLAINTS (NOTIFICATIONS)
+// LOAD ATTENDANCE ALERTS & COMPLAINTS
 // ============================================
 
 async function loadAttendanceAlerts() {
@@ -500,7 +609,6 @@ async function loadAttendanceAlerts() {
 
     const alerts = [];
 
-    // ===== LOAD ATTENDANCE ALERTS =====
     try {
       const attendanceRes = await fetch("https://www.mither3security.com/attendance/all", {
         headers: { Authorization: `Bearer ${token}` }
@@ -537,7 +645,6 @@ async function loadAttendanceAlerts() {
       console.error("Error loading attendance alerts:", err);
     }
 
-    // ===== LOAD COMPLAINTS/TICKETS =====
     try {
       const ticketRes = await fetch("https://www.mither3security.com/tickets", {
         headers: { "Authorization": `Bearer ${token}` }
@@ -545,7 +652,6 @@ async function loadAttendanceAlerts() {
       if (ticketRes.ok) {
         const tickets = await ticketRes.json();
         
-        // Filter for pending and urgent complaints
         const pendingTickets = tickets.filter(t => 
           t.status === "Pending" || t.creatorRole === "client"
         );
@@ -565,7 +671,6 @@ async function loadAttendanceAlerts() {
       console.error("Error loading complaints:", err);
     }
 
-    // ===== RENDER ALL ALERTS =====
     if (alerts.length > 0) {
       alerts.forEach((alert, index) => {
         const div = document.createElement("div");
@@ -576,7 +681,6 @@ async function loadAttendanceAlerts() {
         
         let html = `<p style="margin: 0; color: var(--clr-dark); font-size: 0.85rem;"><b>${alert.name}</b> - ${alert.msg}</p>`;
         
-        // Add view button for complaints
         if (alert.type === "complaint" && alert.ticketId) {
           html += `<button class="view-alert-btn" data-id="${alert.ticketId}" style="margin-top: 0.5rem; padding: 0.4rem 0.8rem; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">View</button>`;
         }
@@ -585,7 +689,6 @@ async function loadAttendanceAlerts() {
         notifList.appendChild(div);
       });
 
-      // Add event listeners for view buttons
       notifList.querySelectorAll(".view-alert-btn").forEach(btn => {
         btn.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -700,7 +803,6 @@ document.addEventListener("DOMContentLoaded", () => {
   loadAttendanceRateBarGraph();  
   loadComplaintsChart();
   loadTodayComplaints();
-  // ✅ LOAD LEAVE COUNT ON PAGE LOAD
   loadLeaveCount();
   loadAttendanceAlerts();
 });
