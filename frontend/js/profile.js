@@ -6,7 +6,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   let isEditing = false;
   let employeeDataCache = {};
   let fileInputs = {};
-  let allBranches = []; // Store all branches for dropdown
+  let allBranches = [];
+  let monthlyAttendanceData = [];
 
   async function fetchEmployeeData() {
     try {
@@ -22,7 +23,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // ===== FETCH ALL BRANCHES =====
   async function fetchAllBranches() {
     try {
       const res = await fetch("https://www.mither3security.com/api/branches");
@@ -58,7 +58,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     };
 
-    // Basic Info
     const basicKeyMap = {
       pslNo: "pslNo",
       sssNo: "sssNo",
@@ -77,7 +76,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       setText(f, basic[modelKey], f === "expiryDate");
     });
 
-    // Personal Information
     const personalKeyMap = {
       fullName: "name",
       email: "email",
@@ -101,7 +99,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       setText(f, personal[modelKey]);
     });
 
-    // Education
     const tbody = document.querySelector("#educationTable tbody");
     if (tbody) {
       tbody.innerHTML = "";
@@ -121,7 +118,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }
 
-    // Credentials
     const credFields = [
       "barangayClearance","policeClearance","diClearance","nbiClearance",
       "personalHistory","residenceHistory","maritalStatus","physicalData",
@@ -157,7 +153,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // ===== HANDLE BRANCH CHANGE =====
   function handleBranchChange(selectedBranch) {
     const salaryEl = document.getElementById("salary");
     const expiryDateEl = document.getElementById("expiryDate");
@@ -165,12 +160,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const shiftEl = document.getElementById("shift");
 
     if (selectedBranch === "toBeSet" || selectedBranch === "") {
-      // ✅ Reset to Pending state
       salaryEl.textContent = "N/A";
       expiryDateEl.textContent = "";
       statusEl.textContent = "Pending";
       
-      // ✅ Reset shift dropdown to show only N/A
       if (shiftEl.tagName === "SELECT") {
         shiftEl.innerHTML = "";
         const nAOpt = document.createElement("option");
@@ -180,14 +173,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         shiftEl.value = "N/A";
       }
     } else {
-      // ✅ Find the branch and auto-fill
       const foundBranch = allBranches.find(b => b.branchData?.branch === selectedBranch);
       
       if (foundBranch) {
-        // Set salary
         salaryEl.textContent = foundBranch.salary || "N/A";
         
-        // Set expiry date
         if (foundBranch.expirationDate) {
           const d = new Date(foundBranch.expirationDate);
           expiryDateEl.textContent = isNaN(d) ? "" : d.toLocaleDateString();
@@ -195,14 +185,12 @@ document.addEventListener("DOMContentLoaded", async () => {
           expiryDateEl.textContent = "";
         }
         
-        // ✅ Update shift dropdown with only the branch's shifts
         if (shiftEl.tagName === "SELECT") {
-          shiftEl.innerHTML = ""; // Clear existing options
+          shiftEl.innerHTML = "";
           
           const dayShiftTime = foundBranch.guardShift?.day;
           const nightShiftTime = foundBranch.guardShift?.night;
           
-          // Add Day Shift if it exists
           if (dayShiftTime && dayShiftTime !== "N/A") {
             const dayOpt = document.createElement("option");
             dayOpt.value = `day|${dayShiftTime}`;
@@ -210,7 +198,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             shiftEl.appendChild(dayOpt);
           }
           
-          // Add Night Shift if it exists
           if (nightShiftTime && nightShiftTime !== "N/A") {
             const nightOpt = document.createElement("option");
             nightOpt.value = `night|${nightShiftTime}`;
@@ -218,7 +205,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             shiftEl.appendChild(nightOpt);
           }
           
-          // If no shifts found, add N/A
           if ((!dayShiftTime || dayShiftTime === "N/A") && (!nightShiftTime || nightShiftTime === "N/A")) {
             const nAOpt = document.createElement("option");
             nAOpt.value = "N/A";
@@ -226,12 +212,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             shiftEl.appendChild(nAOpt);
             shiftEl.value = "N/A";
           } else {
-            // Select first available shift
             shiftEl.selectedIndex = 0;
           }
         }
         
-        // Set status to Active
         statusEl.textContent = "Active";
       }
     }
@@ -243,7 +227,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const formData = new FormData();
 
-    // ===== BUILD EMPLOYEE DATA OBJECT =====
     const employeeData = {
       basicInformation: {},
       personalData: {},
@@ -253,9 +236,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       createdBy: employeeDataCache.employeeData?.createdBy
     };
 
-    // ===== BASIC INFORMATION =====
     const basicFields = ["pslNo","sssNo","tinNo","celNo","shift","expiryDate","badgeNo","branch","salary","status"];
-    const basicOld = employeeDataCache.employeeData?.basicInformation || {};
 
     basicFields.forEach(f => {
       const el = document.getElementById(f);
@@ -263,22 +244,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       let val = el.tagName === "SELECT" ? el.value : el.textContent.trim();
 
-      // Handle branch from select dropdown
       if (f === "branch" && el.tagName === "SELECT") {
         val = el.value === "toBeSet" ? "" : el.value;
       }
 
-      // Handle shift from select dropdown
       if (f === "shift" && el.tagName === "SELECT") {
         const shiftValue = el.value;
         if (shiftValue.includes("|")) {
-          val = shiftValue.split("|")[1]; // Get the time part (e.g., "8:00AM-8:00PM")
+          val = shiftValue.split("|")[1];
         } else {
-          val = shiftValue; // If it's just "N/A"
+          val = shiftValue;
         }
       }
 
-      // Convert date strings to Date or null
       if (f === "expiryDate" && val) {
         if (val === "" || val === "N/A") {
           val = null;
@@ -288,18 +266,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }
 
-      // Convert salary to null if N/A
       if (f === "salary" && val === "N/A") {
         val = null;
       }
 
-      // Always include the field to override
       employeeData.basicInformation[f] = val;
     });
 
-    // ===== PERSONAL INFORMATION =====
     const personalFields = ["fullName","email","dob","presentAddress","birthPlace","previousAddress","citizenship","weight","language","age","height","religion","civilStatus","hairColor","eyeColor"];
-    const personalOld = employeeDataCache.employeeData?.personalData || {};
 
     personalFields.forEach(f => {
       const el = document.getElementById(f);
@@ -307,7 +281,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       let val = el.textContent.trim();
 
-      // Handle date fields
       if (f === "dob" && val) {
         if (val === "" || val === "N/A") {
           val = null;
@@ -327,11 +300,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       };
       const key = keyMap[f] || f;
       
-      // Always include to override
       employeeData.personalData[key] = val;
     });
 
-    // ===== CREDENTIALS =====
     const credFields = [
       "barangayClearance","policeClearance","diClearance","nbiClearance",
       "personalHistory","residenceHistory","maritalStatus","physicalData",
@@ -343,7 +314,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (fileInputs[f]) formData.append(f, fileInputs[f]);
     });
 
-    // ===== SEND TO BACKEND =====
     formData.append("employeeData", JSON.stringify(employeeData));
 
     try {
@@ -378,10 +348,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     isEditing = !isEditing;
 
     if (isEditing) {
-      // ===== ENTER EDIT MODE =====
       editBtn.textContent = "SAVE";
 
-      // ✅ Convert BRANCH field to dropdown
       const branchEl = document.getElementById("branch");
       if (branchEl) {
         const currentBranch = branchEl.textContent.trim();
@@ -394,13 +362,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         select.style.backgroundColor = "#f0f8ff";
         select.style.cursor = "pointer";
 
-        // Add "To Be Set" option
         const optionToBeSet = document.createElement("option");
         optionToBeSet.value = "toBeSet";
         optionToBeSet.textContent = "-- To Be Set --";
         select.appendChild(optionToBeSet);
 
-        // Add all branches
         if (allBranches.length > 0) {
           allBranches.forEach(branch => {
             const option = document.createElement("option");
@@ -410,20 +376,16 @@ document.addEventListener("DOMContentLoaded", async () => {
           });
         }
 
-        // Set current value
         select.value = currentBranch || "toBeSet";
 
-        // ✅ Listen to branch change
         select.addEventListener("change", (e) => {
           handleBranchChange(e.target.value);
         });
 
-        // Replace the text element with select
         branchEl.parentNode.replaceChild(select, branchEl);
-        select.id = "branch"; // Restore the ID for saving
+        select.id = "branch";
       }
 
-      // ✅ Convert SHIFT field to dropdown
       const shiftEl = document.getElementById("shift");
       if (shiftEl) {
         const currentShift = shiftEl.textContent.trim();
@@ -436,21 +398,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         shiftSelect.style.backgroundColor = "#f0f8ff";
         shiftSelect.style.cursor = "pointer";
 
-        // Start with placeholder
         const placeholderOpt = document.createElement("option");
         placeholderOpt.value = "";
         placeholderOpt.textContent = "-- Select Branch First --";
         shiftSelect.appendChild(placeholderOpt);
 
-        // Set current value if available
         shiftSelect.value = currentShift || "";
 
-        // Replace the text element with select
         shiftEl.parentNode.replaceChild(shiftSelect, shiftEl);
-        shiftSelect.id = "shift"; // Restore the ID for saving
+        shiftSelect.id = "shift";
       }
 
-      // Make other fields editable (except salary, expiryDate, status)
       document.querySelectorAll("[contenteditable=false]").forEach(f => {
         if (f.id !== "branch" && f.id !== "salary" && f.id !== "expiryDate" && f.id !== "status") {
           f.setAttribute("contenteditable", "true");
@@ -459,12 +417,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       });
     } else {
-      // ===== SAVE AND EXIT EDIT MODE =====
       await saveEmployeeData();
       editBtn.textContent = "EDIT";
       isEditing = false;
-      
-      // Reload employee data to show fresh state
       await fetchEmployeeData();
     }
   });
@@ -707,7 +662,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // ===== TAB SWITCHING LOGIC =====
   document.querySelectorAll(".tab").forEach(tab => {
     tab.addEventListener("click", () => {
       document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
@@ -721,7 +675,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // ===== ATTENDANCE SECTION =====
   const attendanceTableBody = document.querySelector("#attendanceTable tbody");
-  const monthlyTableBody = document.querySelector("#monthlyAttendanceTable tbody");
   const attendancePercentage = document.getElementById("attendancePercentage");
   const attendanceChartCanvas = document.getElementById("attendanceChart");
   const monthlyReportModal = document.getElementById("monthlyReportModal");
@@ -750,8 +703,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         const checkin = record.checkinTime ? new Date(record.checkinTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "-";
         const checkout = record.checkoutTime ? new Date(record.checkoutTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "-";
         const status = record.status || "Absent";
+        
         const statusClass =
-          status.includes("Absent") ? "absent" :
+          status.toLowerCase().includes("absent") ? "absent" :
           status.toLowerCase().includes("late") ? "late" : "ontime";
 
         row.innerHTML = `
@@ -797,6 +751,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       tbody.innerHTML = "";
 
       const records = data.records || data;
+      monthlyAttendanceData = records;
+
       if (!records.length) {
         tbody.innerHTML = `<tr><td colspan="21" style="text-align:center;">No records found.</td></tr>`;
         return;
@@ -806,7 +762,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       const employeeName = employeeDataCache.employeeData?.personalData?.name || "N/A";
 
       const recordsPerRow = 16;
-      const totalRows = 24;
+      const totalRows = Math.ceil(records.length / recordsPerRow);
+      
+      let grandTotalHours = 0;
+      let grandTotalDays = 0;
 
       for (let row = 0; row < totalRows; row++) {
         const startIndex = row * recordsPerRow;
@@ -820,15 +779,15 @@ document.addEventListener("DOMContentLoaded", async () => {
           firstRecordDate.setDate(firstRecordDate.getDate() - (recordsPerRow * (totalRows - row - 1)));
         }
 
+        // ✅ FIX: Check status properly - count as successful if "On-Time" is in status
         const daysArray = rowRecords.map(record => {
           const status = record.status?.toLowerCase() || "absent";
-          switch (status) {
-            case "on-time": return "✅";
-            case "late": return "⚠️";
-            case "on-leave": return "🏖️";
-            case "absent": return "❌";
-            default: return "❌";
-          }
+          
+          if (status.includes("on-time")) return "✅";
+          if (status.includes("late")) return "⚠️";
+          if (status.includes("on-leave")) return "🏖️";
+          if (status.includes("absent")) return "❌";
+          return "❌";
         });
 
         while (daysArray.length < recordsPerRow) daysArray.push("");
@@ -838,20 +797,37 @@ document.addEventListener("DOMContentLoaded", async () => {
         periodEndDate.setDate(firstRecordDate.getDate() + recordsPerRow - 1);
         const periodEndStr = periodEndDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
-        const totalDays = daysArray.filter(d => d !== "❌" && d !== "").length;
+        // ✅ FIX: Count only successful days (✅, ⚠️, 🏖️) excluding ❌
+        const totalDays = daysArray.filter(d => d === "✅" || d === "⚠️" || d === "🏖️").length;
         const totalHours = totalDays * 12;
+
+        grandTotalHours += totalHours;
+        grandTotalDays += totalDays;
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${branch}</td>
           <td>${periodStartStr} – ${periodEndStr}</td>
           <td>${employeeName}</td>
-          ${daysArray.map(d => `<td class="status-emoji">${d}</td>`).join("")}
-          <td>${totalHours}</td>
-          <td>${totalDays}</td>
+          ${daysArray.map(d => `<td class="status-emoji" style="text-align:center; padding:0.8rem; font-size:1.2rem;">${d}</td>`).join("")}
+          <td style="font-weight:bold; text-align:center;">${totalHours}</td>
+          <td style="font-weight:bold; text-align:center;">${totalDays}</td>
         `;
         tbody.appendChild(tr);
       }
+
+      // ✅ ADD GRAND TOTAL ROW AT BOTTOM
+      const totalRow = document.createElement("tr");
+      totalRow.style.background = "#f0f8ff";
+      totalRow.style.fontWeight = "bold";
+      totalRow.style.borderTop = "3px solid #131315";
+      totalRow.innerHTML = `
+        <td colspan="3" style="text-align:right; padding:1rem; font-weight:bold;">GRAND TOTAL:</td>
+        ${Array.from({ length: 16 }, () => `<td style="text-align:center; padding:0.8rem;"></td>`).join("")}
+        <td style="text-align:center; padding:1rem; background:#e8f5e9;">${grandTotalHours}</td>
+        <td style="text-align:center; padding:1rem; background:#e8f5e9;">${grandTotalDays}</td>
+      `;
+      tbody.appendChild(totalRow);
 
     } catch (err) {
       console.error("Error loading monthly attendance:", err);
@@ -872,27 +848,45 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (e.target === monthlyReportModal) monthlyReportModal.style.display = "none";
   });
 
-  function downloadTableAsCSV(tableId, filename = "monthly_attendance.csv") {
-    const table = document.getElementById(tableId);
+  function downloadTableAsCSV() {
+    const table = document.getElementById("monthlyAttendanceTable");
     if (!table) return;
 
     let csvContent = "";
 
+    // ===== GET HEADERS =====
     const headers = table.querySelectorAll("thead tr th");
-    const headerRow = Array.from(headers).map(th => `"${th.innerText}"`).join(",");
+    const headerRow = Array.from(headers).map(th => {
+      const text = th.innerText.replace(/"/g, '""').trim();
+      return `"${text}"`;
+    }).join(",");
     csvContent += headerRow + "\r\n";
 
+    // ===== GET DATA ROWS =====
     const rows = table.querySelectorAll("tbody tr");
-    rows.forEach(row => {
+
+    rows.forEach((row, index) => {
       const cells = row.querySelectorAll("td");
-      const rowContent = Array.from(cells).map(td => `"${td.innerText}"`).join(",");
+      
+      const rowContent = Array.from(cells).map(td => {
+        const text = td.innerText.replace(/"/g, '""').trim();
+        return `"${text}"`;
+      }).join(",");
+      
       csvContent += rowContent + "\r\n";
     });
 
+    // ===== DOWNLOAD =====
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
+    
     link.setAttribute("href", url);
+    
+    const employeeName = employeeDataCache.employeeData?.personalData?.name || "employee";
+    const sanitizedName = employeeName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const filename = `attendance_${sanitizedName}_${new Date().toISOString().split('T')[0]}.csv`;
+    
     link.setAttribute("download", filename);
     document.body.appendChild(link);
     link.click();
@@ -900,16 +894,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     URL.revokeObjectURL(url);
   }
 
+  // ===== DOWNLOAD BUTTON EVENT =====
+  const downloadBtn = document.getElementById("downloadMonthlyAttendance");
+  if (downloadBtn) {
+    downloadBtn.addEventListener("click", () => {
+      downloadTableAsCSV();
+    });
+  }
+
   function updateAttendanceChart(data) {
     const ctx = attendanceChartCanvas.getContext("2d");
 
-    const onTimeCount = data.filter(d => d.status?.toLowerCase() === "on-time").length;
-    const lateCount = data.filter(d => d.status?.toLowerCase() === "late").length;
+    // ✅ FIX: Count "On-Time" properly (even if it has "Early Out" appended)
+    const onTimeCount = data.filter(d => d.status?.toLowerCase().includes("on-time")).length;
+    const lateCount = data.filter(d => d.status?.toLowerCase().includes("late")).length;
     const absentCount = data.filter(d => d.status?.toLowerCase().includes("absent")).length;
 
     const total = onTimeCount + lateCount + absentCount;
     const percentage = total > 0 ? ((onTimeCount / total) * 100).toFixed(1) : 0;
     attendancePercentage.textContent = `${percentage}%`;
+
+    console.log(`📊 Attendance Chart Data - On-Time: ${onTimeCount}, Late: ${lateCount}, Absent: ${absentCount}, Total: ${total}, Percentage: ${percentage}%`);
 
     if (attendanceChart) attendanceChart.destroy();
 
@@ -944,7 +949,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // ===== Initialize on Page Load =====
   if (employeeId) {
-    await fetchAllBranches(); // ✅ Fetch branches first
+    await fetchAllBranches();
     await fetchEmployeeData();
     await loadWeeklyAttendance();
   }

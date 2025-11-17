@@ -293,19 +293,26 @@ router.patch("/:id", authMiddleware, parseForm, async (req, res) => {
     // --- 2. Prepare update fields ---
     const updateFields = {};
 
-    // Merge subfields if they exist
-    const subfields = [
+    // List of fields that are objects (should be merged)
+    const objectFields = [
       "basicInformation",
       "personalData",
       "governmentIds",
       "contactInfo",
       "emergencyContact",
       "workInformation",
-      "workHistory",
       "createdBy"
     ];
 
-    subfields.forEach(field => {
+    // List of fields that are arrays (should be replaced, not merged)
+    const arrayFields = [
+      "educationalBackground",
+      "firearmsIssued",
+      "credentials"
+    ];
+
+    // Handle object fields (merge them)
+    objectFields.forEach(field => {
       if (employeeData[field]) {
         updateFields[`employeeData.${field}`] = {
           ...employee.employeeData[field]?.toObject?.() || employee.employeeData[field] || {},
@@ -313,6 +320,22 @@ router.patch("/:id", authMiddleware, parseForm, async (req, res) => {
         };
       }
     });
+
+    // Handle array fields (replace them completely)
+    arrayFields.forEach(field => {
+      if (employeeData[field] !== undefined) {
+        updateFields[`employeeData.${field}`] = Array.isArray(employeeData[field]) 
+          ? employeeData[field] 
+          : [];
+      }
+    });
+
+    // Handle workHistory separately if it's an array
+    if (employeeData.workHistory) {
+      updateFields[`employeeData.workHistory`] = Array.isArray(employeeData.workHistory)
+        ? employeeData.workHistory
+        : [];
+    }
 
     // Always update updatedBy
     updateFields["employeeData.updatedBy"] = {
@@ -325,18 +348,17 @@ router.patch("/:id", authMiddleware, parseForm, async (req, res) => {
     const updatedEmployee = await Employee.findByIdAndUpdate(
       id,
       { $set: updateFields },
-      { new: true }
+      { new: true, runValidators: true }
     );
 
     res.json({
       message: "Employee updated successfully",
       updatedEmployee,
-      updateFields,
     });
 
   } catch (err) {
     console.error("❌ Error updating employee:", err);
-    res.status(500).json({ error: "Internal server error during update" });
+    res.status(500).json({ error: err.message || "Internal server error during update" });
   }
 });
 
