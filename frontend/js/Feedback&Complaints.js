@@ -304,7 +304,8 @@ async function openRemarkModal(remarkId) {
       const ticketDetails = remark.ticketDetails;
       
       document.getElementById("ticketSubjectDisplay").innerText = remark.ticketSubject || "N/A";
-      document.getElementById("ticketCreatorDisplay").innerText = ticketDetails.creatorName || "Unknown";
+      document.getElementById("ticketCreatorDisplay").innerText = 
+         ticketDetails.reportedEmployeeName || "N/A";
       document.getElementById("ticketSourceDisplay").innerText = ticketDetails.creatorRole === "client" ? "Client" : "Employee";
       document.getElementById("ticketRatingDisplay").innerText = ticketDetails.rating || "Not Rated";
       document.getElementById("ticketDateDisplay").innerText = ticketDetails.createdAt ? new Date(ticketDetails.createdAt).toLocaleString() : "Unknown";
