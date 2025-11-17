@@ -10,11 +10,7 @@ if (logoutBtn) {
     e.preventDefault();
     const userRole = localStorage.getItem("role");
     localStorage.clear();
-    if (userRole === "employee") {
-      window.location.href = "loginSection.html";
-    } else {
-      window.location.href = "loginSection.html";
-    }
+    window.location.href = "loginSection.html";
   });
 }
 
@@ -106,13 +102,42 @@ async function loadEmployeeData() {
       }
     });
 
-    // Credentials
+    // Credentials - Display files with view buttons
     const creds = data.credentials || {};
     Object.keys(credentialsFields).forEach(key => {
-      if (key !== "profileImage") credentialsFields[key].textContent = creds[key] || "N/A";
-    });
+      if (key === "profileImage") {
+        if (creds.profileImage) {
+          employeePhoto.src = `https://www.mither3security.com${creds.profileImage}`;
+        }
+        return;
+      }
 
-    if (creds.profileImage) employeePhoto.src = creds.profileImage;
+      const span = credentialsFields[key];
+      span.innerHTML = ""; // Clear existing content
+
+      if (creds[key] && creds[key] !== "N/A") {
+        // Create view button
+        const viewBtn = document.createElement("button");
+        viewBtn.textContent = "View";
+        viewBtn.className = "view-btn";
+        viewBtn.style.padding = "0.4rem 0.8rem";
+        viewBtn.style.background = "#2196F3";
+        viewBtn.style.color = "white";
+        viewBtn.style.border = "none";
+        viewBtn.style.borderRadius = "4px";
+        viewBtn.style.cursor = "pointer";
+        viewBtn.style.fontSize = "0.85rem";
+        
+        viewBtn.addEventListener("click", () => {
+          const fileUrl = `https://www.mither3security.com${creds[key]}`;
+          window.open(fileUrl, "_blank");
+        });
+
+        span.appendChild(viewBtn);
+      } else {
+        span.textContent = "No file";
+      }
+    });
 
     // Educational Background
     renderEducationTable(data.educationalBackground || []);
@@ -154,6 +179,7 @@ function createEduRow(edu = {}) {
 // ===== Edit & Save =====
 const editBtn = document.getElementById("editBtn");
 let isEditing = false;
+let uploadedFiles = {}; // Store files to upload
 
 editBtn.addEventListener("click", async () => {
   isEditing = !isEditing;
@@ -191,24 +217,55 @@ editBtn.addEventListener("click", async () => {
     if (addRowBtn) addRowBtn.style.display = "none";
   }
 
-  // Handle credentials fields
+  // Handle credentials fields - add file inputs in edit mode
   Object.keys(credentialsFields).forEach(key => {
     const span = credentialsFields[key];
     if (key === "profileImage") return;
+
     if (isEditing) {
+      // Store current value
+      const currentText = span.textContent;
+      const hasFile = span.querySelector(".view-btn") !== null;
+
+      // Clear and add file input
+      span.innerHTML = "";
+      
+      // Show current file status
+      if (hasFile) {
+        const statusText = document.createElement("span");
+        statusText.textContent = "File exists | ";
+        statusText.style.fontSize = "0.85rem";
+        statusText.style.color = "#4CAF50";
+        span.appendChild(statusText);
+      }
+
       const input = document.createElement("input");
       input.type = "file";
       input.accept = ".pdf";
+      input.style.fontSize = "0.85rem";
       input.dataset.field = key;
-      input.dataset.value = span.textContent;
-      span.replaceWith(input);
-      credentialsFields[key] = input;
+      
+      input.addEventListener("change", (e) => {
+        if (e.target.files && e.target.files[0]) {
+          uploadedFiles[key] = e.target.files[0];
+        }
+      });
+
+      span.appendChild(input);
+      credentialsFields[key] = span;
     }
   });
 
   editBtn.textContent = isEditing ? "SAVE" : "EDIT";
 
   if (!isEditing) {
+    await handleSave();
+  }
+});
+
+async function handleSave() {
+  try {
+    // Prepare employee data
     const updatedData = {
       basicInformation: {},
       personalData: {},
@@ -216,15 +273,22 @@ editBtn.addEventListener("click", async () => {
       educationalBackground: []
     };
 
-    Object.keys(basicInfoFields).forEach(key => updatedData.basicInformation[key] = basicInfoFields[key].textContent.trim() || null);
+    // Collect basic info
+    Object.keys(basicInfoFields).forEach(key => {
+      updatedData.basicInformation[key] = basicInfoFields[key].textContent.trim() || null;
+    });
 
+    // Collect personal data
     Object.keys(overviewFields).forEach(key => {
       if (key === "dob") {
         const val = overviewFields.dob.textContent;
         updatedData.personalData.dateOfBirth = val && val !== "N/A" ? new Date(val) : null;
-      } else updatedData.personalData[key] = overviewFields[key].textContent || null;
+      } else {
+        updatedData.personalData[key] = overviewFields[key].textContent || null;
+      }
     });
 
+    // Collect education data
     const eduRows = document.querySelectorAll("#educationTable tbody tr");
     eduRows.forEach(row => {
       const cells = row.querySelectorAll("td");
@@ -239,82 +303,67 @@ editBtn.addEventListener("click", async () => {
       }
     });
 
-    const uploadPromises = [];
-    Object.keys(credentialsFields).forEach(key => {
-      const input = credentialsFields[key];
-      if (input.files && input.files[0]) {
-        const formData = new FormData();
-        formData.append(key, input.files[0]);
-        formData.append("name", updatedData.personalData.name || "unknown");
+    // Upload files if any
+    if (Object.keys(uploadedFiles).length > 0) {
+      const formData = new FormData();
+      
+      // Add employee name for folder creation
+      formData.append("name", updatedData.personalData.name || "employee");
+      formData.append("employeeId", employeeId);
 
-        const p = fetch("https://www.mither3security.com/employees/upload-credentials", {
-          method: "POST",
-          body: formData,
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        .then(res => res.json())
-        .then(data => {
-            const uploadedUrl = data.urls ? data.urls[key] : null;
-            updatedData.credentials[key] = uploadedUrl || input.files[0].name;
-            const span = document.createElement("span");
-            span.id = key;
-            span.textContent = uploadedUrl ? uploadedUrl.split("/").pop() : input.files[0].name;
-            input.replaceWith(span);
-            credentialsFields[key] = span;
-          })
-        .catch(err => {
-          console.error("File upload error:", err);
-          const span = document.createElement("span");
-          span.id = key;
-          span.textContent = input.dataset.value || "N/A";
-          input.replaceWith(span);
-          credentialsFields[key] = span;
-        });
+      // Add all files
+      Object.keys(uploadedFiles).forEach(key => {
+        formData.append(key, uploadedFiles[key]);
+      });
 
-        uploadPromises.push(p);
-      } else {
-        updatedData.credentials[key] = input.dataset.value || "N/A";
-        const span = document.createElement("span");
-        span.id = key;
-        span.textContent = input.dataset.value || "N/A";
-        input.replaceWith(span);
-        credentialsFields[key] = span;
+      // Upload files
+      const uploadRes = await fetch(`${API_URL}/upload-credentials`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error("File upload failed");
       }
+
+      const uploadResult = await uploadRes.json();
+      
+      // Update credentials with uploaded file URLs
+      if (uploadResult.urls) {
+        updatedData.credentials = uploadResult.urls;
+      }
+
+      // Clear uploaded files
+      uploadedFiles = {};
+    }
+
+    // Update employee data
+    const res = await fetch(`${API_URL}/${employeeId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ employeeData: updatedData }),
     });
 
-    if (uploadPromises.length === 0) {
-      await saveProfileData(updatedData);
-    } else {
-      Promise.all(uploadPromises).then(() => saveProfileData(updatedData));
+    const result = await res.json();
+    if (!res.ok) {
+      return alert(result.error || "Failed to update profile");
     }
 
-    async function saveProfileData(updatedData) {
-      try {
-        const res = await fetch(`${API_URL}/${employeeId}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ employeeData: updatedData }),
-        });
-        const result = await res.json();
-        if (!res.ok) return alert(result.error || "Failed to update profile");
-        alert("Profile updated successfully!");
-        loadEmployeeData();
-      } catch (err) {
-        console.error("Error updating employee:", err);
-        alert("Server error while saving");
-      }
-    }
+    alert("Profile updated successfully!");
+    await loadEmployeeData();
+  } catch (err) {
+    console.error("Error updating employee:", err);
+    alert("Server error while saving: " + err.message);
   }
-});
+}
 
-// ===== ATTENDANCE SECTION =====
 // ===== ATTENDANCE SECTION =====
 async function loadAttendanceData() {
   try {
-    // Changed from `/employees/attendance/${employeeId}` to correct endpoint
     const res = await fetch(
       `https://www.mither3security.com/attendance/${employeeId}`,
       {
@@ -389,7 +438,6 @@ function calculateAttendanceRate(records) {
   const percentage = Math.round((onTimeCount / records.length) * 100);
   document.getElementById("attendancePercentage").textContent = `${percentage}%`;
 
-  // Render pie chart
   renderAttendanceChart(records);
 }
 
@@ -405,7 +453,6 @@ function renderAttendanceChart(records) {
 
   const ctx = document.getElementById("attendanceChart").getContext("2d");
   
-  // Destroy previous chart if exists
   if (window.attendanceChartInstance) {
     window.attendanceChartInstance.destroy();
   }

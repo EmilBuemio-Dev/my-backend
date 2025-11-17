@@ -7,7 +7,6 @@ import Employee from "../models/Employee.js";
 import Branch from "../models/Branch.js";
 import { authMiddleware } from "../middleware/auth.js";
 
-
 const parseForm = multer().none();
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
@@ -24,16 +23,13 @@ function sanitizeData(obj) {
   return obj;
 }
 
-// ===== Proper Sanitization for Employee Data (Before sanitizeData) =====
 function sanitizeEmployeeData(empData) {
   if (!empData) return empData;
 
-  // Remove/null out date fields that are "N/A" or empty BEFORE general sanitization
   if (empData.basicInformation) {
     if (empData.basicInformation.expiryDate === "N/A" || empData.basicInformation.expiryDate === "") {
       empData.basicInformation.expiryDate = null;
     }
-    // Ensure status is valid
     if (!["Active", "Pending"].includes(empData.basicInformation.status)) {
       empData.basicInformation.status = "Active";
     }
@@ -62,6 +58,7 @@ const storage = multer.diskStorage({
     cb(null, dest);
   },
   filename: (req, file, cb) => {
+    // Use fieldname for credential files
     cb(null, `${file.fieldname}.pdf`);
   },
 });
@@ -69,12 +66,14 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    if (file.mimetype !== "application/pdf") return cb(new Error("Only PDFs allowed"), false);
+    if (file.mimetype !== "application/pdf") {
+      return cb(new Error("Only PDFs allowed"), false);
+    }
     cb(null, true);
   },
 });
 
-// ===== Middleware to convert "N/A" to null (ONLY for specific date fields) =====
+// ===== Middleware to convert "N/A" to null =====
 router.use((req, res, next) => {
   if (req.body && typeof req.body === "object") {
     const cleanDates = (obj) => {
@@ -110,43 +109,60 @@ const credentialFields = [
   "militaryRecord",
 ];
 
-// Use multer.fields() to accept multiple files with specific field names
+// ===== Upload Credentials Endpoint =====
 router.post(
   "/upload-credentials",
+  authMiddleware,
   upload.fields(credentialFields.map(name => ({ name, maxCount: 1 }))),
   async (req, res) => {
     try {
       if (!req.files || Object.keys(req.files).length === 0) {
-        return res.status(400).json({ error: "No file uploaded" });
+        return res.status(400).json({ error: "No files uploaded" });
       }
 
       const employeeName = (req.body.name || "unknown").replace(/\s+/g, "_");
+      const employeeId = req.body.employeeId;
       const urls = {};
 
+      // Build URLs for uploaded files
       for (const key of Object.keys(req.files)) {
         const file = req.files[key][0];
         urls[key] = `/uploads/${employeeName}/Credentials/${file.filename}`;
       }
 
-      // Optionally update employee document
-      const employeeId = req.body.employeeId;
+      // Update employee document if employeeId is provided
       if (employeeId) {
-        const updateData = {};
-        for (const key in urls) updateData[`employeeData.credentials.${key}`] = urls[key];
+        const employee = await Employee.findById(employeeId);
+        if (!employee) {
+          return res.status(404).json({ error: "Employee not found" });
+        }
+
+        // Merge new credentials with existing ones
+        const existingCreds = employee.employeeData?.credentials || {};
+        const updatedCreds = { ...existingCreds, ...urls };
 
         const updatedEmployee = await Employee.findByIdAndUpdate(
           employeeId,
-          { $set: updateData },
+          { 
+            $set: { 
+              "employeeData.credentials": updatedCreds 
+            } 
+          },
           { new: true, runValidators: true }
         );
 
-        if (!updatedEmployee) return res.status(404).json({ error: "Employee not found" });
+        return res.status(200).json({ 
+          msg: "Files uploaded and employee updated successfully", 
+          urls,
+          credentials: updatedCreds
+        });
       }
 
+      // If no employeeId, just return the URLs
       res.status(200).json({ msg: "Files uploaded successfully", urls });
     } catch (err) {
       console.error("Error uploading credentials:", err);
-      res.status(500).json({ error: "Server error" });
+      res.status(500).json({ error: "Server error: " + err.message });
     }
   }
 );
@@ -162,10 +178,7 @@ router.post("/", async (req, res) => {
     employeeData.credentials = employeeData.credentials || {};
     employeeData.firearmsIssued = Array.isArray(employeeData.firearmsIssued) ? employeeData.firearmsIssued : [];
 
-    // ✅ Step 1: Sanitize dates FIRST (before general sanitization)
     employeeData = sanitizeEmployeeData(employeeData);
-
-    // ✅ Step 2: General sanitization (converts remaining empty values to "N/A")
     sanitizeData(employeeData);
 
     const personal = employeeData.personalData;
@@ -241,6 +254,7 @@ router.get("/branch/:branchId", async (req, res) => {
   }
 });
 
+// GET leave requests for employee
 router.get("/leave-requests/employee/:employeeId", authMiddleware, async (req, res) => {
   try {
     const { employeeId } = req.params;
@@ -261,11 +275,11 @@ router.get("/leave-requests/employee/:employeeId", authMiddleware, async (req, r
   }
 });
 
+// PATCH (Update) employee
 router.patch("/:id", authMiddleware, parseForm, async (req, res) => {
   try {
     const id = req.params.id;
 
-    // --- 1. Ensure employee exists ---
     const employee = await Employee.findById(id);
     if (!employee) {
       return res.status(404).json({ error: "Employee not found" });
@@ -274,7 +288,6 @@ router.patch("/:id", authMiddleware, parseForm, async (req, res) => {
     let employeeData = {};
 
     if (req.body.employeeData) {
-      // ✅ If employeeData is a string, parse it. If already object, use directly
       if (typeof req.body.employeeData === "string") {
         try {
           employeeData = JSON.parse(req.body.employeeData);
@@ -290,10 +303,8 @@ router.patch("/:id", authMiddleware, parseForm, async (req, res) => {
       return res.status(400).json({ error: "employeeData field is missing" });
     }
 
-    // --- 2. Prepare update fields ---
     const updateFields = {};
 
-    // List of fields that are objects (should be merged)
     const objectFields = [
       "basicInformation",
       "personalData",
@@ -304,11 +315,9 @@ router.patch("/:id", authMiddleware, parseForm, async (req, res) => {
       "createdBy"
     ];
 
-    // List of fields that are arrays (should be replaced, not merged)
     const arrayFields = [
       "educationalBackground",
-      "firearmsIssued",
-      "credentials"
+      "firearmsIssued"
     ];
 
     // Handle object fields (merge them)
@@ -330,7 +339,16 @@ router.patch("/:id", authMiddleware, parseForm, async (req, res) => {
       }
     });
 
-    // Handle workHistory separately if it's an array
+    // Handle credentials separately - merge with existing
+    if (employeeData.credentials) {
+      const existingCreds = employee.employeeData?.credentials || {};
+      updateFields[`employeeData.credentials`] = {
+        ...existingCreds,
+        ...employeeData.credentials
+      };
+    }
+
+    // Handle workHistory
     if (employeeData.workHistory) {
       updateFields[`employeeData.workHistory`] = Array.isArray(employeeData.workHistory)
         ? employeeData.workHistory
@@ -344,7 +362,6 @@ router.patch("/:id", authMiddleware, parseForm, async (req, res) => {
       timestamp: new Date(),
     };
 
-    // --- 3. Apply update ---
     const updatedEmployee = await Employee.findByIdAndUpdate(
       id,
       { $set: updateFields },
@@ -361,7 +378,6 @@ router.patch("/:id", authMiddleware, parseForm, async (req, res) => {
     res.status(500).json({ error: err.message || "Internal server error during update" });
   }
 });
-
 
 // DELETE employee
 router.delete("/:id", async (req, res) => {

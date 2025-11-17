@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const employeeId = urlParams.get("id");
   let isEditing = false;
   let employeeDataCache = {};
-  let fileInputs = {};
+  let fileInputs = {}; // Store selected files
   let allBranches = [];
   let monthlyAttendanceData = [];
 
@@ -128,26 +128,46 @@ document.addEventListener("DOMContentLoaded", async () => {
     credFields.forEach(f => {
       const span = document.getElementById(f);
       if (!span) return;
+      
       const filePath = creds[f];
-      const cleanedPath = filePath ? filePath.split("/").map(s => encodeURIComponent(s)).join("/") : null;
-      const fileUrl = cleanedPath ? `https://www.mither3security.com/${cleanedPath}` : null;
+      const fileUrl = filePath ? `https://www.mither3security.com${filePath}` : null;
 
       span.innerHTML = "";
-      if (fileUrl) {
+      
+      if (fileUrl && fileUrl !== "https://www.mither3security.comN/A") {
         const viewBtn = document.createElement("button");
         viewBtn.className = "view-btn";
         viewBtn.textContent = "View";
+        viewBtn.style.padding = "0.4rem 0.8rem";
+        viewBtn.style.background = "#2196F3";
+        viewBtn.style.color = "white";
+        viewBtn.style.border = "none";
+        viewBtn.style.borderRadius = "4px";
+        viewBtn.style.cursor = "pointer";
+        viewBtn.style.fontSize = "0.85rem";
+        viewBtn.style.marginRight = "8px";
         viewBtn.onclick = () => window.open(fileUrl, "_blank");
         span.appendChild(viewBtn);
       } else {
-        span.textContent = "No file";
+        const noFileText = document.createElement("span");
+        noFileText.textContent = "No file";
+        noFileText.style.color = "#999";
+        noFileText.style.fontSize = "0.85rem";
+        noFileText.style.marginRight = "8px";
+        span.appendChild(noFileText);
       }
 
+      // Add file input in edit mode
       if (isEditing) {
         const input = document.createElement("input");
         input.type = "file";
-        input.style.marginLeft = "10px";
-        input.onchange = e => { fileInputs[f] = e.target.files[0]; };
+        input.accept = ".pdf";
+        input.style.fontSize = "0.85rem";
+        input.onchange = e => { 
+          if (e.target.files && e.target.files[0]) {
+            fileInputs[f] = e.target.files[0]; 
+          }
+        };
         span.appendChild(input);
       }
     });
@@ -225,122 +245,149 @@ document.addEventListener("DOMContentLoaded", async () => {
     const token = localStorage.getItem("token");
     if (!token) return alert("Not authorized");
 
-    const formData = new FormData();
-
-    const employeeData = {
-      basicInformation: {},
-      personalData: {},
-      credentials: {},
-      educationalBackground: employeeDataCache.employeeData?.educationalBackground || [],
-      firearmsIssued: employeeDataCache.employeeData?.firearmsIssued || [],
-      createdBy: employeeDataCache.employeeData?.createdBy
-    };
-
-    const basicFields = ["pslNo","sssNo","tinNo","celNo","shift","expiryDate","badgeNo","branch","salary","status"];
-
-    basicFields.forEach(f => {
-      const el = document.getElementById(f);
-      if (!el) return;
-
-      let val = el.tagName === "SELECT" ? el.value : el.textContent.trim();
-
-      if (f === "branch" && el.tagName === "SELECT") {
-        val = el.value === "toBeSet" ? "" : el.value;
-      }
-
-      if (f === "shift" && el.tagName === "SELECT") {
-        const shiftValue = el.value;
-        if (shiftValue.includes("|")) {
-          val = shiftValue.split("|")[1];
-        } else {
-          val = shiftValue;
-        }
-      }
-
-      if (f === "expiryDate" && val) {
-        if (val === "" || val === "N/A") {
-          val = null;
-        } else {
-          const d = new Date(val);
-          val = isNaN(d) ? null : d;
-        }
-      }
-
-      if (f === "salary" && val === "N/A") {
-        val = null;
-      }
-
-      employeeData.basicInformation[f] = val;
-    });
-
-    const personalFields = ["fullName","email","dob","presentAddress","birthPlace","previousAddress","citizenship","weight","language","age","height","religion","civilStatus","hairColor","eyeColor"];
-
-    personalFields.forEach(f => {
-      const el = document.getElementById(f);
-      if (!el) return;
-
-      let val = el.textContent.trim();
-
-      if (f === "dob" && val) {
-        if (val === "" || val === "N/A") {
-          val = null;
-        } else {
-          const d = new Date(val);
-          val = isNaN(d) ? null : d;
-        }
-      }
-
-      const keyMap = {
-        fullName: "name",
-        dob: "dateOfBirth",
-        previousAddress: "prevAddress",
-        hairColor: "colorOfHair",
-        eyeColor: "colorOfEyes",
-        language: "languageSpoken"
-      };
-      const key = keyMap[f] || f;
-      
-      employeeData.personalData[key] = val;
-    });
-
-    const credFields = [
-      "barangayClearance","policeClearance","diClearance","nbiClearance",
-      "personalHistory","residenceHistory","maritalStatus","physicalData",
-      "educationData","characterReference","employmentHistory",
-      "neighborhoodInvestigation","militaryRecord"
-    ];
-
-    credFields.forEach(f => {
-      if (fileInputs[f]) formData.append(f, fileInputs[f]);
-    });
-
-    formData.append("employeeData", JSON.stringify(employeeData));
-
     try {
+      // First, handle file uploads if there are any
+      let uploadedCredentials = {};
+      
+      if (Object.keys(fileInputs).length > 0) {
+        const formData = new FormData();
+        
+        // Add employee name and ID
+        const employeeName = document.getElementById("fullName").textContent.trim();
+        formData.append("name", employeeName || "employee");
+        formData.append("employeeId", employeeId);
+
+        // Add all files
+        Object.keys(fileInputs).forEach(key => {
+          formData.append(key, fileInputs[key]);
+        });
+
+        // Upload files
+        const uploadRes = await fetch("https://www.mither3security.com/employees/upload-credentials", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData
+        });
+
+        if (!uploadRes.ok) {
+          const errorData = await uploadRes.json();
+          throw new Error("File upload failed: " + (errorData.error || "Unknown error"));
+        }
+
+        const uploadResult = await uploadRes.json();
+        uploadedCredentials = uploadResult.credentials || uploadResult.urls || {};
+        
+        console.log("✅ Files uploaded successfully:", uploadedCredentials);
+      }
+
+      // Now prepare employee data update
+      const employeeData = {
+        basicInformation: {},
+        personalData: {},
+        credentials: uploadedCredentials, // Include uploaded credentials
+        educationalBackground: employeeDataCache.employeeData?.educationalBackground || [],
+        firearmsIssued: employeeDataCache.employeeData?.firearmsIssued || [],
+        createdBy: employeeDataCache.employeeData?.createdBy
+      };
+
+      const basicFields = ["pslNo","sssNo","tinNo","celNo","shift","expiryDate","badgeNo","branch","salary","status"];
+
+      basicFields.forEach(f => {
+        const el = document.getElementById(f);
+        if (!el) return;
+
+        let val = el.tagName === "SELECT" ? el.value : el.textContent.trim();
+
+        if (f === "branch" && el.tagName === "SELECT") {
+          val = el.value === "toBeSet" ? "" : el.value;
+        }
+
+        if (f === "shift" && el.tagName === "SELECT") {
+          const shiftValue = el.value;
+          if (shiftValue.includes("|")) {
+            val = shiftValue.split("|")[1];
+          } else {
+            val = shiftValue;
+          }
+        }
+
+        if (f === "expiryDate" && val) {
+          if (val === "" || val === "N/A") {
+            val = null;
+          } else {
+            const d = new Date(val);
+            val = isNaN(d) ? null : d;
+          }
+        }
+
+        if (f === "salary" && val === "N/A") {
+          val = null;
+        }
+
+        employeeData.basicInformation[f] = val;
+      });
+
+      const personalFields = ["fullName","email","dob","presentAddress","birthPlace","previousAddress","citizenship","weight","language","age","height","religion","civilStatus","hairColor","eyeColor"];
+
+      personalFields.forEach(f => {
+        const el = document.getElementById(f);
+        if (!el) return;
+
+        let val = el.textContent.trim();
+
+        if (f === "dob" && val) {
+          if (val === "" || val === "N/A") {
+            val = null;
+          } else {
+            const d = new Date(val);
+            val = isNaN(d) ? null : d;
+          }
+        }
+
+        const keyMap = {
+          fullName: "name",
+          dob: "dateOfBirth",
+          previousAddress: "prevAddress",
+          hairColor: "colorOfHair",
+          eyeColor: "colorOfEyes",
+          language: "languageSpoken"
+        };
+        const key = keyMap[f] || f;
+        
+        employeeData.personalData[key] = val;
+      });
+
+      // Update employee
       const res = await fetch(`https://www.mither3security.com/employees/${employeeId}`, {
         method: "PATCH",
         headers: {
-          "Authorization": `Bearer ${token}`
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
         },
-        body: formData
+        body: JSON.stringify({ employeeData })
       });
 
       const result = await res.json();
 
       if (!res.ok) {
         console.error("❌ Update failed:", result);
-        alert("Update failed. Check console.");
+        alert("Update failed: " + (result.error || "Unknown error"));
         return;
       }
 
       console.log("✅ Update successful:", result);
       alert("Employee updated successfully!");
-      employeeDataCache = result.employee || result.updatedEmployee;
+      
+      // Clear file inputs
       fileInputs = {};
-      populateProfile(employeeDataCache);
+      
+      // Refresh data
+      employeeDataCache = result.updatedEmployee || result.employee || employeeDataCache;
+      await fetchEmployeeData();
+      
     } catch (err) {
-      console.error(err);
-      alert("Error saving data. Check console for details.");
+      console.error("❌ Error saving data:", err);
+      alert("Error saving data: " + err.message);
     }
   }
 
@@ -410,17 +457,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       document.querySelectorAll("[contenteditable=false]").forEach(f => {
-        if (f.id !== "branch" && f.id !== "salary" && f.id !== "expiryDate" && f.id !== "status") {
+        if (f.id !== "branch" && f.id !== "salary" && f.id !== "expiryDate" && f.id !== "status" && f.id !== "shift") {
           f.setAttribute("contenteditable", "true");
           f.style.backgroundColor = "#f0f8ff";
           f.style.cursor = "text";
         }
       });
+      
+      // Re-populate to show file inputs
+      populateProfile(employeeDataCache);
     } else {
       await saveEmployeeData();
       editBtn.textContent = "EDIT";
       isEditing = false;
-      await fetchEmployeeData();
     }
   });
 
@@ -779,7 +828,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           firstRecordDate.setDate(firstRecordDate.getDate() - (recordsPerRow * (totalRows - row - 1)));
         }
 
-        // ✅ FIX: Check status properly - count as successful if "On-Time" is in status
         const daysArray = rowRecords.map(record => {
           const status = record.status?.toLowerCase() || "absent";
           
@@ -797,7 +845,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         periodEndDate.setDate(firstRecordDate.getDate() + recordsPerRow - 1);
         const periodEndStr = periodEndDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
-        // ✅ FIX: Count only successful days (✅, ⚠️, 🏖️) excluding ❌
         const totalDays = daysArray.filter(d => d === "✅" || d === "⚠️" || d === "🏖️").length;
         const totalHours = totalDays * 12;
 
@@ -816,7 +863,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         tbody.appendChild(tr);
       }
 
-      // ✅ ADD GRAND TOTAL ROW AT BOTTOM
       const totalRow = document.createElement("tr");
       totalRow.style.background = "#f0f8ff";
       totalRow.style.fontWeight = "bold";
@@ -838,12 +884,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   generateMonthlyTableHeader();
 
-  attendanceChartCanvas.addEventListener("click", () => {
-    monthlyReportModal.style.display = "flex";
-    loadMonthlyAttendance();
-  });
+  if (attendanceChartCanvas) {
+    attendanceChartCanvas.addEventListener("click", () => {
+      monthlyReportModal.style.display = "flex";
+      loadMonthlyAttendance();
+    });
+  }
 
-  closeMonthlyModal.addEventListener("click", () => monthlyReportModal.style.display = "none");
+  if (closeMonthlyModal) {
+    closeMonthlyModal.addEventListener("click", () => monthlyReportModal.style.display = "none");
+  }
+  
   window.addEventListener("click", e => {
     if (e.target === monthlyReportModal) monthlyReportModal.style.display = "none";
   });
@@ -854,7 +905,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     let csvContent = "";
 
-    // ===== GET HEADERS =====
     const headers = table.querySelectorAll("thead tr th");
     const headerRow = Array.from(headers).map(th => {
       const text = th.innerText.replace(/"/g, '""').trim();
@@ -862,7 +912,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }).join(",");
     csvContent += headerRow + "\r\n";
 
-    // ===== GET DATA ROWS =====
     const rows = table.querySelectorAll("tbody tr");
 
     rows.forEach((row, index) => {
@@ -876,7 +925,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       csvContent += rowContent + "\r\n";
     });
 
-    // ===== DOWNLOAD =====
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -894,7 +942,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     URL.revokeObjectURL(url);
   }
 
-  // ===== DOWNLOAD BUTTON EVENT =====
   const downloadBtn = document.getElementById("downloadMonthlyAttendance");
   if (downloadBtn) {
     downloadBtn.addEventListener("click", () => {
@@ -905,7 +952,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   function updateAttendanceChart(data) {
     const ctx = attendanceChartCanvas.getContext("2d");
 
-    // ✅ FIX: Count "On-Time" properly (even if it has "Early Out" appended)
     const onTimeCount = data.filter(d => d.status?.toLowerCase().includes("on-time")).length;
     const lateCount = data.filter(d => d.status?.toLowerCase().includes("late")).length;
     const absentCount = data.filter(d => d.status?.toLowerCase().includes("absent")).length;
