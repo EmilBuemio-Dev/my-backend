@@ -50,6 +50,7 @@ router.post("/checkin", authenticateToken, upload.single("checkinImage"), async 
     if (!employeeId) return res.status(400).json({ message: "Missing employee ID." });
     if (!req.file) return res.status(400).json({ message: "Check-in image is required." });
 
+    // ===== FIND EMPLOYEE =====
     const employee = await Employee.findById(employeeId);
     if (!employee) return res.status(404).json({ message: "Employee not found." });
 
@@ -59,72 +60,70 @@ router.post("/checkin", authenticateToken, upload.single("checkinImage"), async 
     console.log(`📝 Check-in attempt for: ${employeeName}`);
     console.log(`🕐 Shift: ${empShift}`);
 
-    // ===== Extract shift start time - handles multiple formats =====
-    // Formats: "8:00AM-5:00PM", "Day, 8:00AM-8:00PM", "8:00 AM - 5:00 PM", etc.
+    // ===== EXTRACT SHIFT START TIME =====
     const timePattern = /(\d{1,2}):(\d{2})\s*([AP]M)/i;
-    const match = empShift.match(timePattern);
-    
-    if (!match) {
-      console.error(`Invalid shift format: ${empShift}`);
-      return res.status(400).json({ 
-        message: "Invalid shift format in employee record",
-        detail: `Expected format like '8:00AM-5:00PM', got: '${empShift}'`
+    const shiftMatch = empShift.match(timePattern);
+
+    if (!shiftMatch) {
+      return res.status(400).json({
+        message: "Invalid shift format",
+        detail: `Expected format like "8:00AM-5:00PM". Got: ${empShift}`,
       });
     }
 
-    // Parse shift start time
-    const shiftStartTime = parseShiftTime(`${match[1]}:${match[2]} ${match[3]}`);
-    if (!shiftStartTime) {
-      return res.status(400).json({ message: "Could not parse shift start time." });
-    }
+    const shiftStart = parseShiftTime(`${shiftMatch[1]}:${shiftMatch[2]} ${shiftMatch[3]}`);
+    if (!shiftStart) return res.status(400).json({ message: "Failed to parse shift start time." });
 
-    // ===== USE PHILIPPINES TIME FOR ALL CALCULATIONS =====
+    // ===== USE PH TIME =====
     const now = getNowInPH();
-    const shiftStart = new Date(now);
-    shiftStart.setHours(shiftStartTime.hour, shiftStartTime.minute, 0, 0);
+    const shiftStartDate = new Date(now);
+    shiftStartDate.setHours(shiftStart.hour, shiftStart.minute, 0, 0);
 
-    const diffMinutes = (now - shiftStart) / 60000; // difference in minutes
+    const diffMinutes = (now - shiftStartDate) / 60000;
+    console.log(`🕐 Now (PH): ${now.toLocaleString()}`);
+    console.log(`🕐 Shift Start: ${shiftStartDate.toLocaleString()}`);
+    console.log(`⏱ Difference (mins): ${diffMinutes}`);
 
-    console.log(`🕐 Philippines Now: ${now.toLocaleString()}`);
-    console.log(`🕐 Shift Start: ${shiftStart.toLocaleString()}`);
-    console.log(`⏱️  Minutes diff: ${diffMinutes}`);
-
-    // ===== Prevent check-in more than 30 minutes early =====
+    // ===== EARLY CHECK-IN RULE =====
     if (diffMinutes < -30) {
       return res.status(400).json({
-        message: `Too early to check in. You can only check in 30 minutes before your shift starts.`,
-        shiftStartTime: `${shiftStartTime.hour}:${shiftStartTime.minute.toString().padStart(2, '0')}`
+        message: "Too early to check in. You can check in 30 minutes before your shift.",
+        shiftStartTime: `${shiftStart.hour}:${shiftStart.minute.toString().padStart(2, "0")}`,
       });
     }
 
-    // ===== Determine status =====
+    // ===== DETERMINE STATUS =====
     let status = "On-Time";
-    if (diffMinutes > 10) status = "Late"; // late if more than 10 min after shift start
+    if (diffMinutes > 10) status = "Late";
 
-    // ===== Check if already checked in today (in PH timezone) =====
+    // ===== TODAY RANGE (PH TIME) =====
     const todayStart = new Date(now);
     todayStart.setHours(0, 0, 0, 0);
+
     const todayEnd = new Date(now);
     todayEnd.setHours(23, 59, 59, 999);
 
-    const existingCheckin = await Attendance.findOne({
+    // ===== STRICT: ALLOW ONLY 1 CHECK-IN PER DAY =====
+    const existing = await Attendance.findOne({
       employeeId,
       checkinTime: { $gte: todayStart, $lte: todayEnd },
     });
 
-    if (existingCheckin && !existingCheckin.checkoutTime) {
+    if (existing) {
       return res.status(400).json({
-        message: "Already checked in today. Please check out first.",
+        message: "You already checked in today.",
+        record: existing,
+        displayTime: existing.checkinTime.toLocaleString(),
       });
     }
 
-    const checkinImageUrl = req.file ? `/uploads/attendance/${req.file.filename}` : null;
+    // ===== SAVE CHECK-IN =====
+    const checkinImageUrl = `/uploads/attendance/${req.file.filename}`;
 
-    // ===== Save using UTC time (for database storage) =====
     const record = new Attendance({
       employeeId,
       employeeName,
-      checkinTime: new Date(), // Store as UTC
+      checkinTime: new Date(), // saved in UTC
       checkinImageUrl,
       shift: empShift,
       status,
@@ -132,13 +131,13 @@ router.post("/checkin", authenticateToken, upload.single("checkinImage"), async 
     });
 
     await record.save();
-    
-    console.log(`✅ Check-in successful: ${employeeName} (Status: ${status})`);
-    
-    res.status(201).json({ 
-      message: "Check-in successful", 
+
+    console.log(`✅ Check-in successful for ${employeeName} (${status})`);
+
+    res.status(201).json({
+      message: "Check-in successful",
       record,
-      displayTime: now.toLocaleString()
+      displayTime: now.toLocaleString("en-US", { timeZone: "Asia/Manila" }),
     });
 
   } catch (err) {

@@ -189,13 +189,20 @@ async function loadWeeklyAttendanceReport() {
     const today = new Date();
     const dayOfWeek = today.getDay();
     const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-    const weekStart = new Date(today.setDate(diff));
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
+    weekStart.setHours(0, 0, 0, 0);
     const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekEnd.getDate() + 6);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
 
     // Filter records for this week
     const weekRecords = records.filter(r => {
+      if (!r.checkinTime) return false;
+
       const recordDate = new Date(r.checkinTime);
+      if (isNaN(recordDate)) return false;
+
       return recordDate >= weekStart && recordDate <= weekEnd;
     });
 
