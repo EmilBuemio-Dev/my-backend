@@ -279,7 +279,7 @@ if (logoutBtn) {
           <td>
             ${record.checkinImageUrl 
               ? `<img src="${API_BASE}${record.checkinImageUrl}" 
-                   alt="Check-in"
+                   alt="Photo"
                    style="width:50px;height:50px;object-fit:cover;cursor:pointer;border-radius:6px;" 
                    class="checkin-photo" />`
               : '<span style="color: #7d8da1;">No photo</span>'
