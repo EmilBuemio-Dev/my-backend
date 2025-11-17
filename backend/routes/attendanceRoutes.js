@@ -52,6 +52,7 @@ function authenticateToken(req, res, next) {
   });
 }
 
+// ===== CHECK-IN =====
 router.post("/checkin", authenticateToken, upload.single("checkinImage"), async (req, res) => {
   try {
     const { employeeId } = req.body;
@@ -84,17 +85,17 @@ router.post("/checkin", authenticateToken, upload.single("checkinImage"), async 
 
     // ===== USE PH TIME =====
     const now = getNowInPH();
-
     const diffMinutes = (now - shiftStart) / 60000;
+
     console.log(`🕐 Now (PH): ${now.toLocaleString()}`);
-    console.log(`🕐 Shift Start: ${shiftStartDate.toLocaleString()}`);
+    console.log(`🕐 Shift Start: ${shiftStart.toLocaleString()}`);
     console.log(`⏱ Difference (mins): ${diffMinutes}`);
 
     // ===== EARLY CHECK-IN RULE =====
     if (diffMinutes < -30) {
       return res.status(400).json({
         message: "Too early to check in. You can check in 30 minutes before your shift.",
-        shiftStartTime: `${shiftStart.hour}:${shiftStart.minute.toString().padStart(2, "0")}`,
+        shiftStartTime: shiftStart.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
       });
     }
 
@@ -109,7 +110,7 @@ router.post("/checkin", authenticateToken, upload.single("checkinImage"), async 
     const todayEnd = new Date(now);
     todayEnd.setHours(23, 59, 59, 999);
 
-    // ===== STRICT: ALLOW ONLY 1 CHECK-IN PER DAY =====
+    // ===== ALLOW ONLY 1 CHECK-IN PER DAY =====
     const existing = await Attendance.findOne({
       employeeId,
       checkinTime: { $gte: todayStart, $lte: todayEnd },
@@ -152,7 +153,7 @@ router.post("/checkin", authenticateToken, upload.single("checkinImage"), async 
   }
 });
 
-
+// ===== CHECK-OUT =====
 router.post("/checkout", authenticateToken, async (req, res) => {
   try {
     const { employeeId } = req.body;
@@ -177,7 +178,7 @@ router.post("/checkout", authenticateToken, async (req, res) => {
     // ===== Determine shift end from employee shift =====
     const empShift = employee.employeeData?.basicInformation?.shift || "8:00 AM-5:00 PM";
     
-    // Extract the second time (shift end) - handles multiple formats
+    // Extract the second time (shift end)
     const timePattern = /(\d{1,2}):(\d{2})\s*([AP]M)/gi;
     const matches = [...empShift.matchAll(timePattern)];
     
@@ -186,11 +187,8 @@ router.post("/checkout", authenticateToken, async (req, res) => {
       const shiftEndTime = parseShiftTimeToDate(`${endTimeMatch[1]}:${endTimeMatch[2]} ${endTimeMatch[3]}`);
       
       if (shiftEndTime) {
-        const shiftEnd = shiftEndTime; 
-        shiftEnd.setHours(shiftEndTime.hour, shiftEndTime.minute, 0, 0);
-
         // Check if leaving early
-        if (now < shiftEnd) {
+        if (now < shiftEndTime) {
           record.status = record.status ? record.status + ", Early Out" : "Early Out";
         }
       }
@@ -201,13 +199,14 @@ router.post("/checkout", authenticateToken, async (req, res) => {
     res.json({ 
       message: "Check-out successful", 
       record,
-      displayTime: now.toLocaleString()
+      displayTime: now.toLocaleString("en-US", { timeZone: "Asia/Manila" })
     });
   } catch (err) {
     console.error("❌ Check-out error:", err);
     res.status(500).json({ message: "Failed to check-out", error: err.message });
   }
 });
+
 
 /* ------------------------- GET ATTENDANCE (USER) ------------------------- */
 router.get("/attendance", authenticateToken, async (req, res) => {
