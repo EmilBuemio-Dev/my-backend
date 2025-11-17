@@ -42,12 +42,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
       const remarks = data.remarks || [];
 
-      // Show notification dot if there are any remarks
       if (remarks.length > 0) {
         notificationDot.style.display = "block";
       }
 
-      // Store remarks globally for modal display
       window.employeeRemarks = remarks;
     } catch (err) {
       console.error("Error loading remarks:", err);
@@ -99,7 +97,6 @@ document.addEventListener("DOMContentLoaded", () => {
     remarksModal.classList.remove("show");
   });
 
-  // Close on background click
   remarksModal?.addEventListener("click", (e) => {
     if (e.target === remarksModal) {
       remarksModal.classList.remove("show");
@@ -116,7 +113,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!res.ok) throw new Error("Failed to load ticket");
       const ticket = await res.json();
 
-      // Show ticket in modal
       showTicketModal(ticket);
     } catch (err) {
       console.error("Error loading ticket:", err);
@@ -265,13 +261,16 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to check-in");
+      if (!res.ok) {
+        throw new Error(data.message || data.detail || "Failed to check-in");
+      }
 
       checkinResultDiv.innerHTML = `
         <div style="background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 4px;">
           <p style="margin: 0 0 10px 0;"><strong>✅ ${data.message}</strong></p>
           <p style="margin: 5px 0;"><strong>Employee:</strong> ${data.record.employeeName}</p>
           <p style="margin: 5px 0;"><strong>Check-in Time:</strong> ${new Date(data.record.checkinTime).toLocaleString()}</p>
+          <p style="margin: 5px 0;"><strong>Status:</strong> ${data.record.status}</p>
           <p style="margin: 10px 0 0 0; font-size: 12px; color: #0c5460; background-color: #d1ecf1; padding: 8px; border-radius: 3px; border-left: 4px solid #0c5460;">
             ⚠️ <strong>Notice:</strong> You can only time-in once per day. Your next time-in will be available tomorrow.
           </p>
@@ -283,7 +282,11 @@ document.addEventListener("DOMContentLoaded", () => {
       openCameraBtn.style.cursor = "not-allowed";
     } catch (err) {
       console.error("❌ Check-in submission error:", err);
-      alert(err.message);
+      checkinResultDiv.innerHTML = `
+        <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 4px;">
+          <p style="margin: 0;"><strong>❌ Error:</strong> ${err.message}</p>
+        </div>
+      `;
     }
   });
 
@@ -323,7 +326,11 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
     } catch (err) {
       console.error("❌ Checkout submission error:", err);
-      alert(err.message);
+      checkoutResultDiv.innerHTML = `
+        <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 4px;">
+          <p style="margin: 0;"><strong>❌ Error:</strong> ${err.message}</p>
+        </div>
+      `;
     }
   });
 
@@ -359,7 +366,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Check on page load
   checkTodayCheckin();
 
   // ==== TICKET SUBMISSION UPDATE ====
@@ -519,6 +525,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Load tickets on page load
   loadMyTickets();
 });

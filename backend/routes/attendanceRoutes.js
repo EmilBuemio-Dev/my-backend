@@ -14,6 +14,22 @@ function getNowInPH() {
   return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
 }
 
+// ===== PARSE SHIFT TIME HELPER =====
+function parseShiftTime(timeStr) {
+  // Matches: "8:00AM", "08:00AM", "8:00 AM", "08:00 AM", etc.
+  const match = timeStr.match(/(\d{1,2}):(\d{2})\s*([AP]M)/i);
+  if (!match) return null;
+
+  let hour = parseInt(match[1], 10);
+  const minute = parseInt(match[2], 10);
+  const period = match[3].toUpperCase();
+
+  if (period === "PM" && hour !== 12) hour += 12;
+  if (period === "AM" && hour === 12) hour = 0;
+
+  return { hour, minute };
+}
+
 // ===== Middleware: Verify Token =====
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
@@ -38,25 +54,34 @@ router.post("/checkin", authenticateToken, upload.single("checkinImage"), async 
     if (!employee) return res.status(404).json({ message: "Employee not found." });
 
     const employeeName = employee.employeeData?.personalData?.name || "Unknown Employee";
-    const empShift = employee.employeeData?.basicInformation?.shift || "Day, 8:00AM-8:00PM";
+    const empShift = employee.employeeData?.basicInformation?.shift || "8:00 AM-5:00 PM";
 
     console.log(`📝 Check-in attempt for: ${employeeName}`);
     console.log(`🕐 Shift: ${empShift}`);
 
-    // ===== Parse shift start time =====
-    const shiftTimeMatch = empShift.match(/(\d{1,2}:\d{2}[AP]M)/);
-    if (!shiftTimeMatch) return res.status(400).json({ message: "Invalid shift format." });
+    // ===== Extract shift start time - handles multiple formats =====
+    // Formats: "8:00AM-5:00PM", "Day, 8:00AM-8:00PM", "8:00 AM - 5:00 PM", etc.
+    const timePattern = /(\d{1,2}):(\d{2})\s*([AP]M)/i;
+    const match = empShift.match(timePattern);
+    
+    if (!match) {
+      console.error(`Invalid shift format: ${empShift}`);
+      return res.status(400).json({ 
+        message: "Invalid shift format in employee record",
+        detail: `Expected format like '8:00AM-5:00PM', got: '${empShift}'`
+      });
+    }
 
-    let [shiftHour, shiftMinute, shiftPeriod] = shiftTimeMatch[1].match(/(\d{1,2}):(\d{2})(AM|PM)/).slice(1);
-    shiftHour = parseInt(shiftHour, 10);
-    shiftMinute = parseInt(shiftMinute, 10);
-    if (shiftPeriod === "PM" && shiftHour !== 12) shiftHour += 12;
-    if (shiftPeriod === "AM" && shiftHour === 12) shiftHour = 0;
+    // Parse shift start time
+    const shiftStartTime = parseShiftTime(`${match[1]}:${match[2]} ${match[3]}`);
+    if (!shiftStartTime) {
+      return res.status(400).json({ message: "Could not parse shift start time." });
+    }
 
     // ===== USE PHILIPPINES TIME FOR ALL CALCULATIONS =====
     const now = getNowInPH();
     const shiftStart = new Date(now);
-    shiftStart.setHours(shiftHour, shiftMinute, 0, 0);
+    shiftStart.setHours(shiftStartTime.hour, shiftStartTime.minute, 0, 0);
 
     const diffMinutes = (now - shiftStart) / 60000; // difference in minutes
 
@@ -67,15 +92,14 @@ router.post("/checkin", authenticateToken, upload.single("checkinImage"), async 
     // ===== Prevent check-in more than 30 minutes early =====
     if (diffMinutes < -30) {
       return res.status(400).json({
-        message: `Too early to check in. You can only check in 30 minutes before your shift starts at ${shiftTimeMatch[1]}.`,
-        debug: { diffMinutes, shiftTime: shiftTimeMatch[1] }
+        message: `Too early to check in. You can only check in 30 minutes before your shift starts.`,
+        shiftStartTime: `${shiftStartTime.hour}:${shiftStartTime.minute.toString().padStart(2, '0')}`
       });
     }
 
     // ===== Determine status =====
     let status = "On-Time";
     if (diffMinutes > 10) status = "Late"; // late if more than 10 min after shift start
-    // all check-ins within 30 mins before to 10 mins after shift are "On-Time"
 
     // ===== Check if already checked in today (in PH timezone) =====
     const todayStart = new Date(now);
@@ -104,7 +128,7 @@ router.post("/checkin", authenticateToken, upload.single("checkinImage"), async 
       checkinImageUrl,
       shift: empShift,
       status,
-      timezone: "Asia/Manila", // Store timezone info
+      timezone: "Asia/Manila",
     });
 
     await record.save();
@@ -114,7 +138,7 @@ router.post("/checkin", authenticateToken, upload.single("checkinImage"), async 
     res.status(201).json({ 
       message: "Check-in successful", 
       record,
-      displayTime: now.toLocaleString() // Show PH time to user
+      displayTime: now.toLocaleString()
     });
 
   } catch (err) {
@@ -146,25 +170,24 @@ router.post("/checkout", authenticateToken, async (req, res) => {
     record.checkoutTime = new Date(); // Store as UTC
 
     // ===== Determine shift end from employee shift =====
-    const empShift = employee.employeeData?.basicInformation?.shift || "Day Shift";
-    const shiftTimesMatch = empShift.match(/(\d{1,2}:\d{2}[AP]M)-(\d{1,2}:\d{2}[AP]M)/);
+    const empShift = employee.employeeData?.basicInformation?.shift || "8:00 AM-5:00 PM";
+    
+    // Extract the second time (shift end) - handles multiple formats
+    const timePattern = /(\d{1,2}):(\d{2})\s*([AP]M)/gi;
+    const matches = [...empShift.matchAll(timePattern)];
+    
+    if (matches.length >= 2) {
+      const endTimeMatch = matches[1];
+      const shiftEndTime = parseShiftTime(`${endTimeMatch[1]}:${endTimeMatch[2]} ${endTimeMatch[3]}`);
+      
+      if (shiftEndTime) {
+        const shiftEnd = new Date(now);
+        shiftEnd.setHours(shiftEndTime.hour, shiftEndTime.minute, 0, 0);
 
-    if (shiftTimesMatch) {
-      let [_, startTimeStr, endTimeStr] = shiftTimesMatch;
-
-      // Parse end time
-      let [endHour, endMinute, endPeriod] = endTimeStr.match(/(\d{1,2}):(\d{2})(AM|PM)/).slice(1);
-      endHour = parseInt(endHour, 10);
-      endMinute = parseInt(endMinute, 10);
-      if (endPeriod === "PM" && endHour !== 12) endHour += 12;
-      if (endPeriod === "AM" && endHour === 12) endHour = 0;
-
-      const shiftEnd = new Date(now);
-      shiftEnd.setHours(endHour, endMinute, 0, 0);
-
-      // Check if leaving early
-      if (now < shiftEnd) {
-        record.status = record.status ? record.status + ", Early Out" : "Early Out";
+        // Check if leaving early
+        if (now < shiftEnd) {
+          record.status = record.status ? record.status + ", Early Out" : "Early Out";
+        }
       }
     }
 
@@ -173,7 +196,7 @@ router.post("/checkout", authenticateToken, async (req, res) => {
     res.json({ 
       message: "Check-out successful", 
       record,
-      displayTime: now.toLocaleString() // Show PH time to user
+      displayTime: now.toLocaleString()
     });
   } catch (err) {
     console.error("❌ Check-out error:", err);
@@ -284,7 +307,7 @@ cron.schedule("0 3 * * *", async () => {
     todayEnd.setHours(23, 59, 59, 999);
 
     const employees = await Employee.find({
-      "employeeData.employmentData.status": { $ne: "Resigned" },
+      "employeeData.basicInformation.status": { $ne: "Resigned" },
     });
 
     for (const emp of employees) {
