@@ -740,114 +740,101 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function loadMonthlyAttendance() {
-  try {
-    if (!employeeId) throw new Error("Employee ID not found");
+    try {
+      if (!employeeId) throw new Error("Employee ID not found");
 
-    const res = await fetch(`https://www.mither3security.com/attendance/${employeeId}/monthly-summary`);
-    if (!res.ok) throw new Error("Failed to fetch monthly summary");
+      const res = await fetch(`https://www.mither3security.com/attendance/${employeeId}/monthly-summary`);
+      if (!res.ok) throw new Error("Failed to fetch monthly summary");
 
-    const data = await res.json();
-    const tbody = document.querySelector("#monthlyAttendanceTable tbody");
-    tbody.innerHTML = "";
+      const data = await res.json();
+      const tbody = document.querySelector("#monthlyAttendanceTable tbody");
+      tbody.innerHTML = "";
 
-    const records = data.records || data;
-    monthlyAttendanceData = records;
+      const records = data.records || data;
+      monthlyAttendanceData = records;
 
-    const branch = employeeDataCache.employeeData?.basicInformation?.branch || "N/A";
-    const employeeName = employeeDataCache.employeeData?.personalData?.name || "N/A";
-
-    // ===== Generate full year dates =====
-    const fullYearRecords = [];
-    const today = new Date();
-    const oneYearAgo = new Date(today);
-    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-
-    // Create a map of existing records by date
-    const recordMap = {};
-    records.forEach(r => {
-      const key = new Date(r.checkinTime || r.createdAt).toDateString();
-      recordMap[key] = r;
-    });
-
-    // Fill all dates from one year ago to today
-    for (let d = new Date(oneYearAgo); d <= today; d.setDate(d.getDate() + 1)) {
-      const key = new Date(d).toDateString();
-      if (recordMap[key]) {
-        fullYearRecords.push(recordMap[key]);
-      } else {
-        fullYearRecords.push({
-          checkinTime: new Date(d),
-          status: "Absent",
-          shift: "-"
-        });
+      if (!records.length) {
+        tbody.innerHTML = `<tr><td colspan="21" style="text-align:center;">No records found.</td></tr>`;
+        return;
       }
-    }
 
-    const recordsPerRow = 16;
-    const totalRows = Math.ceil(fullYearRecords.length / recordsPerRow);
+      const branch = employeeDataCache.employeeData?.basicInformation?.branch || "N/A";
+      const employeeName = employeeDataCache.employeeData?.personalData?.name || "N/A";
 
-    let grandTotalHours = 0;
-    let grandTotalDays = 0;
+      const recordsPerRow = 16;
+      const totalRows = Math.ceil(records.length / recordsPerRow);
+      
+      let grandTotalHours = 0;
+      let grandTotalDays = 0;
 
-    for (let row = 0; row < totalRows; row++) {
-      const startIndex = row * recordsPerRow;
-      const rowRecords = fullYearRecords.slice(startIndex, startIndex + recordsPerRow);
+      for (let row = 0; row < totalRows; row++) {
+        const startIndex = row * recordsPerRow;
+        const rowRecords = records.slice(startIndex, startIndex + recordsPerRow);
 
-      const firstRecordDate = new Date(rowRecords[0].checkinTime);
+        let firstRecordDate;
+        if (rowRecords.length > 0) {
+          firstRecordDate = new Date(rowRecords[0].checkinTime || rowRecords[0].createdAt);
+        } else {
+          firstRecordDate = new Date();
+          firstRecordDate.setDate(firstRecordDate.getDate() - (recordsPerRow * (totalRows - row - 1)));
+        }
 
-      const daysArray = rowRecords.map(record => {
-        const status = record.status?.toLowerCase() || "absent";
-        if (status.includes("on-time")) return "✅";
-        if (status.includes("late")) return "⚠️";
-        if (status.includes("on-leave")) return "🏖️";
-        if (status.includes("absent")) return "❌";
-        return "❌";
-      });
+        // ✅ FIX: Check status properly - count as successful if "On-Time" is in status
+        const daysArray = rowRecords.map(record => {
+          const status = record.status?.toLowerCase() || "absent";
+          
+          if (status.includes("on-time")) return "✅";
+          if (status.includes("late")) return "⚠️";
+          if (status.includes("on-leave")) return "🏖️";
+          if (status.includes("absent")) return "❌";
+          return "❌";
+        });
 
-      while (daysArray.length < recordsPerRow) daysArray.push("");
+        while (daysArray.length < recordsPerRow) daysArray.push("");
 
-      const periodStartStr = firstRecordDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-      const periodEndDate = new Date(firstRecordDate);
-      periodEndDate.setDate(firstRecordDate.getDate() + recordsPerRow - 1);
-      const periodEndStr = periodEndDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        const periodStartStr = firstRecordDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        const periodEndDate = new Date(firstRecordDate);
+        periodEndDate.setDate(firstRecordDate.getDate() + recordsPerRow - 1);
+        const periodEndStr = periodEndDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
-      const totalDays = daysArray.filter(d => d === "✅" || d === "⚠️" || d === "🏖️").length;
-      const totalHours = totalDays * 12;
+        // ✅ FIX: Count only successful days (✅, ⚠️, 🏖️) excluding ❌
+        const totalDays = daysArray.filter(d => d === "✅" || d === "⚠️" || d === "🏖️").length;
+        const totalHours = totalDays * 12;
 
-      grandTotalHours += totalHours;
-      grandTotalDays += totalDays;
+        grandTotalHours += totalHours;
+        grandTotalDays += totalDays;
 
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${branch}</td>
-        <td>${periodStartStr} – ${periodEndStr}</td>
-        <td>${employeeName}</td>
-        ${daysArray.map(d => `<td class="status-emoji" style="text-align:center; padding:0.8rem; font-size:1.2rem;">${d}</td>`).join("")}
-        <td style="font-weight:bold; text-align:center;">${totalHours}</td>
-        <td style="font-weight:bold; text-align:center;">${totalDays}</td>
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${branch}</td>
+          <td>${periodStartStr} – ${periodEndStr}</td>
+          <td>${employeeName}</td>
+          ${daysArray.map(d => `<td class="status-emoji" style="text-align:center; padding:0.8rem; font-size:1.2rem;">${d}</td>`).join("")}
+          <td style="font-weight:bold; text-align:center;">${totalHours}</td>
+          <td style="font-weight:bold; text-align:center;">${totalDays}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      // ✅ ADD GRAND TOTAL ROW AT BOTTOM
+      const totalRow = document.createElement("tr");
+      totalRow.style.background = "#f0f8ff";
+      totalRow.style.fontWeight = "bold";
+      totalRow.style.borderTop = "3px solid #131315";
+      totalRow.innerHTML = `
+        <td colspan="3" style="text-align:right; padding:1rem; font-weight:bold;">GRAND TOTAL:</td>
+        ${Array.from({ length: 16 }, () => `<td style="text-align:center; padding:0.8rem;"></td>`).join("")}
+        <td style="text-align:center; padding:1rem; background:#e8f5e9;">${grandTotalHours}</td>
+        <td style="text-align:center; padding:1rem; background:#e8f5e9;">${grandTotalDays}</td>
       `;
-      tbody.appendChild(tr);
+      tbody.appendChild(totalRow);
+
+    } catch (err) {
+      console.error("Error loading monthly attendance:", err);
+      const tbody = document.querySelector("#monthlyAttendanceTable tbody");
+      tbody.innerHTML = `<tr><td colspan="21" style="text-align:center;color:red;">Failed to load monthly data</td></tr>`;
     }
-
-    // ===== Add grand total row =====
-    const totalRow = document.createElement("tr");
-    totalRow.style.background = "#f0f8ff";
-    totalRow.style.fontWeight = "bold";
-    totalRow.style.borderTop = "3px solid #131315";
-    totalRow.innerHTML = `
-      <td colspan="3" style="text-align:right; padding:1rem; font-weight:bold;">GRAND TOTAL:</td>
-      ${Array.from({ length: 16 }, () => `<td style="text-align:center; padding:0.8rem;"></td>`).join("")}
-      <td style="text-align:center; padding:1rem; background:#e8f5e9;">${grandTotalHours}</td>
-      <td style="text-align:center; padding:1rem; background:#e8f5e9;">${grandTotalDays}</td>
-    `;
-    tbody.appendChild(totalRow);
-
-  } catch (err) {
-    console.error("Error loading monthly attendance:", err);
-    const tbody = document.querySelector("#monthlyAttendanceTable tbody");
-    tbody.innerHTML = `<tr><td colspan="21" style="text-align:center;color:red;">Failed to load monthly data</td></tr>`;
   }
-}
 
   generateMonthlyTableHeader();
 
