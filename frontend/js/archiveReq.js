@@ -177,9 +177,33 @@ async function loadBranches(preselectedBranch = "") {
       select.appendChild(option);
     });
 
-    // ✅ ADD SEARCH FUNCTIONALITY TO BRANCH DROPDOWN
+    // ✅ ADD SEARCH FUNCTIONALITY TO BRANCH DROPDOWN (EXTERNAL SEARCH BAR)
     if (searchInput) {
       searchInput.addEventListener("input", (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const options = select.querySelectorAll("option");
+        
+        options.forEach(option => {
+          // Always show the first two options (Select Branch, To be set)
+          if (option.value === "" || option.value === "toBeSet") {
+            option.style.display = "";
+            return;
+          }
+          
+          // Filter other options based on search term
+          if (option.textContent.toLowerCase().includes(searchTerm)) {
+            option.style.display = "";
+          } else {
+            option.style.display = "none";
+          }
+        });
+      });
+    }
+
+    // ✅ ADD SEARCH FUNCTIONALITY INSIDE DROPDOWN (MODAL SEARCH)
+    const modalSearchInput = document.getElementById("archiveModalBranchSearch");
+    if (modalSearchInput) {
+      modalSearchInput.addEventListener("input", (e) => {
         const searchTerm = e.target.value.toLowerCase();
         const options = select.querySelectorAll("option");
         

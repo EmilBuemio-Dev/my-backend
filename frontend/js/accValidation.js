@@ -554,15 +554,20 @@ async function loadEmployees() {
             const c = freshAccount.clientData || freshAccount.branchData || {};
             const clientName = c.name || freshAccount.name || "Unnamed Client";
             const clientBranch = c.branch || "Unknown Branch";
+            const clientEmail = c.email || "";
+            const clientPassword = c.password || "";
+
+            // ✅ VALIDATE CLIENT PASSWORD EXISTS
+            if (!clientPassword || clientPassword.trim() === "") {
+              alert("⚠️ Client password is required. Please ensure the client has provided a password.");
+              return;
+            }
 
             let clientIdNumber = freshAccount.clientIdNumber || getCachedClientId(acc._id);
             if (!clientIdNumber) {
               clientIdNumber = generateClientId();
               setCachedClientId(acc._id, clientIdNumber);
             }
-
-            // ✅ GENERATE CLIENT PASSWORD (NO BADGE NUMBER, SO USES RANDOM)
-            const clientPassword = generatePassword();
 
             const clientPayload = {
               role: "client",
@@ -574,7 +579,7 @@ async function loadEmployees() {
               guardShift: c.guardShift || { day: "N/A", night: "N/A" },
               branchData: {
                 name: clientName,
-                email: c.email || "",
+                email: clientEmail,
                 branch: clientBranch,
                 password: clientPassword,
               }
@@ -589,7 +594,7 @@ async function loadEmployees() {
 
             const userPayload = {
               name: clientName,
-              email: c.email || "",
+              email: clientEmail,
               password: clientPassword,
               role: "client",
               clientIdNumber,
