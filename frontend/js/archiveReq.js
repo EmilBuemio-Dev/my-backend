@@ -149,10 +149,15 @@ function renderArchives() {
 // === LOAD BRANCHES WITH SEARCH ===
 async function loadBranches(preselectedBranch = "") {
   const select = document.getElementById("branchSelect");
-  const searchInput = document.getElementById("branchSearchInput");
+  const searchInput = document.getElementById("archiveModalBranchSearch");
   const expiryInput = document.querySelector('input[name="expiryDate"]');
   const salaryInput = document.querySelector('input[name="salary"]');
   const shiftSelect = document.querySelector('select[name="shift"]');
+
+  // ✅ CLEAR SEARCH INPUT WHEN LOADING
+  if (searchInput) {
+    searchInput.value = "";
+  }
 
   // ✅ FIXED: Check if all elements exist
   if (!select || !expiryInput || !salaryInput || !shiftSelect) {
@@ -177,33 +182,9 @@ async function loadBranches(preselectedBranch = "") {
       select.appendChild(option);
     });
 
-    // ✅ ADD SEARCH FUNCTIONALITY TO BRANCH DROPDOWN (EXTERNAL SEARCH BAR)
+    // ✅ SEARCH FUNCTIONALITY INSIDE DROPDOWN (INTEGRATED SEARCH BAR)
     if (searchInput) {
       searchInput.addEventListener("input", (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        const options = select.querySelectorAll("option");
-        
-        options.forEach(option => {
-          // Always show the first two options (Select Branch, To be set)
-          if (option.value === "" || option.value === "toBeSet") {
-            option.style.display = "";
-            return;
-          }
-          
-          // Filter other options based on search term
-          if (option.textContent.toLowerCase().includes(searchTerm)) {
-            option.style.display = "";
-          } else {
-            option.style.display = "none";
-          }
-        });
-      });
-    }
-
-    // ✅ ADD SEARCH FUNCTIONALITY INSIDE DROPDOWN (MODAL SEARCH)
-    const modalSearchInput = document.getElementById("archiveModalBranchSearch");
-    if (modalSearchInput) {
-      modalSearchInput.addEventListener("input", (e) => {
         const searchTerm = e.target.value.toLowerCase();
         const options = select.querySelectorAll("option");
         
