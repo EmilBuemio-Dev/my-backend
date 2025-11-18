@@ -56,6 +56,19 @@ const storage = multer.diskStorage({
     else if (file.fieldname === "checkinImage") {
       folder = "attendance";
     }
+    // ✅ CLIENT CONTRACT UPLOAD - Use client name as folder
+    else if (file.fieldname === "contract") {
+      if (req.body.name) {
+        const clientName = req.body.name.trim().replace(/[,\s]+/g, "_");
+        folder = `${clientName}_contracts`;
+        console.log("   ✅ Detected CLIENT contract upload");
+        console.log("   Client name:", clientName);
+        console.log("   Folder:", folder);
+      } else {
+        folder = "contracts"; // Fallback
+        console.log("   ⚠️ No client name found, using generic contracts folder");
+      }
+    }
     // ✅ Employee credentials (when editing existing employee)
     else if (credentialFiles[file.fieldname]) {
       let employeeName = "unknown";
@@ -129,6 +142,14 @@ const storage = multer.diskStorage({
       );
     }
 
+    // ✅ CLIENT CONTRACT - Use descriptive filename
+    if (file.fieldname === "contract") {
+      return cb(
+        null,
+        `contract${path.extname(file.originalname)}`
+      );
+    }
+
     // ✅ Credential files (both applicant and employee)
     const filename =
       credentialFiles[file.fieldname] ||
@@ -141,8 +162,15 @@ const storage = multer.diskStorage({
 
 // ===== File Filter (Accept only PDFs and images) =====
 const fileFilter = (req, file, cb) => {
-  // Allow PDFs for credentials
+  // Allow PDFs for credentials and contracts
   if (file.mimetype === "application/pdf") {
+    return cb(null, true);
+  }
+
+  // Allow DOC/DOCX for contracts
+  if (file.fieldname === "contract" && 
+      (file.mimetype === "application/msword" || 
+       file.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document")) {
     return cb(null, true);
   }
 
