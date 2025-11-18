@@ -41,46 +41,28 @@ router.post(
       if (role === "client") {
         const guardShift = req.body.guardShift ? safeParse(req.body.guardShift, {}) : {};
 
-        // ✅ Build contract path using client name
-        let contractPath = "";
-        if (req.files?.contract) {
-          const clientName = req.body.name.trim().replace(/[,\s]+/g, "_");
-          contractPath = `/uploads/${clientName}_contracts/${req.files.contract[0].filename}`;
-          console.log("✅ Client contract uploaded:", contractPath);
-        }
-
         const clientData = {
           name: req.body.name,
           email: req.body.email,
           password: req.body.password,
           branch: req.body.branch,
           guardShift,
+          contract: req.files.contract ? `/uploads/contracts/${req.files.contract[0].filename}` : undefined,
+          credentials: {},
         };
 
-        // ✅ Build credentials object
-        const credentials = {};
-        if (req.files?.profileImage) {
-          credentials.profileImage = `/uploads/client_profiles/${req.files.profileImage[0].filename}`;
+        if (req.files.profileImage) {
+          clientData.credentials.profileImage = `/uploads/client_profiles/${req.files.profileImage[0].filename}`;
         }
 
         const clientAccount = new Account({
           role,
           status: "Pending",
-          contract: contractPath, // ✅ Store contract at top level
           clientData,
-          credentials, // ✅ Store credentials at top level
         });
 
         await clientAccount.save();
-        
-        console.log("✅ Client account created:");
-        console.log("   ID:", clientAccount._id);
-        console.log("   Contract:", clientAccount.contract);
-        
-        return res.status(201).json({ 
-          message: "Client account created", 
-          account: clientAccount 
-        });
+        return res.status(201).json({ message: "Client account created", account: clientAccount });
       }
 
       // ===== EMPLOYEE =====
@@ -90,7 +72,7 @@ router.post(
         const educationalBackground = safeParse(req.body.educationalBackground, []);
         const credentials = req.body.credentials ? safeParse(req.body.credentials, {}) : {};
 
-        if (req.files?.profileImage) {
+        if (req.files.profileImage) {
           credentials.profileImage = `/uploads/employee_profiles/${req.files.profileImage[0].filename}`;
         }
 
@@ -106,16 +88,13 @@ router.post(
         });
 
         await employeeAccount.save();
-        return res.status(201).json({ 
-          message: "Employee account created", 
-          account: employeeAccount 
-        });
+        return res.status(201).json({ message: "Employee account created", account: employeeAccount });
       }
 
       return res.status(400).json({ error: "Invalid role provided" });
     } catch (err) {
       console.error("❌ Error creating account:", err);
-      res.status(500).json({ error: "Failed to create account", details: err.message });
+      res.status(500).json({ error: "Failed to create account" });
     }
   }
 );
