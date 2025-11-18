@@ -353,6 +353,7 @@ function closeModal() {
 }
 
 // ✅ APPROVE MODAL - FIXED LOGIC
+// ✅ APPROVE MODAL - FIXED LOGIC
 async function openApproveModal() {
   if (!selectedRecord) return;
 
@@ -367,10 +368,17 @@ async function openApproveModal() {
   if (!modal) return;
   modal.style.display = "flex";
 
-  const setField = (id, value) => {
-    const el = document.getElementById(id);
-    if (el) el.value = value?.trim() || "N/A";
-  };
+        const setField = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) {
+          // ✅ For middle name, allow empty string instead of "N/A"
+          if (id === "approveMiddleName") {
+            el.value = value?.trim() || "";
+          } else {
+            el.value = value?.trim() || "N/A";
+          }
+        }
+      };
 
   // Fill name & badge fields
   setField("approveFamilyName", selectedRecord.familyName);
@@ -417,14 +425,23 @@ async function openApproveModal() {
   // Load branches, preselect existing
   await loadBranches(selectedRecord.branch || "");
 
-  // Fill other form fields with "N/A" if empty (except allowed fields)
+  // ✅ CLEAR BRANCH SEARCH INPUT EXPLICITLY
+  const branchSearchInput = document.getElementById("archiveModalBranchSearch");
+  if (branchSearchInput) {
+    branchSearchInput.value = "";
+  }
+
+  // Fill other form fields with "N/A" if empty (except allowed fields and branch search)
   const formElements = document.getElementById("approveForm")?.elements;
   if (formElements) {
     for (let el of formElements) {
       const id = el.id || el.name || "";
+      
+      // ✅ Skip branch search input and other allowed fields
       if (
         el.tagName.toLowerCase() === "button" ||
         el.type === "hidden" ||
+        id === "archiveModalBranchSearch" ||
         allowedFields.includes(id)
       )
         continue;
@@ -493,27 +510,32 @@ function initSubmitHandler() {
   };
 
   const getValue = (selector, key, type = "string") => {
-    const el = form.querySelector(selector);
-    let val = el?.value?.trim();
+  const el = form.querySelector(selector);
+  let val = el?.value?.trim();
 
-    const critical = ["status", "branch", "shift", "salary", "expiryDate"];
+  const critical = ["status", "branch", "shift", "salary", "expiryDate"];
 
-    if (critical.includes(key)) {
-      return val || "N/A";
-    }
+  if (critical.includes(key)) {
+    return val || "N/A";
+  }
 
-    if (key === "approveEmail" && !val) return selectedRecord?.email || "N/A";
+  if (key === "approveEmail" && !val) return selectedRecord?.email || "N/A";
 
-    // ✅ Handle different field types
-    if (type === "date") {
-      return val || null;
-    }
-    if (type === "number") {
-      return val ? Number(val) : 0;
-    }
+  // ✅ Handle different field types
+  if (type === "date") {
+    return val || null;
+  }
+  if (type === "number") {
+    return val ? Number(val) : 0;
+  }
 
-    return val || selectedRecord?.[mapArchiveField[key]] || "N/A";
-  };
+  // ✅ For middle name, return empty string if not provided
+  if (key === "approveMiddleName") {
+    return val || "";
+  }
+
+  return val || selectedRecord?.[mapArchiveField[key]] || "N/A";
+};
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -555,25 +577,25 @@ function initSubmitHandler() {
       role: "employee"
     };
 
-    const personalData = {
-      familyName: getValue('input[name="approveFamilyName"]', "approveFamilyName"),
-      firstName: getValue('input[name="approveFirstName"]', "approveFirstName"),
-      middleName: getValue('input[name="approveMiddleName"]', "approveMiddleName"),
-      email: getValue('input[name="approveEmail"]', "approveEmail"),
-      dateOfBirth: getValue('input[name="dateOfBirth"]', null, "date"),
-      presentAddress: getValue('input[name="presentAddress"]'),
-      placeOfBirth: getValue('input[name="placeOfBirth"]'),
-      prevAddress: getValue('input[name="prevAddress"]'),
-      citizenship: getValue('input[name="citizenship"]'),
-      weight: getValue('input[name="weight"]'),
-      languageSpoken: getValue('input[name="languageSpoken"]'),
-      age: getValue('input[name="age"]', null, "number"),
-      height: getValue('input[name="height"]'),
-      religion: getValue('input[name="religion"]'),
-      civilStatus: getValue('input[name="civilStatus"]'),
-      colorOfHair: getValue('input[name="colorOfHair"]'),
-      colorOfEyes: getValue('input[name="colorOfEyes"]'),
-    };
+   const personalData = {
+  familyName: getValue('input[name="approveFamilyName"]', "approveFamilyName"),
+  firstName: getValue('input[name="approveFirstName"]', "approveFirstName"),
+  middleName: getValue('input[name="approveMiddleName"]', "approveMiddleName"), // Returns "" if empty
+  email: getValue('input[name="approveEmail"]', "approveEmail"),
+  dateOfBirth: getValue('input[name="dateOfBirth"]', null, "date"),
+  presentAddress: getValue('input[name="presentAddress"]'),
+  placeOfBirth: getValue('input[name="placeOfBirth"]'),
+  prevAddress: getValue('input[name="prevAddress"]'),
+  citizenship: getValue('input[name="citizenship"]'),
+  weight: getValue('input[name="weight"]'),
+  languageSpoken: getValue('input[name="languageSpoken"]'),
+  age: getValue('input[name="age"]', null, "number"),
+  height: getValue('input[name="height"]'),
+  religion: getValue('input[name="religion"]'),
+  civilStatus: getValue('input[name="civilStatus"]'),
+  colorOfHair: getValue('input[name="colorOfHair"]'),
+  colorOfEyes: getValue('input[name="colorOfEyes"]'),
+};
 
     const educationalBackground = [
       ...form.querySelectorAll("#educationTable tbody tr")

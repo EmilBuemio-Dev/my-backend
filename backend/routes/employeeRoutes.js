@@ -13,13 +13,22 @@ const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ===== Helper Functions =====
 function sanitizeData(obj) {
   if (!obj || typeof obj !== "object") return obj;
   for (const key in obj) {
     const val = obj[key];
-    if (val === "" || val === null) obj[key] = "N/A";
-    else if (typeof val === "object") sanitizeData(val);
+    
+    // ✅ Keep middleName as empty string, convert everything else
+    if (val === "" || val === null) {
+      if (key === "middleName") {
+        obj[key] = "";  // Keep middle name blank
+      } else {
+        obj[key] = "N/A";  // Convert other fields to N/A
+      }
+    }
+    else if (typeof val === "object") {
+      sanitizeData(val);
+    }
   }
   return obj;
 }
@@ -101,7 +110,7 @@ router.post("/", async (req, res) => {
     }
 
     if (!personal.name || personal.name.trim() === "") {
-      personal.name = `${personal.familyName || ""}, ${personal.firstName || ""} ${personal.middleName || ""}`.trim().replace(/\s+,/, ",") || "N/A";
+      personal.name = `${personal.familyName || ""}, ${personal.firstName || ""} ${personal.middleName || ""}`.trim().replace(/\s+,/, ",");
     }
 
     const newEmployee = new Employee({
