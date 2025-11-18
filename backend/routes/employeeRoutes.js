@@ -221,8 +221,12 @@ router.patch(
         return res.status(400).json({ error: "employeeData field is missing" });
       }
 
-      // ✅ CRITICAL FIX: Get existing credentials FIRST
-      const existingCredentials = employee.employeeData?.credentials || {};
+      // ✅ FIX: Convert Mongoose document to plain object
+      const existingCredentials = employee.employeeData?.credentials 
+        ? JSON.parse(JSON.stringify(employee.employeeData.credentials))
+        : {};
+      
+      console.log("📦 Existing credentials (plain):", existingCredentials);
       
       // ✅ Handle uploaded files and build new credential URLs
       let newCredentialUrls = {};
@@ -232,10 +236,11 @@ router.patch(
         
         const employeeName = (req.body.name || employee.employeeData?.personalData?.name || "unknown")
           .trim()
-          .replace(/[,\s]+/g, "_");  
-
+          .replace(/[,\s]+/g, "_");
+        
         console.log("   Employee folder name:", employeeName);
-
+        
+        // Build file URLs
         for (const key of Object.keys(req.files)) {
           const file = req.files[key][0];
           newCredentialUrls[key] = `/uploads/${employeeName}/${file.filename}`;
@@ -243,14 +248,13 @@ router.patch(
         }
       }
 
-      // ✅ MERGE: existing credentials + new uploads
-      // New uploads will overwrite old ones for the same field
+      // ✅ MERGE: existing credentials + new uploads (properly)
       const mergedCredentials = {
         ...existingCredentials,
         ...newCredentialUrls
       };
       
-      console.log("📝 Final merged credentials:", mergedCredentials);
+      console.log("📝 Final merged credentials (plain):", mergedCredentials);
 
       const updateFields = {};
 
@@ -272,8 +276,9 @@ router.patch(
       // Handle object fields (merge them)
       objectFields.forEach(field => {
         if (employeeData[field]) {
+          const existing = employee.employeeData[field];
           updateFields[`employeeData.${field}`] = {
-            ...employee.employeeData[field]?.toObject?.() || employee.employeeData[field] || {},
+            ...(existing ? JSON.parse(JSON.stringify(existing)) : {}),
             ...employeeData[field],
           };
         }
@@ -288,7 +293,7 @@ router.patch(
         }
       });
 
-      // ✅ Set the merged credentials (not from employeeData.credentials)
+      // ✅ Set the merged credentials (clean plain object)
       updateFields[`employeeData.credentials`] = mergedCredentials;
 
       // Handle workHistory
@@ -305,7 +310,7 @@ router.patch(
         timestamp: new Date(),
       };
 
-      console.log("🚀 Updating employee with:", JSON.stringify(updateFields, null, 2));
+      console.log("🚀 Updating employee with clean data...");
 
       const updatedEmployee = await Employee.findByIdAndUpdate(
         id,

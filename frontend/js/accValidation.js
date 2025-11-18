@@ -486,7 +486,7 @@ function cleanEmployeeData(empData) {
   return cleaned;
 }
 
-// ===== IN APPROVE BUTTON LOGIC - BEFORE SENDING TO API =====
+// ===== APPROVE BUTTON LOGIC - WITH FILE UPLOAD SUPPORT =====
 row.querySelector(".approve-btn").onclick = async () => {
   try {
     const token = localStorage.getItem("token")?.trim();
@@ -532,11 +532,13 @@ row.querySelector(".approve-btn").onclick = async () => {
           // ✅ CLEAN THE DATA BEFORE SENDING
           const cleanBasicInfo = { ...basic };
           cleanBasicInfo.status = "Pending";
-          cleanBasicInfo.expiryDate = null; // Explicitly set to null, not "N/A"
+          cleanBasicInfo.expiryDate = null;
           
           const cleanPersonalData = { ...personal };
-          cleanPersonalData.dateOfBirth = null; // Explicitly set to null
+          cleanPersonalData.dateOfBirth = null;
+          cleanPersonalData.name = fullName; // ✅ Set full name
 
+          // ✅ CREATE EMPLOYEE WITH CREDENTIALS
           const empRes = await fetch("https://www.mither3security.com/employees", {
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
@@ -546,7 +548,7 @@ row.querySelector(".approve-btn").onclick = async () => {
                 basicInformation: cleanBasicInfo,
                 personalData: cleanPersonalData,
                 educationalBackground: education,
-                credentials,
+                credentials, // ✅ Include credentials from account
                 firearmsIssued,
               },
             }),
@@ -610,11 +612,13 @@ row.querySelector(".approve-btn").onclick = async () => {
           // ✅ CLEAN THE DATA BEFORE SENDING
           const cleanBasicInfo = { ...basic };
           cleanBasicInfo.status = "Active";
-          cleanBasicInfo.expiryDate = null; // Explicitly set to null
+          cleanBasicInfo.expiryDate = null;
           
           const cleanPersonalData = { ...personal };
-          cleanPersonalData.dateOfBirth = null; // Explicitly set to null
+          cleanPersonalData.dateOfBirth = null;
+          cleanPersonalData.name = fullName; // ✅ Set full name
 
+          // ✅ CREATE EMPLOYEE WITH CREDENTIALS
           const empRes = await fetch("https://www.mither3security.com/employees", {
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
@@ -624,7 +628,7 @@ row.querySelector(".approve-btn").onclick = async () => {
                 basicInformation: cleanBasicInfo, 
                 personalData: cleanPersonalData, 
                 educationalBackground: education, 
-                credentials, 
+                credentials, // ✅ Include credentials from account
                 firearmsIssued 
               },
             }),
