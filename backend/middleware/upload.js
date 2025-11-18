@@ -148,6 +148,18 @@ const storage = multer.diskStorage({
       );
     }
 
+       if (file.fieldname === "ticketAttachment") {
+      return cb(
+        null,
+        `ticket-${Date.now()}${path.extname(file.originalname)}`
+      );
+    }
+
+        else if (file.fieldname === "ticketAttachment") {
+      folder = "ticket_attachments";
+      console.log("   ✅ Ticket attachment detected");
+    }
+
     // ✅ Credential files (both applicant and employee)
     const filename =
       credentialFiles[file.fieldname] ||

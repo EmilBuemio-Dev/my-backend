@@ -9,6 +9,11 @@ const TicketSchema = new mongoose.Schema({
   reportedEmployeeName: { type: String, default: null },
   subject: { type: String, required: true },
   concern: { type: String, required: true },
+  // ✅ NEW: Optional attachment for client tickets
+  attachment: { 
+    type: String, 
+    default: null 
+  },
   source: { type: String, default: "Guard" },
   status: { type: String, default: "Pending" },
   createdAt: { type: Date, default: Date.now },

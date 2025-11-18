@@ -3,14 +3,15 @@ import Ticket from "../models/Ticket.js";
 import User from "../models/User.js";
 import Employee from "../models/Employee.js";
 import Branch from "../models/Branch.js";
+import upload from "../middleware/upload.js";
 import { authMiddleware } from "../middleware/auth.js";
 
 const router = express.Router();
 
 // ===============================
-// CREATE TICKET
+// CREATE TICKET (with optional image)
 // ===============================
-router.post("/", authMiddleware, async (req, res) => {
+router.post("/", authMiddleware, upload.single("ticketAttachment"), async (req, res) => {
   try {
     const { subject, concern, reportedEmployeeId } = req.body;
 
@@ -67,6 +68,13 @@ router.post("/", authMiddleware, async (req, res) => {
       }
     }
 
+    // ✅ Handle attachment (only for client tickets)
+    let attachmentPath = null;
+    if (creatorRole === "client" && req.file) {
+      attachmentPath = `/uploads/ticket_attachments/${req.file.filename}`;
+      console.log("✅ Client ticket attachment:", attachmentPath);
+    }
+
     // ===== Create Ticket =====
     const newTicket = new Ticket({
       creatorId: userId,
@@ -78,6 +86,7 @@ router.post("/", authMiddleware, async (req, res) => {
       concern,
       reportedEmployeeId: reportedEmployeeId || null,
       reportedEmployeeName,
+      attachment: attachmentPath,
       source: creatorRole === "client" ? "Client" : "Guard",
       status: creatorRole === "client" ? "Urgent" : "Pending",
     });

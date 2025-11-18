@@ -268,75 +268,52 @@
     }
 
     /* Form Inputs */
-    .form-container input,
-    .form-container textarea,
-    .form-container select {
-      width: 100%;
-      padding: 0.6rem 1rem;
-      margin-bottom: 1rem;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      background-color: var(--clr-light);
-      transition: all 0.2s ease;
-      font-family: inherit;
-    }
+   /* Form Inputs */
+.form-container input[type="text"],
+.form-container input[type="email"],
+.form-container input[type="file"],
+.form-container textarea,
+.form-container select {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background-color: var(--clr-light);
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
 
-    .form-container input:focus,
-    .form-container textarea:focus,
-    .form-container select:focus {
-      outline: none;
-      border-color: var(--clr-primary);
-      background: var(--clr-white);
-    }
+.form-container input[type="text"]:focus,
+.form-container input[type="email"]:focus,
+.form-container input[type="file"]:focus,
+.form-container textarea:focus,
+.form-container select:focus {
+  outline: none;
+  border-color: var(--clr-primary);
+  background: var(--clr-white);
+  box-shadow: 0 0 6px rgba(19, 19, 21, 0.1);
+}
 
-    .form-container textarea {
-      resize: none;
-      min-height: 100px;
-    }
+.form-container textarea {
+  resize: none;
+  min-height: 100px;
+}
 
-    /* Rating Stars */
-    .rating {
-      display: flex;
-      gap: 1rem;
-      align-items: center;
-      margin-bottom: 1rem;
-      margin-top: 1rem;
-      padding: 1rem;
-      background: var(--clr-light);
-      border-radius: 8px;
-    }
+/* Attachment Preview Styling */
+#attachmentPreview {
+  padding: 0.8rem;
+  background: var(--clr-light);
+  border-radius: 6px;
+  border-left: 4px solid var(--clr-success);
+  font-size: 0.85rem;
+  color: var(--clr-success);
+}
 
-    .rating-label {
-      font-weight: 600;
-      color: var(--clr-dark);
-      white-space: nowrap;
-      font-size: 0.9rem;
-    }
-
-    .stars {
-      display: flex;
-      flex-direction: row-reverse;
-      gap: 0.5rem;
-    }
-
-    .rating input {
-      display: none;
-    }
-
-    .rating label {
-      font-size: 24px;
-      color: #ddd;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .rating input:checked ~ label,
-    .rating label:hover,
-    .rating label:hover ~ label {
-      color: #f39c12;
-      transform: scale(1.1);
-    }
+#attachmentPreview p {
+  margin: 0;
+}
 
     /* Buttons */
     .form-container button {
@@ -697,6 +674,20 @@
           <option value="">-- Optional: Report a specific employee --</option>
         </select>
 
+        <!-- ✅ NEW: Optional image attachment -->
+        <label for="ticketAttachment" style="display: block; font-weight: 600; color: var(--clr-dark); margin-top: 1rem; margin-bottom: 0.5rem; font-size: 0.9rem;">
+          Attach Image (Optional):
+        </label>
+        <input 
+          type="file" 
+          id="ticketAttachment" 
+          name="ticketAttachment" 
+          accept=".jpg,.jpeg,.png"
+          style="padding: 0.6rem 1rem; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 6px; width: 100%; font-size: 0.85rem; background-color: var(--clr-light); cursor: pointer; transition: all 0.2s ease;"
+        />
+        <!-- ✅ NEW: File preview -->
+        <div id="attachmentPreview" style="margin-bottom: 1rem;"></div>
+
         <button type="submit" id="submitTicketBtn">Submit</button>
       </form>
     </section>
@@ -719,6 +710,7 @@
         </table>
       </div>
     </section>
+  </div>
   </div>
 </div>
 
