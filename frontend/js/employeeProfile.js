@@ -235,10 +235,15 @@ async function handleSave() {
     // Use FormData to handle file uploads
     const formData = new FormData();
 
-    // Collect basic info
+    // ✅ FIX: Collect basic info with correct field name mapping
     const basicInfo = {};
     Object.keys(basicInfoFields).forEach(key => {
-      basicInfo[key] = basicInfoFields[key].textContent.trim() || null;
+      // ✅ Map 'cellNo' to 'celNo' to match backend schema
+      if (key === "cellNo") {
+        basicInfo.celNo = basicInfoFields[key].textContent.trim() || null;
+      } else {
+        basicInfo[key] = basicInfoFields[key].textContent.trim() || null;
+      }
     });
 
     // Collect personal data
@@ -274,7 +279,6 @@ async function handleSave() {
       basicInformation: basicInfo,
       personalData: personalData,
       educationalBackground: educationalBackground
-      // ❌ Don't include credentials here - backend will merge uploaded files
     };
 
     // ✅ Append employee name at TOP LEVEL for multer
@@ -283,6 +287,7 @@ async function handleSave() {
     formData.append("name", employeeName);
     
     console.log("📤 Uploading with employee name:", employeeName);
+    console.log("📞 Cell number being saved:", basicInfo.celNo); // Debug log
 
     // Append employeeData as JSON string
     formData.append("employeeData", JSON.stringify(employeeData));
