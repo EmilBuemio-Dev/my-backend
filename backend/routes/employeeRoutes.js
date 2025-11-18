@@ -189,7 +189,6 @@ router.get("/leave-requests/employee/:employeeId", authMiddleware, async (req, r
   }
 });
 
-// PATCH (Update) employee - WITH FILE UPLOAD SUPPORT
 router.patch(
   "/:id", 
   authMiddleware, 
@@ -222,30 +221,36 @@ router.patch(
         return res.status(400).json({ error: "employeeData field is missing" });
       }
 
-      // Handle uploaded files
+      // ✅ CRITICAL FIX: Get existing credentials FIRST
+      const existingCredentials = employee.employeeData?.credentials || {};
+      
+      // ✅ Handle uploaded files and build new credential URLs
+      let newCredentialUrls = {};
+      
       if (req.files && Object.keys(req.files).length > 0) {
         console.log("📦 Processing uploaded files...");
         
         const employeeName = (req.body.name || employee.employeeData?.personalData?.name || "unknown")
-          .replace(/\s+/g, "_");
+          .replace(/[,\s]+/g, "_");  // ✅ Remove commas AND spaces
         
         console.log("   Employee folder name:", employeeName);
         
-        // Build file URLs - MATCH THE ACTUAL FOLDER STRUCTURE
-        const fileUrls = {};
+        // Build file URLs
         for (const key of Object.keys(req.files)) {
           const file = req.files[key][0];
-          // ✅ FIXED: Use exact folder name from upload
-          fileUrls[key] = `/uploads/${employeeName}/${file.filename}`;
-          console.log(`   ✅ ${key}: ${fileUrls[key]}`);
+          newCredentialUrls[key] = `/uploads/${employeeName}/${file.filename}`;
+          console.log(`   ✅ ${key}: ${newCredentialUrls[key]}`);
         }
-
-        // Merge with existing credentials
-        const existingCreds = employee.employeeData?.credentials || {};
-        employeeData.credentials = { ...existingCreds, ...fileUrls };
-        
-        console.log("   Updated credentials:", employeeData.credentials);
       }
+
+      // ✅ MERGE: existing credentials + new uploads
+      // New uploads will overwrite old ones for the same field
+      const mergedCredentials = {
+        ...existingCredentials,
+        ...newCredentialUrls
+      };
+      
+      console.log("📝 Final merged credentials:", mergedCredentials);
 
       const updateFields = {};
 
@@ -283,14 +288,8 @@ router.patch(
         }
       });
 
-      // Handle credentials separately - merge with existing
-      if (employeeData.credentials) {
-        const existingCreds = employee.employeeData?.credentials || {};
-        updateFields[`employeeData.credentials`] = {
-          ...existingCreds,
-          ...employeeData.credentials
-        };
-      }
+      // ✅ Set the merged credentials (not from employeeData.credentials)
+      updateFields[`employeeData.credentials`] = mergedCredentials;
 
       // Handle workHistory
       if (employeeData.workHistory) {
@@ -305,6 +304,8 @@ router.patch(
         name: req.user.name,
         timestamp: new Date(),
       };
+
+      console.log("🚀 Updating employee with:", JSON.stringify(updateFields, null, 2));
 
       const updatedEmployee = await Employee.findByIdAndUpdate(
         id,

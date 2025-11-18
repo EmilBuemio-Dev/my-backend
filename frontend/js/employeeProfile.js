@@ -240,15 +240,16 @@ async function handleSave() {
       }
     });
 
-    // Build employeeData object
+    // ✅ Build employeeData object WITHOUT credentials
+    // Let backend handle credentials based on file uploads
     const employeeData = {
       basicInformation: basicInfo,
       personalData: personalData,
-      educationalBackground: educationalBackground,
-      credentials: {} // Will be populated by backend after file upload
+      educationalBackground: educationalBackground
+      // ❌ Don't include credentials here - backend will merge uploaded files
     };
 
-    // ✅ IMPORTANT: Append employee name at TOP LEVEL for multer
+    // ✅ Append employee name at TOP LEVEL for multer
     const employeeName = personalData.name || "employee";
     formData.append("name", employeeName);
     
@@ -292,7 +293,7 @@ async function handleSave() {
     // Clear uploaded files
     uploadedFiles = {};
     
-    // Reload employee data
+    // Reload employee data to show updated files
     await loadEmployeeData();
   } catch (err) {
     console.error("❌ Error updating employee:", err);
