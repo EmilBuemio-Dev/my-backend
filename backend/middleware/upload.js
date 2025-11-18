@@ -57,30 +57,50 @@ const storage = multer.diskStorage({
       folder = "attendance";
     }
     // ✅ Employee credentials (when editing existing employee)
-    // These have credentialFiles fieldnames AND a "name" in body (from employeeData)
-    else if (credentialFiles[file.fieldname] && req.body.name) {
-      const employeeName = req.body.name.trim().replace(/\s+/g, "_");
+    else if (credentialFiles[file.fieldname]) {
+      let employeeName = "unknown";
+
+      // Try to get name from req.body.name first
+      if (req.body.name) {
+        employeeName = req.body.name.trim().replace(/[,\s]+/g, "_");
+        console.log("   ✅ Using name from req.body.name:", employeeName);
+      }
+      // If not available, try parsing employeeData JSON
+      else if (req.body.employeeData) {
+        try {
+          const parsed = typeof req.body.employeeData === 'string' 
+            ? JSON.parse(req.body.employeeData)
+            : req.body.employeeData;
+          
+          if (parsed.personalData?.name) {
+            employeeName = parsed.personalData.name
+              .trim()
+              .replace(/[,\s]+/g, "_");
+            console.log("   ✅ Parsed name from employeeData:", employeeName);
+          }
+        } catch (err) {
+          console.log("   ⚠️ Failed to parse employeeData:", err.message);
+        }
+      }
+      // Fallback to familyName + firstName (for applicants)
+      else if (req.body.familyName && req.body.firstName) {
+        const familyName = req.body.familyName.trim();
+        const firstName = req.body.firstName.trim();
+        employeeName = `${familyName}_${firstName}`.replace(/[,\s]+/g, "_");
+        console.log("   ✅ Using familyName + firstName:", employeeName);
+      }
+
       folder = employeeName;
-      console.log("   ✅ Detected EMPLOYEE credential upload");
-      console.log("   Folder:", folder);
+      console.log("   📁 Final folder:", folder);
     }
-    // ✅ Applicant credentials → applicant-specific folder
-    // These have familyName and firstName
-    else if (req.body.familyName && req.body.firstName) {
-      const familyName = req.body.familyName.trim();
-      const firstName = req.body.firstName.trim();
-      folder = `${familyName}_${firstName}`.replace(/\s+/g, "_");
-      console.log("   ✅ Detected APPLICANT credential upload");
-      console.log("   Folder:", folder);
-    }
-    // ✅ Fallback for other credential files
+    // ✅ Fallback
     else {
       folder = "general";
-      console.log("   ⚠️ Using general folder (no name info found)");
+      console.log("   ⚠️ Using general folder");
     }
 
     const dest = ensureUploadPath(folder);
-    console.log("   Final destination:", dest);
+    console.log("   📍 Destination:", dest);
     cb(null, dest);
   },
 

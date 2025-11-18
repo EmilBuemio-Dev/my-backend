@@ -231,11 +231,11 @@ router.patch(
         console.log("📦 Processing uploaded files...");
         
         const employeeName = (req.body.name || employee.employeeData?.personalData?.name || "unknown")
-          .replace(/[,\s]+/g, "_");  // ✅ Remove commas AND spaces
-        
+          .trim()
+          .replace(/[,\s]+/g, "_");  
+
         console.log("   Employee folder name:", employeeName);
-        
-        // Build file URLs
+
         for (const key of Object.keys(req.files)) {
           const file = req.files[key][0];
           newCredentialUrls[key] = `/uploads/${employeeName}/${file.filename}`;

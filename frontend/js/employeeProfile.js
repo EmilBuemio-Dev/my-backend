@@ -250,7 +250,8 @@ async function handleSave() {
     };
 
     // ✅ Append employee name at TOP LEVEL for multer
-    const employeeName = personalData.name || "employee";
+    const employeeName = (personalData.name || "employee")
+       .replace(/[,\s]+/g, "_");  // Remove commas AND spaces
     formData.append("name", employeeName);
     
     console.log("📤 Uploading with employee name:", employeeName);
