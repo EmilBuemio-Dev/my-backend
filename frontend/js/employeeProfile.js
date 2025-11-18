@@ -83,14 +83,42 @@ async function loadEmployeeData() {
     console.log("📥 Loaded employee data:", employee);
 
     // Basic Info
+
+    const cellNoSpan = document.getElementById("cellNo");
+
+// Limit input to 11 digits & numbers only
+cellNoSpan.addEventListener("input", () => {
+  // Remove non-numeric
+  cellNoSpan.textContent = cellNoSpan.textContent.replace(/\D/g, "");
+
+  // Limit to 11 digits
+  if (cellNoSpan.textContent.length > 11) {
+    cellNoSpan.textContent = cellNoSpan.textContent.slice(0, 11);
+  }
+});
+
+// Optional: Block spaces before they appear
+cellNoSpan.addEventListener("beforeinput", (e) => {
+  if (e.data === " ") {
+    e.preventDefault();
+  }
+});
+
     const basic = data.basicInformation || {};
     Object.keys(basicInfoFields).forEach(key => {
-      if (key === "cellNo") {
-        basicInfoFields[key].textContent = basic.celNo || "N/A";
-      } else {
-        basicInfoFields[key].textContent = basic[key] || "N/A";
-      }
-    });
+  if (key === "cellNo") {
+    basicInfoFields[key].textContent = basic.celNo || "N/A";
+  } 
+  else if (key === "expiryDate") {
+    basicInfoFields.expiryDate.textContent = basic.expiryDate
+      ? new Date(basic.expiryDate).toLocaleDateString()
+      : "N/A";
+  } 
+  else {
+    basicInfoFields[key].textContent = basic[key] || "N/A";
+  }
+});
+
 
     // Overview / personal
     const personal = data.personalData || {};

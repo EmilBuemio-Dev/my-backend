@@ -9,6 +9,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   let allBranches = [];
   let monthlyAttendanceData = [];
 
+  // ✅ GET USER ROLE
+  const userRole = localStorage.getItem("role");
+  const isAdmin = userRole === "admin";
+  const isHR = userRole === "hr";
+
   async function fetchEmployeeData() {
     try {
       if (!employeeId) return alert("No employee ID found in the URL.");
@@ -94,10 +99,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     eyeColor: "colorOfEyes"
   };
 
-  Object.keys(personalKeyMap).forEach(f => {
-    const modelKey = personalKeyMap[f];
-    setText(f, personal[modelKey]);
-  });
+ Object.keys(personalKeyMap).forEach(f => {
+  const modelKey = personalKeyMap[f];
+
+  const isDateField = (f === "dob");
+
+  setText(f, personal[modelKey], isDateField);
+});
 
   const tbody = document.querySelector("#educationTable tbody");
   if (tbody) {
@@ -125,34 +133,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     "neighborhoodInvestigation","militaryRecord"
   ];
 
-  // ✅ CHECK USER ROLE - Only admin can upload files
-  const userRole = localStorage.getItem("role");
-  const isHR = userRole === "hr";
-
   credFields.forEach(f => {
     const span = document.getElementById(f);
     if (!span) return;
     
     const filePath = creds[f];
     
-    console.log(`📄 Credential ${f}:`, filePath); // ✅ Debug log
+    console.log(`📄 Credential ${f}:`, filePath);
     
-    // ✅ FIX: Proper file URL construction
     let fileUrl = null;
     if (filePath && filePath !== "N/A" && filePath !== "") {
-      // If path already starts with http, use as-is
       if (filePath.startsWith("http")) {
         fileUrl = filePath;
       }
-      // If path starts with /uploads, prepend domain
       else if (filePath.startsWith("/uploads")) {
         fileUrl = `https://www.mither3security.com${filePath}`;
       }
-      // If path starts with uploads (no leading slash), prepend domain and slash
       else if (filePath.startsWith("uploads")) {
         fileUrl = `https://www.mither3security.com/${filePath}`;
       }
-      // Otherwise, assume it's a relative path
       else {
         fileUrl = `https://www.mither3security.com/uploads/${filePath}`;
       }
@@ -172,7 +171,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       viewBtn.style.cursor = "pointer";
       viewBtn.style.fontSize = "0.85rem";
       viewBtn.onclick = () => {
-        console.log(`🔗 Opening file: ${fileUrl}`); // ✅ Debug log
+        console.log(`🔗 Opening file: ${fileUrl}`);
         window.open(fileUrl, "_blank");
       };
       span.appendChild(viewBtn);
@@ -182,8 +181,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       span.style.fontStyle = "italic";
     }
 
-    // ✅ ONLY SHOW FILE INPUT FOR ADMIN (not HR)
-    if (isEditing && !isHR) {
+    // ✅ ONLY ADMIN CAN UPLOAD FILES (NOT HR)
+    if (isEditing && isAdmin) {
       const input = document.createElement("input");
       input.type = "file";
       input.accept = ".pdf";
@@ -191,7 +190,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       input.style.fontSize = "0.85rem";
       input.onchange = e => { 
         fileInputs[f] = e.target.files[0];
-        console.log(`📎 File selected for ${f}:`, e.target.files[0].name); // ✅ Debug log
+        console.log(`📎 File selected for ${f}:`, e.target.files[0].name);
       };
       span.appendChild(input);
     }
@@ -281,83 +280,54 @@ document.addEventListener("DOMContentLoaded", async () => {
       createdBy: employeeDataCache.employeeData?.createdBy
     };
 
-    const basicFields = ["pslNo","sssNo","tinNo","celNo","shift","expiryDate","badgeNo","branch","salary","status"];
+    // ✅ ONLY UPDATE BRANCH AND SHIFT (HR & ADMIN)
+    const branchEl = document.getElementById("branch");
+    const shiftEl = document.getElementById("shift");
 
+    if (branchEl && branchEl.tagName === "SELECT") {
+      let val = branchEl.value === "toBeSet" ? "" : branchEl.value;
+      employeeData.basicInformation.branch = val;
+    } else {
+      employeeData.basicInformation.branch = employeeDataCache.employeeData?.basicInformation?.branch;
+    }
+
+    if (shiftEl && shiftEl.tagName === "SELECT") {
+      const shiftValue = shiftEl.value;
+      let val;
+      if (shiftValue.includes("|")) {
+        val = shiftValue.split("|")[1];
+      } else {
+        val = shiftValue;
+      }
+      employeeData.basicInformation.shift = val;
+    } else {
+      employeeData.basicInformation.shift = employeeDataCache.employeeData?.basicInformation?.shift;
+    }
+
+    // ✅ PRESERVE ALL OTHER FIELDS FROM CACHE (NO EDITING ALLOWED)
+    const basicFields = ["pslNo","sssNo","tinNo","celNo","expiryDate","badgeNo","salary","status"];
     basicFields.forEach(f => {
-      const el = document.getElementById(f);
-      if (!el) return;
-
-      let val = el.tagName === "SELECT" ? el.value : el.textContent.trim();
-
-      if (f === "branch" && el.tagName === "SELECT") {
-        val = el.value === "toBeSet" ? "" : el.value;
-      }
-
-      if (f === "shift" && el.tagName === "SELECT") {
-        const shiftValue = el.value;
-        if (shiftValue.includes("|")) {
-          val = shiftValue.split("|")[1];
-        } else {
-          val = shiftValue;
-        }
-      }
-
-      if (f === "expiryDate" && val) {
-        if (val === "" || val === "N/A") {
-          val = null;
-        } else {
-          const d = new Date(val);
-          val = isNaN(d) ? null : d;
-        }
-      }
-
-      if (f === "salary" && val === "N/A") {
-        val = null;
-      }
-
-      employeeData.basicInformation[f] = val;
+      employeeData.basicInformation[f] = employeeDataCache.employeeData?.basicInformation?.[f];
     });
 
-    const personalFields = ["fullName","email","dob","presentAddress","birthPlace","previousAddress","citizenship","weight","language","age","height","religion","civilStatus","hairColor","eyeColor"];
-
+    const personalFields = ["name","email","dateOfBirth","presentAddress","placeOfBirth","prevAddress","citizenship","weight","languageSpoken","age","height","religion","civilStatus","colorOfHair","colorOfEyes"];
     personalFields.forEach(f => {
-      const el = document.getElementById(f);
-      if (!el) return;
-
-      let val = el.textContent.trim();
-
-      if (f === "dob" && val) {
-        if (val === "" || val === "N/A") {
-          val = null;
-        } else {
-          const d = new Date(val);
-          val = isNaN(d) ? null : d;
-        }
-      }
-
-      const keyMap = {
-        fullName: "name",
-        dob: "dateOfBirth",
-        previousAddress: "prevAddress",
-        hairColor: "colorOfHair",
-        eyeColor: "colorOfEyes",
-        language: "languageSpoken"
-      };
-      const key = keyMap[f] || f;
-      
-      employeeData.personalData[key] = val;
+      employeeData.personalData[f] = employeeDataCache.employeeData?.personalData?.[f];
     });
 
-    const credFields = [
-      "barangayClearance","policeClearance","diClearance","nbiClearance",
-      "personalHistory","residenceHistory","maritalStatus","physicalData",
-      "educationData","characterReference","employmentHistory",
-      "neighborhoodInvestigation","militaryRecord"
-    ];
+    // ✅ ONLY ADMIN CAN UPLOAD FILES
+    if (isAdmin) {
+      const credFields = [
+        "barangayClearance","policeClearance","diClearance","nbiClearance",
+        "personalHistory","residenceHistory","maritalStatus","physicalData",
+        "educationData","characterReference","employmentHistory",
+        "neighborhoodInvestigation","militaryRecord"
+      ];
 
-    credFields.forEach(f => {
-      if (fileInputs[f]) formData.append(f, fileInputs[f]);
-    });
+      credFields.forEach(f => {
+        if (fileInputs[f]) formData.append(f, fileInputs[f]);
+      });
+    }
 
     formData.append("employeeData", JSON.stringify(employeeData));
 
@@ -395,6 +365,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (isEditing) {
       editBtn.textContent = "SAVE";
 
+      // ✅ ONLY ALLOW BRANCH DROPDOWN EDITING
       const branchEl = document.getElementById("branch");
       if (branchEl) {
         const currentBranch = branchEl.textContent.trim();
@@ -431,6 +402,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         select.id = "branch";
       }
 
+      // ✅ ONLY ALLOW SHIFT DROPDOWN EDITING
       const shiftEl = document.getElementById("shift");
       if (shiftEl) {
         const currentShift = shiftEl.textContent.trim();
@@ -454,13 +426,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         shiftSelect.id = "shift";
       }
 
-      document.querySelectorAll("[contenteditable=false]").forEach(f => {
-        if (f.id !== "branch" && f.id !== "salary" && f.id !== "expiryDate" && f.id !== "status") {
-          f.setAttribute("contenteditable", "true");
-          f.style.backgroundColor = "#f0f8ff";
-          f.style.cursor = "text";
-        }
-      });
+      // ✅ DO NOT MAKE OTHER FIELDS EDITABLE (HR & ADMIN CANNOT EDIT THEM)
+      console.log("🔒 Personal and basic information fields are read-only for HR and Admin");
+
     } else {
       await saveEmployeeData();
       editBtn.textContent = "EDIT";
@@ -824,7 +792,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           firstRecordDate.setDate(firstRecordDate.getDate() - (recordsPerRow * (totalRows - row - 1)));
         }
 
-        // ✅ FIX: Check status properly - count as successful if "On-Time" is in status
         const daysArray = rowRecords.map(record => {
           const status = record.status?.toLowerCase() || "absent";
           
@@ -842,7 +809,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         periodEndDate.setDate(firstRecordDate.getDate() + recordsPerRow - 1);
         const periodEndStr = periodEndDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
-        // ✅ FIX: Count only successful days (✅, ⚠️, 🏖️) excluding ❌
         const totalDays = daysArray.filter(d => d === "✅" || d === "⚠️" || d === "🏖️").length;
         const totalHours = totalDays * 12;
 
@@ -861,7 +827,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         tbody.appendChild(tr);
       }
 
-      // ✅ ADD GRAND TOTAL ROWS AT BOTTOM (TWO ROWS)
       const totalHoursRow = document.createElement("tr");
       totalHoursRow.style.background = "#f0f8ff";
       totalHoursRow.style.fontWeight = "bold";
@@ -910,7 +875,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     let csvContent = "";
 
-    // ===== GET HEADERS =====
     const headers = table.querySelectorAll("thead tr th");
     const headerRow = Array.from(headers).map(th => {
       const text = th.innerText.replace(/"/g, '""').trim();
@@ -918,7 +882,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }).join(",");
     csvContent += headerRow + "\r\n";
 
-    // ===== GET DATA ROWS =====
     const rows = table.querySelectorAll("tbody tr");
 
     rows.forEach((row, index) => {
@@ -932,7 +895,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       csvContent += rowContent + "\r\n";
     });
 
-    // ===== DOWNLOAD =====
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -950,7 +912,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     URL.revokeObjectURL(url);
   }
 
-  // ===== DOWNLOAD BUTTON EVENT =====
   const downloadBtn = document.getElementById("downloadMonthlyAttendance");
   if (downloadBtn) {
     downloadBtn.addEventListener("click", () => {
@@ -961,7 +922,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   function updateAttendanceChart(data) {
     const ctx = attendanceChartCanvas.getContext("2d");
 
-    // ✅ FIX: Count "On-Time" properly (even if it has "Early Out" appended)
     const onTimeCount = data.filter(d => d.status?.toLowerCase().includes("on-time")).length;
     const lateCount = data.filter(d => d.status?.toLowerCase().includes("late")).length;
     const absentCount = data.filter(d => d.status?.toLowerCase().includes("absent")).length;
@@ -1003,7 +963,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // ===== Initialize on Page Load =====
   if (employeeId) {
     await fetchAllBranches();
     await fetchEmployeeData();
