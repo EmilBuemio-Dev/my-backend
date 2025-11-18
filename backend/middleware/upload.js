@@ -50,8 +50,13 @@ const storage = multer.diskStorage({
     else if (file.fieldname === "checkinImage") {
       folder = "attendance";
     }
+    // ✅ Employee credentials → employee-specific folder
+    else if (credentialFiles[file.fieldname]) {
+      // For employee credential updates
+      const name = req.body.name?.trim() || "employee";
+      folder = name.replace(/\s+/g, "_");
+    }
     // ✅ Applicant credentials → applicant-specific folder
-    // FIX: Use familyName_firstName instead of name
     else {
       const familyName = req.body.familyName?.trim() || "general";
       const firstName = req.body.firstName?.trim() || "applicant";
@@ -87,7 +92,7 @@ const storage = multer.diskStorage({
       );
     }
 
-    // ✅ Applicant credential (default)
+    // ✅ Credential files (both applicant and employee)
     const filename =
       credentialFiles[file.fieldname] ||
       `document-${Date.now()}${path.extname(file.originalname)}`;

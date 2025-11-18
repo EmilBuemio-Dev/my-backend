@@ -816,18 +816,29 @@ document.addEventListener("DOMContentLoaded", async () => {
         tbody.appendChild(tr);
       }
 
-      // ✅ ADD GRAND TOTAL ROW AT BOTTOM
-      const totalRow = document.createElement("tr");
-      totalRow.style.background = "#f0f8ff";
-      totalRow.style.fontWeight = "bold";
-      totalRow.style.borderTop = "3px solid #131315";
-      totalRow.innerHTML = `
-        <td colspan="3" style="text-align:right; padding:1rem; font-weight:bold;">GRAND TOTAL:</td>
+      // ✅ ADD GRAND TOTAL ROWS AT BOTTOM (TWO ROWS)
+      const totalHoursRow = document.createElement("tr");
+      totalHoursRow.style.background = "#f0f8ff";
+      totalHoursRow.style.fontWeight = "bold";
+      totalHoursRow.style.borderTop = "3px solid #131315";
+      totalHoursRow.innerHTML = `
+        <td colspan="3" style="text-align:right; padding:1rem; font-weight:bold;">TOTAL NO. OF HOURS:</td>
         ${Array.from({ length: 16 }, () => `<td style="text-align:center; padding:0.8rem;"></td>`).join("")}
-        <td style="text-align:center; padding:1rem; background:#e8f5e9;">${grandTotalHours}</td>
-        <td style="text-align:center; padding:1rem; background:#e8f5e9;">${grandTotalDays}</td>
+        <td style="text-align:center; padding:1rem; background:#e8f5e9; font-size:1.1rem;">${grandTotalHours}</td>
+        <td style="text-align:center; padding:0.8rem;"></td>
       `;
-      tbody.appendChild(totalRow);
+      tbody.appendChild(totalHoursRow);
+
+      const totalDaysRow = document.createElement("tr");
+      totalDaysRow.style.background = "#f0f8ff";
+      totalDaysRow.style.fontWeight = "bold";
+      totalDaysRow.innerHTML = `
+        <td colspan="3" style="text-align:right; padding:1rem; font-weight:bold;">TOTAL NO. OF DAYS:</td>
+        ${Array.from({ length: 16 }, () => `<td style="text-align:center; padding:0.8rem;"></td>`).join("")}
+        <td style="text-align:center; padding:0.8rem;"></td>
+        <td style="text-align:center; padding:1rem; background:#e8f5e9; font-size:1.1rem;">${grandTotalDays}</td>
+      `;
+      tbody.appendChild(totalDaysRow);
 
     } catch (err) {
       console.error("Error loading monthly attendance:", err);

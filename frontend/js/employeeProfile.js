@@ -105,36 +105,70 @@ async function loadEmployeeData() {
     // Credentials - Display files with view buttons
     const creds = data.credentials || {};
     Object.keys(credentialsFields).forEach(key => {
-      if (key === "profileImage") {
-        if (creds.profileImage) {
-          employeePhoto.src = `https://www.mither3security.com${creds.profileImage}`;
-        }
-        return;
-      }
+  const span = credentialsFields[key];
+  if (key === "profileImage") return;
 
-      const span = credentialsFields[key];
-      span.innerHTML = ""; // Clear existing content
+  if (isEditing) {
+    // Store current button if exists
+    const hasFile = span.querySelector(".view-btn") !== null;
 
-      if (creds[key] && creds[key] !== "N/A") {
-        // Create view button
-        const viewBtn = document.createElement("button");
-        viewBtn.textContent = "View";
-        viewBtn.className = "view-btn";
-        viewBtn.style.padding = "0.4rem 0.8rem";
-        viewBtn.style.background = "#2196F3";
-        viewBtn.style.color = "white";
-        viewBtn.style.border = "none";
-        viewBtn.style.borderRadius = "4px";
-        viewBtn.style.cursor = "pointer";
-        viewBtn.style.fontSize = "0.85rem";
+    // Clear and add file input
+    span.innerHTML = "";
+    
+    // Show current file status
+    if (hasFile) {
+      const statusText = document.createElement("span");
+      statusText.textContent = "Current: ";
+      statusText.style.fontSize = "0.85rem";
+      statusText.style.color = "#666";
+      statusText.style.marginRight = "8px";
+      span.appendChild(statusText);
+
+      const fileLabel = document.createElement("span");
+      fileLabel.textContent = "File exists";
+      fileLabel.style.fontSize = "0.85rem";
+      fileLabel.style.color = "#4CAF50";
+      fileLabel.style.fontWeight = "600";
+      fileLabel.style.marginRight = "10px";
+      span.appendChild(fileLabel);
+    } else {
+      const noFileLabel = document.createElement("span");
+      noFileLabel.textContent = "No file | ";
+      noFileLabel.style.fontSize = "0.85rem";
+      noFileLabel.style.color = "#999";
+      noFileLabel.style.marginRight = "8px";
+      span.appendChild(noFileLabel);
+    }
+
+    // Add file input
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".pdf";
+    input.style.fontSize = "0.85rem";
+    input.dataset.field = key;
+    
+    input.addEventListener("change", (e) => {
+      if (e.target.files && e.target.files[0]) {
+        uploadedFiles[key] = e.target.files[0];
         
-        viewBtn.addEventListener("click", () => {
-          const fileUrl = `https://www.mither3security.com${creds[key]}`;
-          window.open(fileUrl, "_blank");
-        });
+        // Show selected file name
+        const fileNameSpan = span.querySelector(".selected-file");
+        if (fileNameSpan) {
+          fileNameSpan.textContent = e.target.files[0].name;
+        } else {
+          const newFileNameSpan = document.createElement("span");
+          newFileNameSpan.className = "selected-file";
+          newFileNameSpan.style.fontSize = "0.8rem";
+          newFileNameSpan.style.color = "#2196F3";
+          newFileNameSpan.style.marginLeft = "8px";
+          newFileNameSpan.textContent = e.target.files[0].name;
+          span.appendChild(newFileNameSpan);
+        }
+      }
+    });
 
-        span.appendChild(viewBtn);
-      } else {
+    span.appendChild(input);
+  } else {
         span.textContent = "No file";
       }
     });
@@ -265,30 +299,28 @@ editBtn.addEventListener("click", async () => {
 
 async function handleSave() {
   try {
-    // Prepare employee data
-    const updatedData = {
-      basicInformation: {},
-      personalData: {},
-      credentials: {},
-      educationalBackground: []
-    };
+    // Use FormData to handle file uploads
+    const formData = new FormData();
 
     // Collect basic info
+    const basicInfo = {};
     Object.keys(basicInfoFields).forEach(key => {
-      updatedData.basicInformation[key] = basicInfoFields[key].textContent.trim() || null;
+      basicInfo[key] = basicInfoFields[key].textContent.trim() || null;
     });
 
     // Collect personal data
+    const personalData = {};
     Object.keys(overviewFields).forEach(key => {
       if (key === "dob") {
         const val = overviewFields.dob.textContent;
-        updatedData.personalData.dateOfBirth = val && val !== "N/A" ? new Date(val) : null;
+        personalData.dateOfBirth = val && val !== "N/A" ? new Date(val) : null;
       } else {
-        updatedData.personalData[key] = overviewFields[key].textContent || null;
+        personalData[key] = overviewFields[key].textContent || null;
       }
     });
 
     // Collect education data
+    const educationalBackground = [];
     const eduRows = document.querySelectorAll("#educationTable tbody tr");
     eduRows.forEach(row => {
       const cells = row.querySelectorAll("td");
@@ -299,61 +331,53 @@ async function handleSave() {
           degree: cells[2].textContent.trim(),
           dateGraduated: cells[3].textContent.trim()
         };
-        updatedData.educationalBackground.push(edu);
+        educationalBackground.push(edu);
       }
     });
 
-    // Upload files if any
-    if (Object.keys(uploadedFiles).length > 0) {
-      const formData = new FormData();
-      
-      // Add employee name for folder creation
-      formData.append("name", updatedData.personalData.name || "employee");
-      formData.append("employeeId", employeeId);
+    // Build employeeData object
+    const employeeData = {
+      basicInformation: basicInfo,
+      personalData: personalData,
+      educationalBackground: educationalBackground,
+      credentials: {} // Will be populated by backend after file upload
+    };
 
-      // Add all files
-      Object.keys(uploadedFiles).forEach(key => {
-        formData.append(key, uploadedFiles[key]);
-      });
+    // Append employeeData as JSON string
+    formData.append("employeeData", JSON.stringify(employeeData));
 
-      // Upload files
-      const uploadRes = await fetch(`${API_URL}/upload-credentials`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData
-      });
+    // Append files if any were uploaded
+    Object.keys(uploadedFiles).forEach(key => {
+      formData.append(key, uploadedFiles[key]);
+    });
 
-      if (!uploadRes.ok) {
-        throw new Error("File upload failed");
-      }
+    // Get employee name for folder creation
+    const employeeName = personalData.name || "employee";
+    formData.append("name", employeeName);
 
-      const uploadResult = await uploadRes.json();
-      
-      // Update credentials with uploaded file URLs
-      if (uploadResult.urls) {
-        updatedData.credentials = uploadResult.urls;
-      }
-
-      // Clear uploaded files
-      uploadedFiles = {};
-    }
-
-    // Update employee data
+    // Send PATCH request with FormData
     const res = await fetch(`${API_URL}/${employeeId}`, {
       method: "PATCH",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
+        // Don't set Content-Type - let browser set it with boundary for multipart/form-data
       },
-      body: JSON.stringify({ employeeData: updatedData }),
+      body: formData
     });
 
     const result = await res.json();
+    
     if (!res.ok) {
+      console.error("Update failed:", result);
       return alert(result.error || "Failed to update profile");
     }
 
     alert("Profile updated successfully!");
+    
+    // Clear uploaded files
+    uploadedFiles = {};
+    
+    // Reload employee data
     await loadEmployeeData();
   } catch (err) {
     console.error("Error updating employee:", err);
