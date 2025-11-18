@@ -15,7 +15,6 @@ function ensureUploadPath(folder = "general") {
   return dest;
 }
 
-
 const credentialFiles = {
   barangayClearance: "barangay.pdf",
   policeClearance: "police.pdf",
@@ -39,12 +38,14 @@ const storage = multer.diskStorage({
 
     console.log("📁 Upload request detected:");
     console.log("   Field:", file.fieldname);
-    console.log("   Body name:", req.body.name);
-    console.log("   Body familyName:", req.body.familyName);
-    console.log("   Body firstName:", req.body.firstName);
 
+    // ✅ TICKET ATTACHMENT - Must come FIRST
+    if (file.fieldname === "ticketAttachment") {
+      folder = "ticket_attachments";
+      console.log("   ✅ Ticket attachment detected → folder: ticket_attachments");
+    }
     // ✅ Employee profile upload → "employee_profiles" folder
-    if (file.fieldname === "employeeProfile") {
+    else if (file.fieldname === "employeeProfile") {
       folder = "employee_profiles";
     }
     // ✅ Client profile upload → "client_profiles" folder
@@ -55,6 +56,7 @@ const storage = multer.diskStorage({
     else if (file.fieldname === "checkinImage") {
       folder = "attendance";
     }
+    // ✅ Client contract
     else if (file.fieldname === "contract") {
       if (req.body.name) {
         const clientName = req.body.name.trim().replace(/[,\s]+/g, "_");
@@ -63,7 +65,7 @@ const storage = multer.diskStorage({
         console.log("   Client name:", clientName);
         console.log("   Folder:", folder);
       } else {
-        folder = "contracts"; // Fallback
+        folder = "contracts";
         console.log("   ⚠️ No client name found, using generic contracts folder");
       }
     }
@@ -71,13 +73,10 @@ const storage = multer.diskStorage({
     else if (credentialFiles[file.fieldname]) {
       let employeeName = "unknown";
 
-      // Try to get name from req.body.name first
       if (req.body.name) {
         employeeName = req.body.name.trim().replace(/[,\s]+/g, "_");
         console.log("   ✅ Using name from req.body.name:", employeeName);
-      }
-      // If not available, try parsing employeeData JSON
-      else if (req.body.employeeData) {
+      } else if (req.body.employeeData) {
         try {
           const parsed = typeof req.body.employeeData === 'string' 
             ? JSON.parse(req.body.employeeData)
@@ -92,9 +91,7 @@ const storage = multer.diskStorage({
         } catch (err) {
           console.log("   ⚠️ Failed to parse employeeData:", err.message);
         }
-      }
-      // Fallback to familyName + firstName (for applicants)
-      else if (req.body.familyName && req.body.firstName) {
+      } else if (req.body.familyName && req.body.firstName) {
         const familyName = req.body.familyName.trim();
         const firstName = req.body.firstName.trim();
         employeeName = `${familyName}_${firstName}`.replace(/[,\s]+/g, "_");
@@ -116,7 +113,7 @@ const storage = multer.diskStorage({
   },
 
   filename: (req, file, cb) => {
-    // ✅ Employee profile image
+        // ✅ Employee profile image
     if (file.fieldname === "employeeProfile") {
       return cb(
         null,
@@ -148,16 +145,12 @@ const storage = multer.diskStorage({
       );
     }
 
-       if (file.fieldname === "ticketAttachment") {
+    // ✅ TICKET ATTACHMENT
+    if (file.fieldname === "ticketAttachment") {
       return cb(
         null,
         `ticket-${Date.now()}${path.extname(file.originalname)}`
       );
-    }
-
-        else if (file.fieldname === "ticketAttachment") {
-      folder = "ticket_attachments";
-      console.log("   ✅ Ticket attachment detected");
     }
 
     // ✅ Credential files (both applicant and employee)
@@ -172,6 +165,11 @@ const storage = multer.diskStorage({
 
 // ===== File Filter (Accept only PDFs and images) =====
 const fileFilter = (req, file, cb) => {
+  // Allow images for ticket attachments, profiles and attendance
+  if (file.fieldname === "ticketAttachment" && file.mimetype.startsWith("image/")) {
+    return cb(null, true);
+  }
+
   // Allow PDFs for credentials and contracts
   if (file.mimetype === "application/pdf") {
     return cb(null, true);

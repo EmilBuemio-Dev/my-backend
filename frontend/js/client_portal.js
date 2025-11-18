@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initSearch();
   initLogout();
   initTicketSubmit();
+  initFilePreview();
 });
 
 // === Helper: Get user and token ===
@@ -193,6 +194,50 @@ function renderGuardsTable(guards) {
   console.log("Guards table rendered with", guards.length, "entries");
 }
 
+// === Initialize File Preview ===
+function initFilePreview() {
+  const fileInput = document.getElementById("ticketAttachment");
+  const preview = document.getElementById("attachmentPreview");
+
+  if (!fileInput) return;
+
+  fileInput.addEventListener("change", (e) => {
+    preview.innerHTML = "";
+    const file = e.target.files[0];
+
+    if (!file) {
+      console.log("No file selected");
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please select a valid image file (JPG, PNG)");
+      fileInput.value = "";
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size must be less than 5MB");
+      fileInput.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      preview.innerHTML = `
+        <div style="margin-top: 1rem; padding: 1rem; background: var(--clr-light); border-radius: 6px;">
+          <p style="font-weight: 600; color: var(--clr-dark); margin-bottom: 0.5rem;">Preview:</p>
+          <img src="${event.target.result}" alt="preview" style="max-width: 100%; max-height: 200px; border-radius: 6px; object-fit: cover;">
+          <p style="font-size: 0.85rem; color: var(--clr-black-variant); margin-top: 0.5rem;">${file.name} (${(file.size / 1024).toFixed(2)} KB)</p>
+        </div>
+      `;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  console.log("File preview handler initialized");
+}
+
 // === Initialize Ticket Submission ===
 function initTicketSubmit() {
   const ticketForm = document.getElementById("ticketForm");
@@ -211,6 +256,7 @@ function initTicketSubmit() {
     const concern = document.getElementById("concern")?.value.trim();
     const reportedEmployeeSelect = document.getElementById("reportedEmployee");
     const reportedEmployeeId = reportedEmployeeSelect?.value || null;
+    const fileInput = document.getElementById("ticketAttachment");
 
     if (!subject || !concern) {
       alert("Please fill subject and concern.");
@@ -218,21 +264,26 @@ function initTicketSubmit() {
     }
 
     try {
-      const body = {
-        subject,
-        concern,
-        reportedEmployeeId: reportedEmployeeId || null,
-        creatorId: user._id,
-        creatorEmail: user.email,
-      };
+      // ✅ Use FormData to handle file upload
+      const formData = new FormData();
+      formData.append("subject", subject);
+      formData.append("concern", concern);
+      formData.append("reportedEmployeeId", reportedEmployeeId || null);
+      formData.append("creatorId", user._id);
+      formData.append("creatorEmail", user.email);
+
+      // ✅ Append file if selected
+      if (fileInput?.files?.length > 0) {
+        formData.append("ticketAttachment", fileInput.files[0]);
+        console.log("📎 File attached:", fileInput.files[0].name);
+      }
 
       const res = await fetch("https://www.mither3security.com/tickets", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           "Authorization": `Bearer ${user.token}`,
         },
-        body: JSON.stringify(body),
+        body: formData,
       });
 
       const data = await res.json();
@@ -240,9 +291,10 @@ function initTicketSubmit() {
 
       alert(`✅ ${data.message}\nStatus: ${data.ticket.status}`);
       ticketForm.reset();
+      document.getElementById("attachmentPreview").innerHTML = "";
       await loadMyTickets();
     } catch (err) {
-      console.error(err);
+      console.error("❌ Error submitting ticket:", err);
       alert("Error submitting ticket. See console for details.");
     }
   });
@@ -335,6 +387,20 @@ function openTicketModal(ticket) {
 
   // Populate modal with ticket details
   const detailsDiv = modal.querySelector("#modalDetails");
+  let attachmentHTML = "";
+  
+  if (ticket.attachment) {
+    attachmentHTML = `
+      <div class="ticket-detail-item">
+        <strong>Attachment:</strong>
+        <div style="margin-top: 0.5rem;">
+          <img src="https://www.mither3security.com${ticket.attachment}" alt="ticket attachment" 
+               style="max-width: 100%; max-height: 300px; border-radius: 6px; object-fit: contain;">
+        </div>
+      </div>
+    `;
+  }
+
   detailsDiv.innerHTML = `
     <div class="ticket-detail-item">
       <strong>Subject:</strong> ${ticket.subject}
@@ -354,6 +420,7 @@ function openTicketModal(ticket) {
       <strong>Concern:</strong>
       <p class="concern-text">${ticket.concern}</p>
     </div>
+    ${attachmentHTML}
   `;
 
   // Show modal
