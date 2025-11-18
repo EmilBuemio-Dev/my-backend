@@ -98,35 +98,33 @@
 
           <form id="multiStepForm">
             <!-- STEP 1 -->
-<!-- STEP 1 -->
-<div class="step active" id="step1">
-  <div class="form-section">
-    <div class="input-group">
-      <label for="familyName">Family Name</label>
-      <input type="text" id="familyName" name="familyName" placeholder="Enter family name" required />
-    </div>
+            <div class="step active" id="step1">
+              <div class="form-section">
+                <div class="input-group">
+                  <label for="familyName">Family Name</label>
+                  <input type="text" id="familyName" name="familyName" placeholder="Enter family name" required />
+                </div>
 
-    <div class="input-group">
-      <label for="firstName">First Name</label>
-      <input type="text" id="firstName" name="firstName" placeholder="Enter first name" required />
-    </div>
+                <div class="input-group">
+                  <label for="firstName">First Name</label>
+                  <input type="text" id="firstName" name="firstName" placeholder="Enter first name" required />
+                </div>
 
-    <div class="input-group">
-      <label for="middleName">Middle Name</label>
-      <input type="text" id="middleName" name="middleName" placeholder="Enter middle name" required />
-    </div>
+                <div class="input-group">
+                  <label for="middleName">Middle Name</label>
+                  <input type="text" id="middleName" name="middleName" placeholder="Enter middle name" required />
+                </div>
 
-    <div class="input-group">
-      <label for="badgeNo">Badge No.</label>
-      <input type="text" id="badgeNo" name="badgeNo" placeholder="Enter badge number" required />
-    </div>
+                <div class="input-group">
+                  <label for="badgeNo">Badge No.</label>
+                  <input type="text" id="badgeNo" name="badgeNo" placeholder="Enter badge number" required />
+                </div>
 
-    <div class="input-group">
-      <label for="position">Position</label>
-      <input type="text" id="position" name="position" value="Guard" readonly />
-    </div>
-  </div>
-
+                <div class="input-group">
+                  <label for="position">Position</label>
+                  <input type="text" id="position" name="position" value="Guard" readonly />
+                </div>
+              </div>
 
               <div class="form-section">
                 <h3>Clearances</h3>
@@ -237,144 +235,153 @@
         </div>
       </div>
 
- <!-- Approve Modal -->
-<div id="approveModal" class="modal">
-  <div class="modal-content formal-modal large">
-    <div class="modal-header">
-      <h3>New Guard Record</h3>
-      <span class="close-btn" onclick="closeApproveModal()">&times;</span>
-    </div>
+      <!-- Approve Modal -->
+      <div id="approveModal" class="modal">
+        <div class="modal-content formal-modal large">
+          <div class="modal-header">
+            <h3>New Guard Record</h3>
+            <span class="close-btn" onclick="closeApproveModal()">&times;</span>
+          </div>
 
-    <form id="approveForm">
-      <div class="profile-upload">
-        <div id="profilePreview" class="default-avatar material-symbols-outlined">
-          person
+          <form id="approveForm">
+            <div class="profile-upload">
+              <div id="profilePreview" class="default-avatar material-symbols-outlined">
+                person
+              </div>
+              <input type="file" name="employeeProfile" id="profileImageInput" accept="image/*">
+              <label for="profileImageInput" class="upload-label">Choose Photo</label>
+            </div>
+
+            <!-- BASIC INFORMATION -->
+            <div class="form-section">
+              <h3>Basic Information</h3>
+              <div class="form-grid two-column">
+                <label>Family Name:</label>
+                <input type="text" id="approveFamilyName" name="familyName" required>
+
+                <label>First Name:</label>
+                <input type="text" id="approveFirstName" name="firstName" required>
+
+                <label>Middle Name:</label>
+                <input type="text" id="approveMiddleName" name="middleName">
+
+                <label>Tel. Number:</label>
+                <input type="tel" name="telNumber" id="approveTelNumber" placeholder="N/A">
+
+                <label>PSL No.:</label><input type="text" name="pslNo" readonly>
+                <label>S.S.S. No.:</label><input type="text" name="sssNo" readonly>
+                <label>TIN No.:</label><input type="text" name="tinNo" readonly>
+                <label>Cel No.:</label><input type="tel" name="celNo" readonly>
+                <label>Status:</label><input type="text" name="status" disabled>
+                <label>Badge No.:</label><input type="text" name="badgeNo" id="approvedBadgeNo" readonly>
+                
+                <!-- ✅ BRANCH SECTION WITH SEARCH BAR -->
+                <label>Branch:</label>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <input 
+                    type="text" 
+                    id="archiveModalBranchSearch" 
+                    placeholder="🔍 Search branch name..." 
+                    style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;"
+                  />
+                  <select name="branch" id="branchSelect" required style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></select>
+                </div>
+
+                <label for="shift">Shift:</label>
+                <select name="shift" required></select>
+                <label>Expiry Date:</label><input type="text" name="expiryDate" disabled>
+                <label>Salary:</label><input type="number" name="salary" min="1" disabled>
+                <input type="hidden" name="role" value="employee">
+              </div>
+            </div>
+
+            <!-- PERSONAL DATA -->
+            <div class="form-section">
+              <h3>Personal Data</h3>
+              <div class="form-grid two-column">
+                <label>Email:</label><input type="email" name="email" id="approveEmail" required>
+                <label>Date of Birth:</label><input type="date" name="dateOfBirth" readonly>
+                <label>Present Address:</label><input type="text" name="presentAddress" readonly>
+                <label>Place of Birth:</label><input type="text" name="placeOfBirth" readonly>
+                <label>Previous Address:</label><input type="text" name="prevAddress" readonly>
+                <label>Citizenship:</label><input type="text" name="citizenship" readonly>
+                <label>Complexion:</label><input type="text" name="complexion" placeholder="N/A">
+                <label>Weight (kg):</label><input type="number" name="weight" readonly>
+                <label>Language Spoken:</label><input type="text" name="languageSpoken" readonly>
+                <label>Age:</label><input type="number" name="age" readonly>
+                <label>Height (cm):</label><input type="number" name="height" readonly>
+                <label>Religion:</label><input type="text" name="religion" readonly>
+                <label>Civil Status:</label><input type="text" name="civilStatus" readonly>
+                <label>Color of Hair:</label><input type="text" name="colorOfHair" readonly>
+                <label>Color of Eyes:</label><input type="text" name="colorOfEyes" readonly>
+                <label>Distinguishing Mark:</label><input type="text" name="distinguishingMark" placeholder="N/A">
+                <label>Father's Name:</label><input type="text" name="fatherName" placeholder="N/A">
+                <label>Mother's Name:</label><input type="text" name="motherName" placeholder="N/A">
+                <label>Spouse's Name:</label><input type="text" name="spouseName" placeholder="N/A">
+                <label>Children's Name:</label><input type="text" name="childrenName" placeholder="N/A">
+                <label>Occupation:</label><input type="text" name="occupation" placeholder="N/A">
+              </div>
+
+              <!-- Emergency Contact -->
+              <h4>Person to contact in case of emergency:</h4>
+              <div class="form-grid two-column">
+                <label>Name:</label><input type="text" name="emergencyName" placeholder="N/A">
+                <label>Relationship:</label><input type="text" name="emergencyRelationship" placeholder="N/A">
+                <label>Address:</label><input type="text" name="emergencyAddress" placeholder="N/A">
+                <label>Tel. Number:</label><input type="tel" name="emergencyTel" placeholder="N/A">
+              </div>
+            </div>
+
+            <!-- EDUCATIONAL BACKGROUND -->
+            <div class="form-section">
+              <h3>Educational Background</h3>
+              <table class="education-table" id="educationTable">
+                <thead>
+                  <tr>
+                    <th>School/University</th>
+                    <th>Inclusive Date</th>
+                    <th>Degree</th>
+                    <th>Date Grad'td</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><input type="text" name="school[]" required readonly value="N/A"></td>
+                    <td><input type="text" name="inclusiveDate[]" required readonly value="N/A"></td>
+                    <td><input type="text" name="degree[]" required readonly value="N/A"></td>
+                    <td><input type="text" name="dateGraduated[]" required readonly value="N/A"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- FIREARMS ISSUED SECTION -->
+            <div class="form-section">
+              <h3>FIREARMS ISSUED (BASED ON DDO)</h3>
+              <table class="firearms-table" id="firearmsTable">
+                <thead>
+                  <tr>
+                    <th>KIND</th>
+                    <th>MAKE</th>
+                    <th>SN</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><input type="text" name="firearmKind[]" value="N/A"></td>
+                    <td><input type="text" name="firearmMake[]" value="N/A"></td>
+                    <td><input type="text" name="firearmSN[]" value="N/A"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-success">Submit</button>
+            </div>
+          </form>
         </div>
-        <input type="file" name="employeeProfile" id="profileImageInput" accept="image/*">
-        <label for="profileImageInput" class="upload-label">Choose Photo</label>
       </div>
-
-      <!-- BASIC INFORMATION -->
-      <div class="form-section">
-        <h3>Basic Information</h3>
-        <div class="form-grid two-column">
-          <label>Family Name:</label>
-          <input type="text" id="approveFamilyName" name="familyName" required>
-
-          <label>First Name:</label>
-          <input type="text" id="approveFirstName" name="firstName" required>
-
-          <label>Middle Name:</label>
-          <input type="text" id="approveMiddleName" name="middleName">
-
-          <label>Tel. Number:</label>
-          <input type="tel" name="telNumber" id="approveTelNumber" placeholder="N/A">
-
-          <label>PSL No.:</label><input type="text" name="pslNo" readonly>
-          <label>S.S.S. No.:</label><input type="text" name="sssNo" readonly>
-          <label>TIN No.:</label><input type="text" name="tinNo" readonly>
-          <label>Cel No.:</label><input type="tel" name="celNo" readonly>
-          <label>Status:</label><input type="text" name="status" disabled>
-          <label>Badge No.:</label><input type="text" name="badgeNo" id="approvedBadgeNo" readonly>
-          <label>Branch:</label>
-          <select name="branch" id="branchSelect" required></select>
-          <label for="shift">Shift:</label>
-          <select name="shift" required></select>
-          <label>Expiry Date:</label><input type="text" name="expiryDate" disabled>
-          <label>Salary:</label><input type="number" name="salary" min="1" disabled>
-          <input type="hidden" name="role" value="employee">
-        </div>
-      </div>
-
-      <!-- PERSONAL DATA -->
-      <div class="form-section">
-        <h3>Personal Data</h3>
-        <div class="form-grid two-column">
-          <label>Email:</label><input type="email" name="email" id="approveEmail" required>
-          <label>Date of Birth:</label><input type="date" name="dateOfBirth" readonly>
-          <label>Present Address:</label><input type="text" name="presentAddress" readonly>
-          <label>Place of Birth:</label><input type="text" name="placeOfBirth" readonly>
-          <label>Previous Address:</label><input type="text" name="prevAddress" readonly>
-          <label>Citizenship:</label><input type="text" name="citizenship" readonly>
-          <label>Complexion:</label><input type="text" name="complexion" placeholder="N/A">
-          <label>Weight (kg):</label><input type="number" name="weight" readonly>
-          <label>Language Spoken:</label><input type="text" name="languageSpoken" readonly>
-          <label>Age:</label><input type="number" name="age" readonly>
-          <label>Height (cm):</label><input type="number" name="height" readonly>
-          <label>Religion:</label><input type="text" name="religion" readonly>
-          <label>Civil Status:</label><input type="text" name="civilStatus" readonly>
-          <label>Color of Hair:</label><input type="text" name="colorOfHair" readonly>
-          <label>Color of Eyes:</label><input type="text" name="colorOfEyes" readonly>
-          <label>Distinguishing Mark:</label><input type="text" name="distinguishingMark" placeholder="N/A">
-          <label>Father's Name:</label><input type="text" name="fatherName" placeholder="N/A">
-          <label>Mother's Name:</label><input type="text" name="motherName" placeholder="N/A">
-          <label>Spouse's Name:</label><input type="text" name="spouseName" placeholder="N/A">
-          <label>Children's Name:</label><input type="text" name="childrenName" placeholder="N/A">
-          <label>Occupation:</label><input type="text" name="occupation" placeholder="N/A">
-        </div>
-
-        <!-- Emergency Contact -->
-        <h4>Person to contact in case of emergency:</h4>
-        <div class="form-grid two-column">
-          <label>Name:</label><input type="text" name="emergencyName" placeholder="N/A">
-          <label>Relationship:</label><input type="text" name="emergencyRelationship" placeholder="N/A">
-          <label>Address:</label><input type="text" name="emergencyAddress" placeholder="N/A">
-          <label>Tel. Number:</label><input type="tel" name="emergencyTel" placeholder="N/A">
-        </div>
-      </div>
-
-      <!-- EDUCATIONAL BACKGROUND -->
-      <div class="form-section">
-        <h3>Educational Background</h3>
-        <table class="education-table" id="educationTable">
-          <thead>
-            <tr>
-              <th>School/University</th>
-              <th>Inclusive Date</th>
-              <th>Degree</th>
-              <th>Date Grad'td</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><input type="text" name="school[]" required readonly value="N/A"></td>
-              <td><input type="text" name="inclusiveDate[]" required readonly value="N/A"></td>
-              <td><input type="text" name="degree[]" required readonly value="N/A"></td>
-              <td><input type="text" name="dateGraduated[]" required readonly value="N/A"></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- FIREARMS ISSUED SECTION -->
-<div class="form-section">
-  <h3>FIREARMS ISSUED (BASED ON DDO)</h3>
-  <table class="firearms-table" id="firearmsTable">
-    <thead>
-      <tr>
-        <th>KIND</th>
-        <th>MAKE</th>
-        <th>SN</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><input type="text" name="firearmKind[]" value="N/A"></td>
-        <td><input type="text" name="firearmMake[]" value="N/A"></td>
-        <td><input type="text" name="firearmSN[]" value="N/A"></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-success">Submit</button>
-      </div>
-    </form>
-  </div>
-</div>
-
 
     </main>
   </div>

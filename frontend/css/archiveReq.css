@@ -631,3 +631,67 @@ aside .sidebar .badge.show {
   background-size: cover;
   background-position: center;
 }
+
+.branch-search-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  overflow: hidden;
+  background: white;
+}
+
+.branch-search-input {
+  padding: 10px 12px;
+  border: none;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: background-color 0.2s ease;
+}
+
+.branch-search-input:focus {
+  background-color: #f5f5f5;
+  border-bottom-color: #007bff;
+}
+
+.branch-search-input::placeholder {
+  color: #999;
+}
+
+.branch-select {
+  padding: 10px 12px;
+  border: none;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  background: white;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.branch-select:focus {
+  background-color: #f5f5f5;
+}
+
+.branch-select option {
+  padding: 8px;
+  background: white;
+  color: #333;
+}
+
+.branch-select option:hover {
+  background: #e3f2fd;
+}
+
+/* For better appearance on hover */
+.branch-search-container:hover {
+  border-color: #999;
+}
+
+.branch-search-container:focus-within {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
