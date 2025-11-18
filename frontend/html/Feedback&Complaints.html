@@ -538,6 +538,9 @@
         <hr>
         <p><strong>Concern:</strong></p>
         <div id="modalConcern" style="background: var(--clr-light); padding: 1rem; border-radius: 8px; margin: 0.5rem 0;"></div>
+        
+        <!-- ✅ NEW: Attachment Display -->
+        <div id="modalAttachment" style="display: none; margin-top: 1.5rem; padding: 1rem; background: #f0f8ff; border-left: 4px solid #007bff; border-radius: 8px;"></div>
       </div>
       <div class="modal-footer">
         <button class="btn-cancel" id="closeFooterBtn">Close</button>
@@ -627,6 +630,10 @@
           <p><strong>Source:</strong> <span id="ticketSourceDisplay"></span></p>
           <p><strong>Rating:</strong> <span id="ticketRatingDisplay"></span></p>
           <p><strong>Date:</strong> <span id="ticketDateDisplay"></span></p>
+          
+          <!-- ✅ NEW: Ticket Attachment Display -->
+          <div id="ticketAttachmentDisplay" style="display: none; margin-top: 1rem; padding: 1rem; background: white; border-radius: 6px; border: 1px solid #ddd;"></div>
+          
           <button class="btn" id="viewFullTicketBtn" style="margin-top: 0.8rem; background: #007bff;">View Full Ticket</button>
         </div>
         

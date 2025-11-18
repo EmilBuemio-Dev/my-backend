@@ -925,24 +925,28 @@
   </div>
 
   <!-- TICKET DETAILS MODAL -->
-  <div id="ticketDetailsModal" class="modal">
-    <div class="modal-content">
-      <button class="close" id="closeTicketDetailsBtn">&times;</button>
-      <h3>Ticket Details</h3>
-      <div class="modal-body">
-        <p><strong>Name:</strong> <span id="ticketModalName"></span></p>
-        <p><strong>Subject:</strong> <span id="ticketModalSubject"></span></p>
-        <p><strong>Source:</strong> <span id="ticketModalSource"></span></p>
-        <p><strong>Status:</strong> <span id="ticketModalStatus" class="status-badge"></span></p>
-        <p><strong>Date:</strong> <span id="ticketModalDate"></span></p>
-        <hr>
-        <p><strong>Concern:</strong></p>
-        <div style="background: var(--clr-light); padding: 1rem; border-radius: 8px;">
-          <p id="ticketModalConcern" style="margin: 0;"></p>
-        </div>
+  <!-- TICKET DETAILS MODAL -->
+<div id="ticketDetailsModal" class="modal">
+  <div class="modal-content">
+    <button class="close" id="closeTicketDetailsBtn">&times;</button>
+    <h3>Ticket Details</h3>
+    <div class="modal-body">
+      <p><strong>Name:</strong> <span id="ticketModalName"></span></p>
+      <p><strong>Subject:</strong> <span id="ticketModalSubject"></span></p>
+      <p><strong>Source:</strong> <span id="ticketModalSource"></span></p>
+      <p><strong>Status:</strong> <span id="ticketModalStatus" class="status-badge"></span></p>
+      <p><strong>Date:</strong> <span id="ticketModalDate"></span></p>
+      <hr>
+      <p><strong>Concern:</strong></p>
+      <div style="background: var(--clr-light); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+        <p id="ticketModalConcern" style="margin: 0;"></p>
       </div>
+      <!-- ✅ NEW: Ticket Attachment Display -->
+      <div id="ticketAttachmentDisplay" style="display: none;"></div>
     </div>
   </div>
+</div>
+</div>
 
   <script src="../js/auth.js"></script>
   <script src="../js/guardduty.js"></script>

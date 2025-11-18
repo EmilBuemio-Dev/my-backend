@@ -120,7 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // ===== SHOW TICKET MODAL =====
+  // ===== SHOW TICKET MODAL (WITH ATTACHMENT) =====
   function showTicketModal(ticket) {
     const ticketModal = document.getElementById("ticketDetailsModal");
     if (!ticketModal) return;
@@ -135,6 +135,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("ticketModalDate").innerText = ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : "Unknown";
     document.getElementById("ticketModalConcern").innerText = ticket.concern || "No concern";
+
+    // ✅ NEW: Display ticket attachment if exists
+    const ticketAttachmentDiv = document.getElementById("ticketAttachmentDisplay");
+    if (ticket.attachment) {
+      const imageUrl = `https://www.mither3security.com${ticket.attachment}`;
+      ticketAttachmentDiv.innerHTML = `
+        <p style="margin-top: 1rem; margin-bottom: 0.5rem;"><strong>📎 Attached Image:</strong></p>
+        <a href="${imageUrl}" target="_blank" style="display: inline-block; cursor: pointer;">
+          <img src="${imageUrl}" 
+               alt="ticket attachment" 
+               style="max-width: 100%; max-height: 250px; border-radius: 8px; object-fit: contain; border: 2px solid #007bff; transition: transform 0.2s ease; cursor: pointer;"
+               onmouseover="this.style.transform='scale(1.05)'"
+               onmouseout="this.style.transform='scale(1)'"
+          >
+        </a>
+        <p style="font-size: 0.85rem; color: #666; margin-top: 0.5rem;">Click image to view full size</p>
+      `;
+      ticketAttachmentDiv.style.display = "block";
+    } else {
+      ticketAttachmentDiv.style.display = "none";
+    }
 
     ticketModal.classList.add("show");
   }

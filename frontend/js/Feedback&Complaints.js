@@ -71,7 +71,7 @@ async function loadTickets() {
   }
 }
 
-// ===== OPEN TICKET MODAL ===== (FIXED WITH CLICKABLE EMPLOYEE)
+// ===== OPEN TICKET MODAL ===== (WITH ATTACHMENT DISPLAY)
 async function openTicketModal(ticketId) {
   try {
     if (!ticketId) {
@@ -123,6 +123,27 @@ async function openTicketModal(ticketId) {
 
     document.getElementById("modalDate").innerText = ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : "Unknown";
     document.getElementById("modalConcern").innerText = ticket.concern || "No concern";
+
+    // ✅ NEW: Display ticket attachment if exists
+    const attachmentDiv = document.getElementById("modalAttachment");
+    if (ticket.attachment) {
+      const imageUrl = `https://www.mither3security.com${ticket.attachment}`;
+      attachmentDiv.innerHTML = `
+        <p><strong>Attachment:</strong></p>
+        <a href="${imageUrl}" target="_blank" style="display: inline-block; cursor: pointer;">
+          <img src="${imageUrl}" 
+               alt="ticket attachment" 
+               style="max-width: 100%; max-height: 300px; border-radius: 8px; object-fit: contain; border: 2px solid #ddd; transition: transform 0.2s ease; cursor: pointer;"
+               onmouseover="this.style.transform='scale(1.05)'"
+               onmouseout="this.style.transform='scale(1)'"
+          >
+        </a>
+        <p style="font-size: 0.85rem; color: #666; margin-top: 0.5rem;">Click image to view full size</p>
+      `;
+      attachmentDiv.style.display = "block";
+    } else {
+      attachmentDiv.style.display = "none";
+    }
 
     const markBtn = document.getElementById("markCompletedBtn");
     if (ticket.status === "Completed") {
@@ -300,7 +321,7 @@ document.getElementById("remarkForm").addEventListener("submit", async (e) => {
   }
 });
 
-// ===== VIEW REMARK MODAL ===== (WITH CLICKABLE EMPLOYEE)
+// ===== VIEW REMARK MODAL ===== (WITH CLICKABLE EMPLOYEE AND TICKET ATTACHMENT)
 async function openRemarkModal(remarkId) {
   try {
     const res = await fetch(`https://www.mither3security.com/remarks/${remarkId}`, {
@@ -342,7 +363,7 @@ async function openRemarkModal(remarkId) {
     document.getElementById("viewRemarkCreatedBy").innerText = remark.createdBy.name || "Unknown";
     document.getElementById("viewRemarkCreatedDate").innerText = createdDate;
 
-    // ===== DISPLAY TICKET DETAILS =====
+    // ===== DISPLAY TICKET DETAILS WITH ATTACHMENT =====
     const ticketSection = document.getElementById("ticketDetailsSection");
     
     if (remark.ticketId) {
@@ -361,6 +382,27 @@ async function openRemarkModal(remarkId) {
           document.getElementById("ticketSourceDisplay").innerText = ticketDetails.creatorRole === "client" ? "Client" : "Employee";
           document.getElementById("ticketRatingDisplay").innerText = ticketDetails.rating || "Not Rated";
           document.getElementById("ticketDateDisplay").innerText = ticketDetails.createdAt ? new Date(ticketDetails.createdAt).toLocaleString() : "Unknown";
+          
+          // ✅ NEW: Display ticket attachment in remark modal
+          const ticketAttachmentDiv = document.getElementById("ticketAttachmentDisplay");
+          if (ticketDetails.attachment) {
+            const imageUrl = `https://www.mither3security.com${ticketDetails.attachment}`;
+            ticketAttachmentDiv.innerHTML = `
+              <p style="margin-top: 1rem;"><strong>📎 Attached Image:</strong></p>
+              <a href="${imageUrl}" target="_blank">
+                <img src="${imageUrl}" 
+                     alt="ticket attachment" 
+                     style="max-width: 100%; max-height: 250px; border-radius: 6px; object-fit: contain; border: 2px solid #007bff; transition: transform 0.2s ease; cursor: pointer;"
+                     onmouseover="this.style.transform='scale(1.05)'"
+                     onmouseout="this.style.transform='scale(1)'"
+                >
+              </a>
+              <p style="font-size: 0.85rem; color: #666; margin-top: 0.5rem;">Click to view full size</p>
+            `;
+            ticketAttachmentDiv.style.display = "block";
+          } else {
+            ticketAttachmentDiv.style.display = "none";
+          }
           
           const viewFullTicketBtn = document.getElementById("viewFullTicketBtn");
           if (viewFullTicketBtn) {
