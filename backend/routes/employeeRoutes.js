@@ -1,10 +1,11 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import multer from "multer";
 import { fileURLToPath } from "url";
 import Employee from "../models/Employee.js";
 import Branch from "../models/Branch.js";
-import upload from "../middleware/upload.js";
+import upload from "../middleware/upload.js"; // ✅ Import from middleware
 import { authMiddleware } from "../middleware/auth.js";
 
 const parseForm = multer().none();
@@ -223,20 +224,27 @@ router.patch(
 
       // Handle uploaded files
       if (req.files && Object.keys(req.files).length > 0) {
+        console.log("📦 Processing uploaded files...");
+        
         const employeeName = (req.body.name || employee.employeeData?.personalData?.name || "unknown")
           .replace(/\s+/g, "_");
         
-        // Build file URLs
+        console.log("   Employee folder name:", employeeName);
+        
+        // Build file URLs - MATCH THE ACTUAL FOLDER STRUCTURE
         const fileUrls = {};
         for (const key of Object.keys(req.files)) {
           const file = req.files[key][0];
-          // Use simple folder structure: /uploads/EmployeeName/filename.pdf
+          // ✅ FIXED: Use exact folder name from upload
           fileUrls[key] = `/uploads/${employeeName}/${file.filename}`;
+          console.log(`   ✅ ${key}: ${fileUrls[key]}`);
         }
 
         // Merge with existing credentials
         const existingCreds = employee.employeeData?.credentials || {};
         employeeData.credentials = { ...existingCreds, ...fileUrls };
+        
+        console.log("   Updated credentials:", employeeData.credentials);
       }
 
       const updateFields = {};
@@ -303,6 +311,8 @@ router.patch(
         { $set: updateFields },
         { new: true, runValidators: true }
       );
+
+      console.log("✅ Employee updated successfully");
 
       res.json({
         message: "Employee updated successfully",

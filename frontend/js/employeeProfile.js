@@ -261,42 +261,81 @@ editBtn.addEventListener("click", async () => {
 
   // Handle credentials fields - add file inputs in edit mode
   Object.keys(credentialsFields).forEach(key => {
-    const span = credentialsFields[key];
-    if (key === "profileImage") return;
+  const span = credentialsFields[key];
+  if (key === "profileImage") return;
 
-    if (isEditing) {
-      // Store current value
-      const currentText = span.textContent;
-      const hasFile = span.querySelector(".view-btn") !== null;
+  if (isEditing) {
+    // Store current button if exists
+    const hasFile = span.querySelector(".view-btn") !== null;
 
-      // Clear and add file input
-      span.innerHTML = "";
-      
-      // Show current file status
-      if (hasFile) {
-        const statusText = document.createElement("span");
-        statusText.textContent = "File exists | ";
-        statusText.style.fontSize = "0.85rem";
-        statusText.style.color = "#4CAF50";
-        span.appendChild(statusText);
-      }
+    // Clear and add file input
+    span.innerHTML = "";
+    
+    // Show current file status
+    if (hasFile) {
+      const statusText = document.createElement("span");
+      statusText.textContent = "Current: ";
+      statusText.style.fontSize = "0.85rem";
+      statusText.style.color = "#666";
+      statusText.style.marginRight = "8px";
+      span.appendChild(statusText);
 
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = ".pdf";
-      input.style.fontSize = "0.85rem";
-      input.dataset.field = key;
-      
-      input.addEventListener("change", (e) => {
-        if (e.target.files && e.target.files[0]) {
-          uploadedFiles[key] = e.target.files[0];
-        }
-      });
+      const fileLabel = document.createElement("span");
+      fileLabel.textContent = "File exists";
+      fileLabel.style.fontSize = "0.85rem";
+      fileLabel.style.color = "#4CAF50";
+      fileLabel.style.fontWeight = "600";
+      fileLabel.style.marginRight = "10px";
+      span.appendChild(fileLabel);
 
-      span.appendChild(input);
-      credentialsFields[key] = span;
+      const separator = document.createElement("span");
+      separator.textContent = " | ";
+      separator.style.color = "#999";
+      separator.style.margin = "0 5px";
+      span.appendChild(separator);
+    } else {
+      const noFileLabel = document.createElement("span");
+      noFileLabel.textContent = "No file | ";
+      noFileLabel.style.fontSize = "0.85rem";
+      noFileLabel.style.color = "#999";
+      noFileLabel.style.marginRight = "8px";
+      span.appendChild(noFileLabel);
     }
-  });
+
+    // Add file input
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".pdf";
+    input.style.fontSize = "0.85rem";
+    input.dataset.field = key;
+    
+    input.addEventListener("change", (e) => {
+      if (e.target.files && e.target.files[0]) {
+        uploadedFiles[key] = e.target.files[0];
+        console.log(`📎 File selected for ${key}:`, e.target.files[0].name);
+        
+        // Show selected file name
+        const fileNameSpan = span.querySelector(".selected-file");
+        if (fileNameSpan) {
+          fileNameSpan.textContent = ` → ${e.target.files[0].name}`;
+        } else {
+          const newFileNameSpan = document.createElement("span");
+          newFileNameSpan.className = "selected-file";
+          newFileNameSpan.style.fontSize = "0.8rem";
+          newFileNameSpan.style.color = "#2196F3";
+          newFileNameSpan.style.marginLeft = "8px";
+          newFileNameSpan.style.fontWeight = "600";
+          newFileNameSpan.textContent = ` → ${e.target.files[0].name}`;
+          span.appendChild(newFileNameSpan);
+        }
+      }
+    });
+
+    span.appendChild(input);
+  } else {
+    
+  }
+});
 
   editBtn.textContent = isEditing ? "SAVE" : "EDIT";
 
@@ -305,7 +344,16 @@ editBtn.addEventListener("click", async () => {
   }
 });
 
+let isSaving = false; // ✅ Prevent double submissions
+
 async function handleSave() {
+  if (isSaving) {
+    console.log("⏳ Already saving, please wait...");
+    return;
+  }
+  
+  isSaving = true;
+  
   try {
     // Use FormData to handle file uploads
     const formData = new FormData();
