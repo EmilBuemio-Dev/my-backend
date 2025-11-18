@@ -31,7 +31,7 @@ const credentialsSchema = new mongoose.Schema({
   neighborhoodInvestigation: { type: String },
   militaryRecord: { type: String },
   profileImage: { type: String }
-}, { _id: true });
+}, { _id: false }); // ✅ CHANGED: Set to false to prevent auto _id generation
 
 // === PERSONAL DATA ===
 const personalDataSchema = new mongoose.Schema({
