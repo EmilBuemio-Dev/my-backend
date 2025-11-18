@@ -1,4 +1,3 @@
-
 const logoutBtn = document.getElementById("logoutBtn");
 if (logoutBtn) {
   logoutBtn.addEventListener("click", (e) => {
@@ -30,8 +29,11 @@ async function parseError(res) {
 function generateClientId() {
   return `C-${Math.floor(100000 + Math.random() * 900000)}`;
 }
-function generatePassword() {
-  return `employee${Math.floor(100000 + Math.random() * 900000)}`;
+
+// ✅ UPDATED: Now accepts badgeNo and extracts digits for password
+function generatePassword(badgeNo) {
+  const cleanBadgeNo = badgeNo ? badgeNo.replace(/[^0-9]/g, "") : Math.floor(100000 + Math.random() * 900000);
+  return `employee${cleanBadgeNo}`;
 }
 
 // ===== Local Cache for Temporary Client IDs =====
@@ -154,28 +156,28 @@ async function loadClients() {
     branchList.innerHTML = clients.length ? "" : `<tr><td colspan="7">No clients available.</td></tr>`;
 
     clients.forEach(client => {
-  const c = client.branchData || {};
-  const name = c.name || "N/A";
-  const branch = c.branch || "N/A";
-  const clientId = client.clientIdNumber || "N/A";
-  const salary = client.salary != null ? client.salary : "N/A";
-  const expDate = client.expirationDate ? new Date(client.expirationDate).toISOString().split("T")[0] : "N/A";
-  const profileImg = client.credentials?.profileImage || "../defaultProfile/Default_pfp.jpg";
+      const c = client.branchData || {};
+      const name = c.name || "N/A";
+      const branch = c.branch || "N/A";
+      const clientId = client.clientIdNumber || "N/A";
+      const salary = client.salary != null ? client.salary : "N/A";
+      const expDate = client.expirationDate ? new Date(client.expirationDate).toISOString().split("T")[0] : "N/A";
+      const profileImg = client.credentials?.profileImage || "../defaultProfile/Default_pfp.jpg";
 
-  const row = document.createElement("tr");
-  row.setAttribute("data-id", client._id);
-  row.innerHTML = `
-    <td><img src="../defaultProfile/Default_pfp.jpg" class="profile-circle"></td>
-    <td>${name}</td>
-    <td>${branch}</td>
-    <td class="salary-cell">${salary}</td>
-    <td class="exp-cell">${expDate}</td>
-    <td>${clientId}</td>
-    <td class="action-cell"><button class="view-btn">View</button></td>
-  `;
-  row.querySelector(".view-btn").onclick = () => showClientProfile(client);
-  branchList.appendChild(row);
-});
+      const row = document.createElement("tr");
+      row.setAttribute("data-id", client._id);
+      row.innerHTML = `
+        <td><img src="../defaultProfile/Default_pfp.jpg" class="profile-circle"></td>
+        <td>${name}</td>
+        <td>${branch}</td>
+        <td class="salary-cell">${salary}</td>
+        <td class="exp-cell">${expDate}</td>
+        <td>${clientId}</td>
+        <td class="action-cell"><button class="view-btn">View</button></td>
+      `;
+      row.querySelector(".view-btn").onclick = () => showClientProfile(client);
+      branchList.appendChild(row);
+    });
 
   } catch (err) {
     console.error(err);
@@ -214,7 +216,6 @@ function showClientProfile(client) {
     btn.onclick = () => window.open(btn.getAttribute("data-url"), "_blank");
   });
 }
-
 
 document.getElementById("closeClientModal")?.addEventListener("click", () => {
   document.getElementById("clientProfileModal").classList.remove("show");
@@ -293,25 +294,24 @@ function renderAccountDetails(acc) {
       }
     }
   } else if (acc.role === "client") {
-  const c = acc.clientData || acc.branchData || {};
-  const guardShift = acc.guardShift || c.guardShift || { day: "N/A", night: "N/A" };
+    const c = acc.clientData || acc.branchData || {};
+    const guardShift = acc.guardShift || c.guardShift || { day: "N/A", night: "N/A" };
 
-  html += `<h4>Client Details:</h4>`;
-  html += `<p><strong>Name:</strong> ${c.name || "N/A"}</p>`;
-  html += `<p><strong>Branch:</strong> ${c.branch || "N/A"}</p>`;
-  html += `<p><strong>Client ID:</strong> ${acc.clientIdNumber || "N/A"}</p>`;
-  html += `<p><strong>Email:</strong> ${c.email || "N/A"}</p>`;
+    html += `<h4>Client Details:</h4>`;
+    html += `<p><strong>Name:</strong> ${c.name || "N/A"}</p>`;
+    html += `<p><strong>Branch:</strong> ${c.branch || "N/A"}</p>`;
+    html += `<p><strong>Client ID:</strong> ${acc.clientIdNumber || "N/A"}</p>`;
+    html += `<p><strong>Email:</strong> ${c.email || "N/A"}</p>`;
 
-  html += `<h4>Contract:</h4>`;
-  html += c.contract
-    ? `<button class="view-file-btn" data-url="${c.contract}">View Contract</button>`
-    : "N/A";
+    html += `<h4>Contract:</h4>`;
+    html += c.contract
+      ? `<button class="view-file-btn" data-url="${c.contract}">View Contract</button>`
+      : "N/A";
 
-  html += `<h4>Guard Shift:</h4>`;
-  html += `<p><strong>Day Shift:</strong> ${guardShift.day || "N/A"}</p>`;
-  html += `<p><strong>Night Shift:</strong> ${guardShift.night || "N/A"}</p>`;
-}
-
+    html += `<h4>Guard Shift:</h4>`;
+    html += `<p><strong>Day Shift:</strong> ${guardShift.day || "N/A"}</p>`;
+    html += `<p><strong>Night Shift:</strong> ${guardShift.night || "N/A"}</p>`;
+  }
 
   detailsContainer.innerHTML = html;
   viewModal.classList.add("show");
@@ -433,7 +433,7 @@ async function loadEmployees() {
           setCachedClientId(acc._id, clientId);
         }
         acc.clientIdNumber = clientId;
-        badgeNo = clientId; // Display client ID in place of badgeNo
+        badgeNo = clientId;
       }
 
       const row = document.createElement("tr");
@@ -448,307 +448,187 @@ async function loadEmployees() {
       // ===== View Button =====
       row.querySelector(".view-btn").onclick = () => renderAccountDetails(acc);
 
-// ===== CLEAN DATA HELPER =====
-function cleanEmployeeData(empData) {
-  const cleaned = JSON.parse(JSON.stringify(empData)); // Deep copy
-  
-  // Clean basic information
-  if (cleaned.basicInformation) {
-    // Ensure expiryDate is null or valid Date
-    if (cleaned.basicInformation.expiryDate === "N/A" || 
-        cleaned.basicInformation.expiryDate === "" ||
-        !cleaned.basicInformation.expiryDate) {
-      cleaned.basicInformation.expiryDate = null;
-    }
-    // Ensure status is valid enum
-    if (!["Active", "Expired", "Pending"].includes(cleaned.basicInformation.status)) {
-      cleaned.basicInformation.status = "Active";
-    }
-  }
-  
-  // Clean personal data
-  if (cleaned.personalData) {
-    if (cleaned.personalData.dateOfBirth === "N/A" || 
-        cleaned.personalData.dateOfBirth === "") {
-      cleaned.personalData.dateOfBirth = null;
-    }
-  }
-  
-  // Clean educational background
-  if (Array.isArray(cleaned.educationalBackground)) {
-    cleaned.educationalBackground = cleaned.educationalBackground.map(edu => ({
-      ...edu,
-      inclusiveDate: edu.inclusiveDate === "N/A" || edu.inclusiveDate === "" ? null : edu.inclusiveDate,
-      dateGraduated: edu.dateGraduated === "N/A" || edu.dateGraduated === "" ? null : edu.dateGraduated,
-    }));
-  }
-  
-  return cleaned;
-}
+      // ===== APPROVE BUTTON LOGIC =====
+      row.querySelector(".approve-btn").onclick = async () => {
+        try {
+          const token = localStorage.getItem("token")?.trim();
+          if (!token) return alert("No admin token found.");
 
-// ===== IN APPROVE BUTTON LOGIC - BEFORE SENDING TO API =====
-row.querySelector(".approve-btn").onclick = async () => {
-  try {
-    const token = localStorage.getItem("token")?.trim();
-    if (!token) return alert("No admin token found.");
+          const accountRes = await fetch(`https://www.mither3security.com/accounts/${acc._id}`);
+          if (!accountRes.ok) throw new Error(await parseError(accountRes));
+          const freshAccount = await accountRes.json();
 
-    const accountRes = await fetch(`https://www.mither3security.com/accounts/${acc._id}`);
-    if (!accountRes.ok) throw new Error(await parseError(accountRes));
-    const freshAccount = await accountRes.json();
+          // ===== EMPLOYEE APPROVAL =====
+          if (freshAccount.role === "employee") {
+            const empData = freshAccount.employeeData || {};
+            const personal = empData.personalData || {};
+            const basic = empData.basicInformation || {};
+            const education = Array.isArray(empData.educationalBackground) ? empData.educationalBackground : [];
+            const credentials = empData.credentials || {};
+            const firearmsIssued = Array.isArray(empData.firearmsIssued) ? empData.firearmsIssued : [];
 
-    // ===== EMPLOYEE APPROVAL =====
-    if (freshAccount.role === "employee") {
-      const empData = freshAccount.employeeData || {};
-      const personal = empData.personalData || {};
-      const basic = empData.basicInformation || {};
-      const education = Array.isArray(empData.educationalBackground) ? empData.educationalBackground : [];
-      const credentials = empData.credentials || {};
-      const firearmsIssued = Array.isArray(empData.firearmsIssued) ? empData.firearmsIssued : [];
+            const fullName = [personal.familyName, personal.firstName, personal.middleName?.charAt(0)]
+              .filter(Boolean).join(" ").trim();
+            const email = personal.email?.trim();
+            const badgeNo = basic.badgeNo || null;
+            const branch = basic.branch?.trim();
 
-      const fullName = [personal.familyName, personal.firstName, personal.middleName?.charAt(0)]
-        .filter(Boolean).join(" ").trim();
-      const email = personal.email?.trim();
-      const badgeNo = basic.badgeNo || null;
-      const branch = basic.branch?.trim();
+            // ✅ PASS BADGE NUMBER TO PASSWORD GENERATOR
+            const password = generatePassword(badgeNo);
+            showPasswordModal(fullName, password);
 
-      if (!branch || branch === "toBeSet" || branch === "") {
-        alert("⚠️ Branch field is not set. Employee will be created with 'Pending' status. Please assign a branch later.");
-        
-        const password = generatePassword();
-        showPasswordModal(fullName, password);
+            if (!email || email.trim() === "") {
+              alert("This employee has no email address. Please assign a unique email before approving.");
+              return;
+            }
 
-        if (!email || email.trim() === "") {
-          alert("This employee has no email address. Please assign a unique email before approving.");
-          return;
-        }
+            const empCheckRes = await fetch(`https://www.mither3security.com/employees?email=${email}`);
+            const existingEmp = await empCheckRes.json();
+            let employeeId = null;
 
-        const empCheckRes = await fetch(`https://www.mither3security.com/employees?email=${email}`);
-        const existingEmp = await empCheckRes.json();
-        let employeeId = null;
+            if (email && existingEmp.length === 1) {
+              employeeId = existingEmp[0]._id;
+            } else {
+              const cleanBasicInfo = { ...basic };
+              cleanBasicInfo.status = branch && branch !== "toBeSet" ? "Active" : "Pending";
+              cleanBasicInfo.expiryDate = null;
+              
+              const cleanPersonalData = { ...personal };
+              cleanPersonalData.dateOfBirth = null;
 
-        if (email && existingEmp.length === 1) {
-          employeeId = existingEmp[0]._id;
-        } else {
-          // ✅ CLEAN THE DATA BEFORE SENDING
-          const cleanBasicInfo = { ...basic };
-          cleanBasicInfo.status = "Pending";
-          cleanBasicInfo.expiryDate = null; // Explicitly set to null, not "N/A"
-          
-          const cleanPersonalData = { ...personal };
-          cleanPersonalData.dateOfBirth = null; // Explicitly set to null
+              const empRes = await fetch("https://www.mither3security.com/employees", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+                body: JSON.stringify({
+                  role: "employee",
+                  employeeData: {
+                    basicInformation: cleanBasicInfo,
+                    personalData: cleanPersonalData,
+                    educationalBackground: education,
+                    credentials,
+                    firearmsIssued,
+                  },
+                }),
+              });
+              if (!empRes.ok) throw new Error(await parseError(empRes));
+              const savedEmp = await empRes.json();
+              employeeId = savedEmp.employee._id;
+            }
 
-          const empRes = await fetch("https://www.mither3security.com/employees", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-            body: JSON.stringify({
-              role: "employee",
-              employeeData: {
-                basicInformation: cleanBasicInfo,
-                personalData: cleanPersonalData,
-                educationalBackground: education,
-                credentials,
-                firearmsIssued,
-              },
-            }),
-          });
-          if (!empRes.ok) throw new Error(await parseError(empRes));
-          const savedEmp = await empRes.json();
-          employeeId = savedEmp.employee._id;
-        }
+            const userPayload = { 
+              name: fullName, 
+              email, 
+              password, 
+              role: "employee", 
+              status: branch && branch !== "toBeSet" ? "Active" : "Pending", 
+              badgeNumber: badgeNo, 
+              employeeId 
+            };
+            const registerRes = await fetch("https://www.mither3security.com/api/users/register", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+              body: JSON.stringify(userPayload),
+            });
+            if (!registerRes.ok) throw new Error(await parseError(registerRes));
 
-        const userPayload = { 
-          name: fullName, 
-          email, 
-          password, 
-          role: "employee", 
-          status: "Pending", 
-          badgeNumber: badgeNo, 
-          employeeId 
-        };
-        const registerRes = await fetch("https://www.mither3security.com/api/users/register", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-          body: JSON.stringify(userPayload),
-        });
-        if (!registerRes.ok) throw new Error(await parseError(registerRes));
+            if (email) {
+              await fetch("https://www.mither3security.com/api/email/send", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  to: email,
+                  subject: "Your Account Has Been Approved - Mither3 Security",
+                  html: `<p>Hi ${fullName},</p><p>Your account has been approved. Temporary password: <b>${password}</b></p>`,
+                }),
+              });
+            }
 
-        if (email) {
-          await fetch("https://www.mither3security.com/api/email/send", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              to: email,
-              subject: "Your Account Has Been Approved - Mither3 Security",
-              html: `<p>Hi ${fullName},</p><p>Your account is approved but pending branch assignment. Temporary password: <b>${password}</b></p>`,
-            }),
-          });
-        }
+            if (acc._id) {
+              await fetch(`https://www.mither3security.com/accounts/${acc._id}`, { method: "DELETE" });
+            }
 
-        if (acc._id) {
-          await fetch(`https://www.mither3security.com/accounts/${acc._id}`, { method: "DELETE" });
-        }
+            alert(`✅ Employee ${fullName} approved successfully.`);
+          } 
+          // ===== CLIENT APPROVAL =====
+          else if (freshAccount.role === "client") {
+            const c = freshAccount.clientData || freshAccount.branchData || {};
+            const clientName = c.name || freshAccount.name || "Unnamed Client";
+            const clientBranch = c.branch || "Unknown Branch";
 
-        alert(`✅ Employee ${fullName} approved with Pending status.`);
-      } 
-      // ===== BRANCH IS ASSIGNED =====
-      else {
-        const password = generatePassword();
-        showPasswordModal(fullName, password);
+            let clientIdNumber = freshAccount.clientIdNumber || getCachedClientId(acc._id);
+            if (!clientIdNumber) {
+              clientIdNumber = generateClientId();
+              setCachedClientId(acc._id, clientIdNumber);
+            }
 
-        if (!email || email.trim() === "") {
-          alert("This employee has no email address. Please assign a unique email before approving.");
-          return;
-        }
+            // ✅ GENERATE CLIENT PASSWORD (NO BADGE NUMBER, SO USES RANDOM)
+            const clientPassword = generatePassword();
 
-        const empCheckRes = await fetch(`https://www.mither3security.com/employees?email=${email}`);
-        const existingEmp = await empCheckRes.json();
-        let employeeId = null;
+            const clientPayload = {
+              role: "client",
+              clientIdNumber,
+              salary: null,
+              expirationDate: null,
+              contract: c.contract || "",
+              credentials: c.credentials || {},
+              guardShift: c.guardShift || { day: "N/A", night: "N/A" },
+              branchData: {
+                name: clientName,
+                email: c.email || "",
+                branch: clientBranch,
+                password: clientPassword,
+              }
+            };
 
-        if (email && existingEmp.length === 1) {
-          employeeId = existingEmp[0]._id;
-        } else {
-          // ✅ CLEAN THE DATA BEFORE SENDING
-          const cleanBasicInfo = { ...basic };
-          cleanBasicInfo.status = "Active";
-          cleanBasicInfo.expiryDate = null; // Explicitly set to null
-          
-          const cleanPersonalData = { ...personal };
-          cleanPersonalData.dateOfBirth = null; // Explicitly set to null
+            const branchRes = await fetch("https://www.mither3security.com/api/branches", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(clientPayload),
+            });
+            if (!branchRes.ok) throw new Error(await parseError(branchRes));
 
-          const empRes = await fetch("https://www.mither3security.com/employees", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-            body: JSON.stringify({
-              role: "employee",
-              employeeData: { 
-                basicInformation: cleanBasicInfo, 
-                personalData: cleanPersonalData, 
-                educationalBackground: education, 
-                credentials, 
-                firearmsIssued 
-              },
-            }),
-          });
-          if (!empRes.ok) throw new Error(await parseError(empRes));
-          const savedEmp = await empRes.json();
-          employeeId = savedEmp.employee._id;
-        }
+            const userPayload = {
+              name: clientName,
+              email: c.email || "",
+              password: clientPassword,
+              role: "client",
+              clientIdNumber,
+              branch: clientBranch,
+            };
 
-        const userPayload = { 
-          name: fullName, 
-          email, 
-          password, 
-          role: "employee", 
-          status: "Active", 
-          badgeNumber: badgeNo, 
-          employeeId 
-        };
-        const registerRes = await fetch("https://www.mither3security.com/api/users/register", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-          body: JSON.stringify(userPayload),
-        });
-        if (!registerRes.ok) throw new Error(await parseError(registerRes));
+            await fetch("https://www.mither3security.com/api/users/register", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+              body: JSON.stringify(userPayload),
+            });
 
-        if (email) {
-          await fetch("https://www.mither3security.com/api/email/send", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              to: email,
-              subject: "Your Account Has Been Approved - Mither3 Security",
-              html: `<p>Hi ${fullName},</p><p>Your account is approved. Temporary password: <b>${password}</b></p>`,
-            }),
-          });
-        }
+            removeCachedClientId(acc._id);
+            alert(`✅ Client ${clientName} approved successfully.`);
 
-        if (acc._id) {
-          await fetch(`https://www.mither3security.com/accounts/${acc._id}`, { method: "DELETE" });
-        }
+            if (acc._id) {
+              await fetch(`https://www.mither3security.com/accounts/${acc._id}`, { method: "DELETE" });
+            }
 
-        alert(`✅ Employee ${fullName} approved and linked successfully.`);
-      }
-    } 
-    // ===== CLIENT APPROVAL =====
-    else if (freshAccount.role === "client") {
-      const c = freshAccount.clientData || freshAccount.branchData || {};
-      const clientName = c.name || freshAccount.name || "Unnamed Client";
-      const clientBranch = c.branch || "Unknown Branch";
+            loadEmployees();
+            loadClients();
+          }
 
-      let clientIdNumber = freshAccount.clientIdNumber || getCachedClientId(acc._id);
-      if (!clientIdNumber) {
-        clientIdNumber = generateClientId();
-        setCachedClientId(acc._id, clientIdNumber);
-      }
+          loadEmployees();
+          loadClients();
 
-      const clientPayload = {
-        role: "client",
-        clientIdNumber,
-        salary: null,
-        expirationDate: null,
-        contract: c.contract || "",
-        credentials: c.credentials || {},
-        guardShift: c.guardShift || { day: "N/A", night: "N/A" },
-        branchData: {
-          name: clientName,
-          email: c.email || "",
-          branch: clientBranch,
-          password: c.password || "",
+        } catch (err) {
+          console.error(err);
+          alert("Failed to approve account: " + err.message);
         }
       };
-
-      const branchRes = await fetch("https://www.mither3security.com/api/branches", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(clientPayload),
-      });
-      if (!branchRes.ok) throw new Error(await parseError(branchRes));
-
-      const userPayload = {
-        name: clientName,
-        email: c.email || "",
-        password: c.password || generatePassword(),
-        role: "client",
-        clientIdNumber,
-        branch: clientBranch,
-      };
-
-      await fetch("https://www.mither3security.com/api/users/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-        body: JSON.stringify(userPayload),
-      });
-
-      removeCachedClientId(acc._id);
-      alert(`✅ Client ${clientName} approved successfully.`);
-
-      if (acc._id) {
-        await fetch(`https://www.mither3security.com/accounts/${acc._id}`, { method: "DELETE" });
-      }
-
-      loadEmployees();
-      loadClients();
-    }
-
-    loadEmployees();
-    loadClients();
-
-  } catch (err) {
-    console.error(err);
-    alert("Failed to approve account: " + err.message);
-  }
-};
-
-
 
       employeeTableBody.appendChild(row);
     });
-} catch (err) {
+  } catch (err) {
     console.error(err);
-    alert("Failed to approve employee: " + err.message);
+    alert("Failed to load employees: " + err.message);
   }
-};
-
+}
 
 document.getElementById("closeViewModal")?.addEventListener("click", () =>
   viewModal.classList.remove("show")
@@ -767,153 +647,149 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
- // ===== Requirement & Branch Modal =====
-// ===== Requirement & Branch Modal =====
-const createRequirementBtn = document.getElementById("createRequirementBtn");
-const branchSelectionModal = document.getElementById("branchSelectionModal");
-const closeBranchModal = document.getElementById("closeBranchModal");
-const addRequirementBtn = document.getElementById("addRequirementBtn");
+  // ===== Requirement & Branch Modal =====
+  const createRequirementBtn = document.getElementById("createRequirementBtn");
+  const branchSelectionModal = document.getElementById("branchSelectionModal");
+  const closeBranchModal = document.getElementById("closeBranchModal");
+  const addRequirementBtn = document.getElementById("addRequirementBtn");
 
-const requirementModal = document.getElementById("requirementModal");
-const closeRequirementModal = document.getElementById("closeRequirementModal");
-const reqBranchSelect = document.getElementById("reqBranch");
-const reqClientName = document.getElementById("reqClientName");
-const reqSalary = document.getElementById("reqSalary");
-const requirementForm = document.getElementById("requirementForm");
+  const requirementModal = document.getElementById("requirementModal");
+  const closeRequirementModal = document.getElementById("closeRequirementModal");
+  const reqBranchSelect = document.getElementById("reqBranch");
+  const reqClientName = document.getElementById("reqClientName");
+  const reqSalary = document.getElementById("reqSalary");
+  const requirementForm = document.getElementById("requirementForm");
 
-// ===== Show Branch Selection Modal =====
-createRequirementBtn?.addEventListener("click", () => {
-  loadRequirements();
-  branchSelectionModal.classList.add("show");
-});
+  // ===== Show Branch Selection Modal =====
+  createRequirementBtn?.addEventListener("click", () => {
+    loadRequirements();
+    branchSelectionModal.classList.add("show");
+  });
 
-// ===== Close Branch Selection Modal =====
-closeBranchModal?.addEventListener("click", () => {
-  branchSelectionModal.classList.remove("show");
-});
+  // ===== Close Branch Selection Modal =====
+  closeBranchModal?.addEventListener("click", () => {
+    branchSelectionModal.classList.remove("show");
+  });
 
-branchSelectionModal?.addEventListener("click", e => {
-  if (e.target.id === "branchSelectionModal") branchSelectionModal.classList.remove("show");
-});
+  branchSelectionModal?.addEventListener("click", e => {
+    if (e.target.id === "branchSelectionModal") branchSelectionModal.classList.remove("show");
+  });
 
-// ===== Close Requirement Modal =====
-closeRequirementModal?.addEventListener("click", () => {
-  requirementModal.classList.remove("show");
-});
-
-requirementModal?.addEventListener("click", e => {
-  if (e.target.id === "requirementModal") requirementModal.classList.remove("show");
-});
-
-// ===== Load Branches for Requirement Modal =====
-async function loadBranchOptions() {
-  try {
-    const res = await fetch("https://www.mither3security.com/api/branches");
-    const branches = await res.json();
-
-    // Reset options with default first
-    reqBranchSelect.innerHTML = '<option value="" disabled selected>-- Select Branch --</option>';
-
-    // Populate branch list
-    branches.forEach(branch => {
-      const option = document.createElement("option");
-      option.value = branch.branchData?.branch || "Unnamed Branch";
-      option.textContent = branch.branchData?.branch || "Unnamed Branch";
-      option.dataset.clientName = branch.branchData?.name || "N/A";
-      option.dataset.salary = branch.salary || "";
-      reqBranchSelect.appendChild(option);
-    });
-  } catch (err) {
-    console.error("Failed to load branches:", err);
-  }
-}
-
-// ===== When a Branch is selected =====
-reqBranchSelect?.addEventListener("change", (e) => {
-  const selected = e.target.options[e.target.selectedIndex];
-  reqClientName.value = selected.dataset.clientName || "";
-  reqSalary.value = selected.dataset.salary || "";
-});
-
-// ===== Open Requirement Modal & Load Branches =====
-addRequirementBtn?.addEventListener("click", async () => {
-  branchSelectionModal.classList.remove("show");
-  requirementModal.classList.add("show");
-  await loadBranchOptions();
-});
-
-// ===== Requirement Form Submission =====
-requirementForm?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const payload = {
-    clientName: reqClientName.value.trim(),
-    branch: reqBranchSelect.value.trim(),
-    salary: parseFloat(reqSalary.value),
-    height: parseFloat(document.getElementById("reqHeight").value),
-    weight: parseFloat(document.getElementById("reqWeight").value),
-  };
-
-  try {
-    const res = await fetch("https://www.mither3security.com/api/requirements", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    if (!res.ok) throw new Error(await parseError(res));
-    alert("Requirement saved successfully!");
+  // ===== Close Requirement Modal =====
+  closeRequirementModal?.addEventListener("click", () => {
     requirementModal.classList.remove("show");
-    requirementForm.reset();
-  } catch (err) {
-    console.error(err);
-    alert("Failed to save requirement: " + err.message);
-  }
-});
+  });
 
-// ===== Render Requirements in Branch Selection Modal =====
-async function loadRequirements() {
-  try {
-    const res = await fetch("https://www.mither3security.com/api/requirements");
-    const data = await res.json();
-    const tbody = document.getElementById("branchTableBody");
-    tbody.innerHTML = "";
+  requirementModal?.addEventListener("click", e => {
+    if (e.target.id === "requirementModal") requirementModal.classList.remove("show");
+  });
 
-    data.forEach(req => {
-      const tr = document.createElement("tr");
-      tr.dataset.id = req._id;
-      tr.innerHTML = `
-        <td>${req.branch}</td>
-        <td>${req.clientName}</td>
-        <td>${req.salary}</td>
-        <td>${req.height}</td>
-        <td>${req.weight}</td>
-        <td><button class="remove-btn">Delete</button></td>
-      `;
-      tbody.appendChild(tr);
-    });
-  } catch (err) {
-    console.error("Failed to load requirements:", err);
-  }
-}
-
-// ===== Event Delegation for Delete Buttons =====
-document.getElementById("branchTableBody").addEventListener("click", async (e) => {
-  if (e.target.classList.contains("remove-btn")) {
-    const tr = e.target.closest("tr");
-    const id = tr.dataset.id;
-    if (!confirm("Are you sure you want to delete this requirement?")) return;
-
+  // ===== Load Branches for Requirement Modal =====
+  async function loadBranchOptions() {
     try {
-      const res = await fetch(`https://www.mither3security.com/api/requirements/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete requirement");
-      alert("Requirement deleted successfully!");
-      loadRequirements();
+      const res = await fetch("https://www.mither3security.com/api/branches");
+      const branches = await res.json();
+
+      reqBranchSelect.innerHTML = '<option value="" disabled selected>-- Select Branch --</option>';
+
+      branches.forEach(branch => {
+        const option = document.createElement("option");
+        option.value = branch.branchData?.branch || "Unnamed Branch";
+        option.textContent = branch.branchData?.branch || "Unnamed Branch";
+        option.dataset.clientName = branch.branchData?.name || "N/A";
+        option.dataset.salary = branch.salary || "";
+        reqBranchSelect.appendChild(option);
+      });
     } catch (err) {
-      console.error(err);
-      alert("Failed to delete requirement: " + err.message);
+      console.error("Failed to load branches:", err);
     }
   }
-});
 
+  // ===== When a Branch is selected =====
+  reqBranchSelect?.addEventListener("change", (e) => {
+    const selected = e.target.options[e.target.selectedIndex];
+    reqClientName.value = selected.dataset.clientName || "";
+    reqSalary.value = selected.dataset.salary || "";
+  });
+
+  // ===== Open Requirement Modal & Load Branches =====
+  addRequirementBtn?.addEventListener("click", async () => {
+    branchSelectionModal.classList.remove("show");
+    requirementModal.classList.add("show");
+    await loadBranchOptions();
+  });
+
+  // ===== Requirement Form Submission =====
+  requirementForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const payload = {
+      clientName: reqClientName.value.trim(),
+      branch: reqBranchSelect.value.trim(),
+      salary: parseFloat(reqSalary.value),
+      height: parseFloat(document.getElementById("reqHeight").value),
+      weight: parseFloat(document.getElementById("reqWeight").value),
+    };
+
+    try {
+      const res = await fetch("https://www.mither3security.com/api/requirements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(await parseError(res));
+      alert("Requirement saved successfully!");
+      requirementModal.classList.remove("show");
+      requirementForm.reset();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save requirement: " + err.message);
+    }
+  });
+
+  // ===== Render Requirements in Branch Selection Modal =====
+  async function loadRequirements() {
+    try {
+      const res = await fetch("https://www.mither3security.com/api/requirements");
+      const data = await res.json();
+      const tbody = document.getElementById("branchTableBody");
+      tbody.innerHTML = "";
+
+      data.forEach(req => {
+        const tr = document.createElement("tr");
+        tr.dataset.id = req._id;
+        tr.innerHTML = `
+          <td>${req.branch}</td>
+          <td>${req.clientName}</td>
+          <td>${req.salary}</td>
+          <td>${req.height}</td>
+          <td>${req.weight}</td>
+          <td><button class="remove-btn">Delete</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch (err) {
+      console.error("Failed to load requirements:", err);
+    }
+  }
+
+  // ===== Event Delegation for Delete Buttons =====
+  document.getElementById("branchTableBody")?.addEventListener("click", async (e) => {
+    if (e.target.classList.contains("remove-btn")) {
+      const tr = e.target.closest("tr");
+      const id = tr.dataset.id;
+      if (!confirm("Are you sure you want to delete this requirement?")) return;
+
+      try {
+        const res = await fetch(`https://www.mither3security.com/api/requirements/${id}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Failed to delete requirement");
+        alert("Requirement deleted successfully!");
+        loadRequirements();
+      } catch (err) {
+        console.error(err);
+        alert("Failed to delete requirement: " + err.message);
+      }
+    }
+  });
 
   loadEmployees();
   loadClients();

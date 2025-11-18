@@ -19,14 +19,12 @@ function safeParse(str, fallback) {
   return str ?? fallback;
 }
 
-// ✅ Helper: Check if branch is valid
 function isValidBranch(branch) {
   if (!branch) return false;
   const invalidValues = ["toBeSet", "N/A", "", null, undefined];
   return !invalidValues.includes(branch);
 }
 
-/* CREATE ACCOUNT (employee or client) */
 router.post(
   "/",
   upload.fields([
@@ -99,7 +97,6 @@ router.post(
   }
 );
 
-/* ✅ APPROVE ARCHIVE -> MOVE TO ACCOUNT */
 router.post("/approve/:archiveId", upload.single("employeeProfile"), async (req, res) => {
   try {
     const { archiveId } = req.params;

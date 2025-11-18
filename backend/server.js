@@ -38,16 +38,6 @@ console.log("JWT_SECRET:", process.env.JWT_SECRET ? "✅ Set" : "❌ Not Set");
 console.log("RESEND_API_KEY:", process.env.RESEND_API_KEY ? "✅ Set" : "❌ NOT SET - EMAIL WON'T WORK!");
 console.log("=============================================\n");
 
-// ✅ Verify Resend is initialized
-if (process.env.RESEND_API_KEY) {
-  console.log("✅ Resend email service is ready");
-  console.log("📧 Using Resend API Key (first 10 chars):", process.env.RESEND_API_KEY.substring(0, 10) + "...");
-} else {
-  console.error("❌ RESEND_API_KEY not set in environment - EMAIL FUNCTIONALITY WILL NOT WORK");
-  console.error("📝 Add this to your .env file:");
-  console.error("   RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxx");
-}
-
 // ===== Middleware =====
 app.use(
   cors({
@@ -91,8 +81,6 @@ if (fs.existsSync(publicDir)) {
 } else {
   console.warn("⚠ Public directory not found:", publicDir);
 }
-
-console.log("==============================================\n");
 
 // ===== Routes =====
 app.use("/archive", archiveRoutes);
@@ -144,7 +132,6 @@ app.get("/:page", (req, res) => {
     return res.status(404).json({ error: "Not Found" });
   }
   
-  // Check if file exists with .html extension
   let htmlFile = page.endsWith(".html") ? page : `${page}.html`;
   const filePath = path.join(htmlDir, htmlFile);
   
@@ -174,8 +161,4 @@ app.use((req, res) => {
 
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
-  console.log(`🌐 Access at: http://localhost:${PORT}`);
-  console.log(`📊 Dashboard at: http://localhost:${PORT}/dashboard`);
-  console.log(`👤 Employee Dashboard at: http://localhost:${PORT}/employeedashboard`);
-  console.log(`💡 Tip: Any .html file in /frontend/html can be accessed by name (e.g., /archiveReq, /account.html)`);
 });

@@ -6,7 +6,6 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ===== Helper to ensure upload folder exists =====
 function ensureUploadPath(folder = "general") {
   const dest = path.join(__dirname, "../../uploads", folder);
   if (!fs.existsSync(dest)) {
@@ -16,7 +15,7 @@ function ensureUploadPath(folder = "general") {
   return dest;
 }
 
-// ===== File naming map for credentials =====
+
 const credentialFiles = {
   barangayClearance: "barangay.pdf",
   policeClearance: "police.pdf",
@@ -56,7 +55,6 @@ const storage = multer.diskStorage({
     else if (file.fieldname === "checkinImage") {
       folder = "attendance";
     }
-    // ✅ CLIENT CONTRACT UPLOAD - Use client name as folder
     else if (file.fieldname === "contract") {
       if (req.body.name) {
         const clientName = req.body.name.trim().replace(/[,\s]+/g, "_");
@@ -167,7 +165,6 @@ const fileFilter = (req, file, cb) => {
     return cb(null, true);
   }
 
-  // Allow DOC/DOCX for contracts
   if (file.fieldname === "contract" && 
       (file.mimetype === "application/msword" || 
        file.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document")) {
@@ -179,7 +176,6 @@ const fileFilter = (req, file, cb) => {
     return cb(null, true);
   }
 
-  // Reject other file types
   console.log("❌ Rejected file type:", file.mimetype);
   cb(new Error(`File type not allowed: ${file.mimetype}`));
 };

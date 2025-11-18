@@ -416,7 +416,6 @@ editBtn.addEventListener("click", async () => {
         span.appendChild(noFileLabel);
       }
 
-      // Add file input
       const input = document.createElement("input");
       input.type = "file";
       input.accept = ".pdf";

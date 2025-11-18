@@ -12,7 +12,6 @@ export const authMiddleware = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Initialize req.user with full token payload
     req.user = {
       id: decoded.id,
       email: decoded.email || null,
@@ -22,7 +21,6 @@ export const authMiddleware = async (req, res, next) => {
       clientIdNumber: decoded.clientIdNumber || null,
     };
 
-    // ===== Fallback if some info missing =====
     if (!req.user.email || !req.user.name) {
       let foundUser = await User.findById(decoded.id).select("email name role branch");
       if (!foundUser) {

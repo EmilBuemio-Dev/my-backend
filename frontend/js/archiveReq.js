@@ -146,9 +146,10 @@ function renderArchives() {
   });
 }
 
-// === LOAD BRANCHES ===
+// === LOAD BRANCHES WITH SEARCH ===
 async function loadBranches(preselectedBranch = "") {
   const select = document.getElementById("branchSelect");
+  const searchInput = document.getElementById("branchSearchInput");
   const expiryInput = document.querySelector('input[name="expiryDate"]');
   const salaryInput = document.querySelector('input[name="salary"]');
   const shiftSelect = document.querySelector('select[name="shift"]');
@@ -175,6 +176,29 @@ async function loadBranches(preselectedBranch = "") {
       if (branchName === preselectedBranch) option.selected = true;
       select.appendChild(option);
     });
+
+    // ✅ ADD SEARCH FUNCTIONALITY TO BRANCH DROPDOWN
+    if (searchInput) {
+      searchInput.addEventListener("input", (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const options = select.querySelectorAll("option");
+        
+        options.forEach(option => {
+          // Always show the first two options (Select Branch, To be set)
+          if (option.value === "" || option.value === "toBeSet") {
+            option.style.display = "";
+            return;
+          }
+          
+          // Filter other options based on search term
+          if (option.textContent.toLowerCase().includes(searchTerm)) {
+            option.style.display = "";
+          } else {
+            option.style.display = "none";
+          }
+        });
+      });
+    }
 
     // Handle branch change
     select.addEventListener("change", () => {

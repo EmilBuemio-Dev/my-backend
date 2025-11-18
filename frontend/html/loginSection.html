@@ -37,7 +37,7 @@
       position: relative;
       overflow-x: hidden;
       background: linear-gradient(135deg, rgba(26, 26, 46, 0.9) 0%, rgba(22, 33, 62, 0.9) 50%, rgba(15, 52, 96, 0.9) 100%),
-                  url('../../image/login-background.jpeg') center/cover no-repeat fixed;
+                  url('../image/login-background.jpeg') center/cover no-repeat fixed;
     }
 
     body::before {
@@ -437,13 +437,67 @@
       color: var(--clr-success);
     }
 
-    /* Dynamic input visibility */
     .dynamic-input {
       display: none;
     }
 
     .dynamic-input.show {
       display: block;
+    }
+
+    /* Email Validation Tooltip - Right Side */
+    .email-validation-tooltip {
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: white;
+      border-radius: 12px;
+      padding: 1.2rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      max-width: 280px;
+      font-size: 0.9rem;
+      display: none;
+      z-index: 1500;
+      animation: slideInRight 0.3s ease;
+      border-left: 4px solid var(--clr-primary);
+    }
+
+    .email-validation-tooltip.show {
+      display: block;
+    }
+
+    .email-validation-tooltip.error {
+      border-left-color: var(--clr-danger);
+    }
+
+    .email-validation-tooltip.success {
+      border-left-color: var(--clr-success);
+    }
+
+    .email-validation-tooltip p {
+      margin: 0;
+      color: var(--clr-primary);
+      font-weight: 600;
+    }
+
+    .email-validation-tooltip.error p {
+      color: var(--clr-danger);
+    }
+
+    .email-validation-tooltip.success p {
+      color: var(--clr-success);
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateY(-50%) translateX(50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0);
+      }
     }
 
     @media (max-width: 600px) {
@@ -469,6 +523,16 @@
         padding: 0.9rem 1.2rem;
         font-size: 0.95rem;
       }
+
+      .email-validation-tooltip {
+        position: fixed;
+        right: 10px;
+        left: 10px;
+        top: auto;
+        bottom: 20px;
+        transform: none;
+        max-width: none;
+      }
     }
   </style>
 </head>
@@ -480,6 +544,9 @@
     </div>
     <button class="login-btn" id="loginBtn">Log In</button>
   </header>
+
+  <!-- Email Validation Tooltip -->
+  <div class="email-validation-tooltip" id="emailValidationTooltip"></div>
 
   <div class="modal" id="loginModal">
     <div class="modal-content">
@@ -526,7 +593,6 @@
           <h3>User Login</h3>
         </div>
         <form id="loginFormUser">
-          <!-- User Type Selector -->
           <select id="userTypeSelect" required>
             <option value="">Select User Type</option>
             <option value="hr">HR</option>
@@ -536,7 +602,6 @@
 
           <input type="email" id="userEmail" placeholder="Email" required>
           
-          <!-- Dynamic inputs based on user type -->
           <input type="text" id="hrIdNumber" class="dynamic-input" placeholder="HR ID Number" required>
           <input type="text" id="employeeBadgeNumber" class="dynamic-input" placeholder="SSS NR (00-0000000-0)" required maxlength="12">
           <input type="text" id="clientIdNumber" class="dynamic-input" placeholder="Client ID Number" required>
@@ -566,60 +631,31 @@
       <form id="registerForm">
         <div class="form-group">
           <label for="badgeNo">SSS NR (00-0000000-0) <span class="required">*</span></label>
-          <input 
-            type="text" 
-            id="badgeNo" 
-            placeholder="Enter SSS NR (00-0000000-0)" 
-            required 
-            maxlength="12"
-          >
+          <input type="text" id="badgeNo" placeholder="Enter SSS NR (00-0000000-0)" required maxlength="12">
           <div id="badgeNoFeedback" class="feedback"></div>
         </div>
 
         <div class="form-group">
           <label for="familyName">Family Name <span class="required">*</span></label>
-          <input 
-            type="text" 
-            id="familyName" 
-            placeholder="Family Name" 
-            readonly
-          >
+          <input type="text" id="familyName" placeholder="Family Name" readonly>
         </div>
 
         <div class="form-group">
           <label for="firstName">First Name <span class="required">*</span></label>
-          <input 
-            type="text" 
-            id="firstName" 
-            placeholder="First Name" 
-            readonly
-          >
+          <input type="text" id="firstName" placeholder="First Name" readonly>
         </div>
 
         <div class="form-group">
           <label for="middleName">Middle Name</label>
-          <input 
-            type="text" 
-            id="middleName" 
-            placeholder="Middle Name" 
-            readonly
-          >
+          <input type="text" id="middleName" placeholder="Middle Name" readonly>
         </div>
 
         <div class="form-group">
           <label for="registerEmail">Email <span class="required">*</span></label>
-          <input 
-            type="email" 
-            id="registerEmail" 
-            placeholder="Email" 
-            required
-          >
+          <input type="email" id="registerEmail" placeholder="Email" required>
         </div>
 
-        <button type="submit" id="registerSubmitBtn" disabled>
-          Register
-        </button>
-        <div id="registerFormFeedback" class="feedback"></div>
+        <button type="submit" id="registerSubmitBtn" disabled>Register</button>
       </form>
     </div>
   </div>
@@ -634,6 +670,7 @@
         <button type="submit">Update Password</button>
       </form>
       <p id="changePasswordError" class="error"></p>
+      <p id="changePasswordSuccess" class="success"></p>
     </div>
   </div>
 
@@ -668,6 +705,22 @@
   <script>
     const API_URL = "https://www.mither3security.com/api/users";
 
+    // Password validation function
+    function validatePassword(password) {
+      const hasUpperCase = /[A-Z]/.test(password);
+      const hasNumber = /[0-9]/.test(password);
+      const isLengthValid = password.length >= 8;
+      return hasUpperCase && hasNumber && isLengthValid;
+    }
+
+    function getPasswordErrors(password) {
+      const errors = [];
+      if (password.length < 8) errors.push("At least 8 characters");
+      if (!/[A-Z]/.test(password)) errors.push("At least 1 capital letter");
+      if (!/[0-9]/.test(password)) errors.push("At least 1 number");
+      return errors;
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       const loginBtn = document.getElementById("loginBtn");
       const modal = document.getElementById("loginModal");
@@ -677,20 +730,17 @@
       const backBtn = document.getElementById("backBtn");
       const backBtns = document.querySelectorAll(".backBtn");
 
-      // User type selector elements
       const userTypeSelect = document.getElementById("userTypeSelect");
       const hrIdNumberInput = document.getElementById("hrIdNumber");
       const employeeBadgeNumberInput = document.getElementById("employeeBadgeNumber");
       const clientIdNumberInput = document.getElementById("clientIdNumber");
       const registerTextContainer = document.getElementById("registerTextContainer");
 
-      // Open modal
       loginBtn.addEventListener("click", () => {
         modal.classList.add("show");
         showRoleSelection();
       });
 
-      // Close modal
       closeModal.addEventListener("click", () => {
         modal.classList.remove("show");
       });
@@ -699,13 +749,11 @@
         if (e.target === modal) modal.classList.remove("show");
       });
 
-      // Show role selection
       function showRoleSelection() {
         document.querySelectorAll(".login-form").forEach(f => f.classList.remove("show"));
         roleSelection.style.display = "block";
       }
 
-      // Show form for role
       function showForm(role) {
         roleSelection.style.display = "none";
         document.querySelectorAll(".login-form").forEach(f => f.classList.remove("show"));
@@ -713,7 +761,6 @@
         document.getElementById(formId).classList.add("show");
       }
 
-      // Role button listeners
       roleButtons.forEach(btn => {
         btn.addEventListener("click", () => {
           const role = btn.dataset.role;
@@ -721,28 +768,23 @@
         });
       });
 
-      // Back button listeners
       backBtn.addEventListener("click", showRoleSelection);
       backBtns.forEach(btn => {
         btn.addEventListener("click", showRoleSelection);
       });
 
-      // Handle user type selection changes
       userTypeSelect.addEventListener("change", (e) => {
         const userType = e.target.value;
         
-        // Hide all dynamic inputs
         hrIdNumberInput.classList.remove("show");
         employeeBadgeNumberInput.classList.remove("show");
         clientIdNumberInput.classList.remove("show");
         registerTextContainer.style.display = "none";
         
-        // Remove required attribute from all
         hrIdNumberInput.removeAttribute("required");
         employeeBadgeNumberInput.removeAttribute("required");
         clientIdNumberInput.removeAttribute("required");
         
-        // Show relevant input based on user type
         if (userType === "hr") {
           hrIdNumberInput.classList.add("show");
           hrIdNumberInput.setAttribute("required", "required");
@@ -757,7 +799,6 @@
         }
       });
 
-      // Badge number formatting for employee
       [employeeBadgeNumberInput, document.getElementById("badgeNo")].forEach(input => {
         if (input) {
           input.addEventListener("input", function() {
@@ -869,6 +910,7 @@
       const changePasswordModal = document.getElementById("changePasswordModal");
       const changePasswordForm = document.getElementById("changePasswordForm");
       const changePasswordErrorP = document.getElementById("changePasswordError");
+      const changePasswordSuccessP = document.getElementById("changePasswordSuccess");
 
       userGetOtpBtn.addEventListener("click", async () => {
         userErrorP.textContent = "";
@@ -888,7 +930,6 @@
           return;
         }
 
-        // Prepare login payload based on user type
         const loginData = { email, password };
 
         if (userType === "hr") {
@@ -978,18 +1019,15 @@
             return;
           }
 
-          // Verify user type matches
           if (data.role !== userType) {
             userErrorP.textContent = `Invalid credentials for ${userType} login.`;
             return;
           }
 
-          // Store common data
           localStorage.setItem("token", data.token);
           localStorage.setItem("name", data.name);
           localStorage.setItem("role", data.role);
 
-          // Handle based on user type
           if (userType === "employee") {
             localStorage.setItem("employeeId", data.employeeId || "N/A");
 
@@ -1025,6 +1063,7 @@
       changePasswordForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         changePasswordErrorP.textContent = "";
+        changePasswordSuccessP.textContent = "";
         const newPassword = document.getElementById("newPassword").value.trim();
         const confirmPassword = document.getElementById("confirmPassword").value.trim();
 
@@ -1035,6 +1074,12 @@
 
         if (newPassword !== confirmPassword) {
           changePasswordErrorP.textContent = "Passwords do not match!";
+          return;
+        }
+
+        const errors = getPasswordErrors(newPassword);
+        if (errors.length > 0) {
+          changePasswordErrorP.textContent = "Password requirements: " + errors.join(", ");
           return;
         }
 
@@ -1054,7 +1099,7 @@
             return;
           }
 
-          changePasswordErrorP.textContent = "Password updated successfully!";
+          changePasswordSuccessP.textContent = "Password updated successfully!";
           setTimeout(() => {
             changePasswordModal.classList.remove("show");
             window.location.href = "guardduty.html";
@@ -1076,15 +1121,12 @@
       const middleNameInput = document.getElementById("middleName");
       const registerEmailInput = document.getElementById("registerEmail");
       const badgeNoFeedback = document.getElementById("badgeNoFeedback");
-      const registerFormFeedback = document.getElementById("registerFormFeedback");
       const registerSubmitBtn = document.getElementById("registerSubmitBtn");
+      const emailValidationTooltip = document.getElementById("emailValidationTooltip");
 
-      // Badge number blur event - 3-LAYER VALIDATION
       badgeNoInput.addEventListener("blur", async () => {
         badgeNoFeedback.textContent = "";
         badgeNoFeedback.className = "feedback";
-        registerFormFeedback.textContent = "";
-        registerFormFeedback.className = "feedback";
         familyNameInput.value = "";
         firstNameInput.value = "";
         middleNameInput.value = "";
@@ -1101,8 +1143,6 @@
         try {
           console.log("🔍 Starting 3-layer validation for badge number:", badgeNo);
           
-          // LAYER 1: Check if badge number already exists in Register collection
-          console.log("LAYER 1: Checking Register collection for duplicates...");
           const checkDuplicateRes = await fetch(
             `https://www.mither3security.com/api/registers?badgeNo=${encodeURIComponent(badgeNo)}`
           );
@@ -1117,8 +1157,6 @@
           }
           console.log("✅ LAYER 1 PASSED: Badge not in Register collection");
 
-          // LAYER 2: Check if badge number exists in Archive collection
-          console.log("LAYER 2: Checking Archive collection for employee records...");
           const archiveRes = await fetch(
             `https://www.mither3security.com/archive/search?badgeNo=${encodeURIComponent(badgeNo)}`
           );
@@ -1135,7 +1173,6 @@
           }
           console.log("✅ LAYER 2 PASSED: Badge found in Archive");
 
-          // LAYER 3: Badge found in Archive - auto-fill the fields
           console.log("LAYER 3: Badge validation successful, filling employee details...");
           const archive = Array.isArray(archiveData) ? archiveData[0] : archiveData;
           
@@ -1156,13 +1193,13 @@
         }
       });
 
-      // Email blur event - CHECK IF EMAIL EXISTS
+      // Email blur event - CHECK IF EMAIL EXISTS (RIGHT SIDE TOOLTIP)
       registerEmailInput.addEventListener("blur", async () => {
         const email = registerEmailInput.value.trim();
 
+        emailValidationTooltip.classList.remove("show", "error", "success");
+
         if (!email) {
-          registerFormFeedback.textContent = "";
-          registerFormFeedback.className = "feedback";
           return;
         }
 
@@ -1176,24 +1213,23 @@
 
           if (checkEmailRes.ok && Array.isArray(emailData) && emailData.length > 0) {
             console.log("❌ EMAIL VALIDATION FAILED: Email already registered");
-            registerFormFeedback.textContent = "❌ This email is already registered. Please use a different email.";
-            registerFormFeedback.className = "feedback error";
+            emailValidationTooltip.innerHTML = "<p>❌ This email is already registered. Please use a different email.</p>";
+            emailValidationTooltip.classList.add("show", "error");
             registerSubmitBtn.disabled = true;
             return;
           }
 
           console.log("✅ EMAIL VALIDATION PASSED: Email not registered yet");
-          registerFormFeedback.textContent = "✅ Email is available.";
-          registerFormFeedback.className = "feedback success";
+          emailValidationTooltip.innerHTML = "<p>✅ Email is available.</p>";
+          emailValidationTooltip.classList.add("show", "success");
           registerSubmitBtn.disabled = false;
         } catch (err) {
           console.error("Email validation error:", err);
-          registerFormFeedback.textContent = "⚠️ Error validating email. Please try again.";
-          registerFormFeedback.className = "feedback error";
+          emailValidationTooltip.innerHTML = "<p>⚠️ Error validating email. Please try again.</p>";
+          emailValidationTooltip.classList.add("show", "error");
         }
       });
 
-      // Open register modal
       if (userRegisterLink) {
         userRegisterLink.addEventListener("click", (e) => {
           e.preventDefault();
@@ -1205,8 +1241,6 @@
             badgeNoInput.focus();
             badgeNoFeedback.textContent = "";
             badgeNoFeedback.className = "feedback";
-            registerFormFeedback.textContent = "";
-            registerFormFeedback.className = "feedback";
             registerSubmitBtn.disabled = true;
           } else if (userType === "client") {
             clientRegisterModal.classList.add("show");
@@ -1214,25 +1248,23 @@
         });
       }
 
-      // Close register modal
       if (closeRegister) {
         closeRegister.addEventListener("click", () => {
           registerModal.classList.remove("show");
+          emailValidationTooltip.classList.remove("show");
         });
       }
 
       window.addEventListener("click", (e) => {
         if (e.target === registerModal) {
           registerModal.classList.remove("show");
+          emailValidationTooltip.classList.remove("show");
         }
       });
 
-      // Register form submission
       if (registerForm) {
         registerForm.addEventListener("submit", async (e) => {
           e.preventDefault();
-          registerFormFeedback.textContent = "";
-          registerFormFeedback.className = "feedback";
 
           const familyName = familyNameInput.value.trim();
           const firstName = firstNameInput.value.trim();
@@ -1241,15 +1273,13 @@
           const badgeNo = badgeNoInput.value.trim();
 
           if (!familyName || !firstName || !email || !badgeNo) {
-            registerFormFeedback.textContent = "❌ Please fill in all required fields.";
-            registerFormFeedback.className = "feedback error";
+            alert("Please fill in all required fields.");
             return;
           }
 
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           if (!emailRegex.test(email)) {
-            registerFormFeedback.textContent = "❌ Please enter a valid email address.";
-            registerFormFeedback.className = "feedback error";
+            alert("Please enter a valid email address.");
             return;
           }
 
@@ -1287,24 +1317,22 @@
                 }
               }
 
-              registerFormFeedback.textContent = "❌ " + errorMsg;
-              registerFormFeedback.className = "feedback error";
+              alert("❌ " + errorMsg);
               registerSubmitBtn.disabled = true;
               return;
             }
 
-            registerFormFeedback.textContent = "✅ Registration successful! Check your email for account activation details.";
-            registerFormFeedback.className = "feedback success";
+            alert("✅ Registration successful! Check your email for account activation details.");
             registerForm.reset();
             registerSubmitBtn.disabled = true;
             
             setTimeout(() => {
               registerModal.classList.remove("show");
+              emailValidationTooltip.classList.remove("show");
             }, 2000);
           } catch (err) {
             console.error("Register error:", err);
-            registerFormFeedback.textContent = "❌ Server error during registration. Please try again.";
-            registerFormFeedback.className = "feedback error";
+            alert("❌ Server error during registration. Please try again.");
           }
         });
       }

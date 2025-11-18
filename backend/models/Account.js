@@ -108,7 +108,6 @@ function isValidBranch(branch) {
   return !invalidValues.includes(branch);
 }
 
-// ✅ VIRTUAL: Check if account is pending (no valid branch)
 accountSchema.virtual("isPending").get(function () {
   if (this.role !== "employee") return false;
   
