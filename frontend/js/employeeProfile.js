@@ -80,6 +80,8 @@ async function loadEmployeeData() {
     const employee = await res.json();
     const data = employee.employeeData || {};
 
+    console.log("📥 Loaded employee data:", employee);
+
     // Basic Info
     const basic = data.basicInformation || {};
     Object.keys(basicInfoFields).forEach(key => {
@@ -104,82 +106,51 @@ async function loadEmployeeData() {
 
     // Credentials - Display files with view buttons
     const creds = data.credentials || {};
-   Object.keys(credentialsFields).forEach(key => {
-  const span = credentialsFields[key];
-  if (key === "profileImage") return;
-
-  if (isEditing) {
-    // Store current button if exists
-    const hasFile = span.querySelector(".view-btn") !== null;
-
-    // Clear and add file input
-    span.innerHTML = "";
+    console.log("📄 Credentials found:", creds);
     
-    // Show current file status
-    if (hasFile) {
-      const statusText = document.createElement("span");
-      statusText.textContent = "Current: ";
-      statusText.style.fontSize = "0.85rem";
-      statusText.style.color = "#666";
-      statusText.style.marginRight = "8px";
-      span.appendChild(statusText);
-
-      const fileLabel = document.createElement("span");
-      fileLabel.textContent = "File exists";
-      fileLabel.style.fontSize = "0.85rem";
-      fileLabel.style.color = "#4CAF50";
-      fileLabel.style.fontWeight = "600";
-      fileLabel.style.marginRight = "10px";
-      span.appendChild(fileLabel);
-
-      const separator = document.createElement("span");
-      separator.textContent = " | ";
-      separator.style.color = "#999";
-      separator.style.margin = "0 5px";
-      span.appendChild(separator);
-    } else {
-      const noFileLabel = document.createElement("span");
-      noFileLabel.textContent = "No file | ";
-      noFileLabel.style.fontSize = "0.85rem";
-      noFileLabel.style.color = "#999";
-      noFileLabel.style.marginRight = "8px";
-      span.appendChild(noFileLabel);
-    }
-
-    // Add file input
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".pdf";
-    input.style.fontSize = "0.85rem";
-    input.dataset.field = key;
-    
-    input.addEventListener("change", (e) => {
-      if (e.target.files && e.target.files[0]) {
-        uploadedFiles[key] = e.target.files[0];
-        console.log(`📎 File selected for ${key}:`, e.target.files[0].name);
-        
-        // Show selected file name
-        const fileNameSpan = span.querySelector(".selected-file");
-        if (fileNameSpan) {
-          fileNameSpan.textContent = ` → ${e.target.files[0].name}`;
-        } else {
-          const newFileNameSpan = document.createElement("span");
-          newFileNameSpan.className = "selected-file";
-          newFileNameSpan.style.fontSize = "0.8rem";
-          newFileNameSpan.style.color = "#2196F3";
-          newFileNameSpan.style.marginLeft = "8px";
-          newFileNameSpan.style.fontWeight = "600";
-          newFileNameSpan.textContent = ` → ${e.target.files[0].name}`;
-          span.appendChild(newFileNameSpan);
+    Object.keys(credentialsFields).forEach(key => {
+      if (key === "profileImage") {
+        if (creds.profileImage) {
+          employeePhoto.src = `https://www.mither3security.com${creds.profileImage}`;
         }
+        return;
+      }
+
+      const span = credentialsFields[key];
+      span.innerHTML = ""; // Clear existing content
+
+      const fileUrl = creds[key];
+      
+      console.log(`   ${key}:`, fileUrl ? fileUrl : "No file");
+
+      if (fileUrl && fileUrl !== "N/A" && fileUrl !== "") {
+        // Create view button
+        const viewBtn = document.createElement("button");
+        viewBtn.textContent = "View";
+        viewBtn.className = "view-btn";
+        viewBtn.style.padding = "0.4rem 0.8rem";
+        viewBtn.style.background = "#2196F3";
+        viewBtn.style.color = "white";
+        viewBtn.style.border = "none";
+        viewBtn.style.borderRadius = "4px";
+        viewBtn.style.cursor = "pointer";
+        viewBtn.style.fontSize = "0.85rem";
+        
+        viewBtn.addEventListener("click", () => {
+          const fullUrl = fileUrl.startsWith('http') 
+            ? fileUrl 
+            : `https://www.mither3security.com${fileUrl}`;
+          console.log(`🔗 Opening file: ${fullUrl}`);
+          window.open(fullUrl, "_blank");
+        });
+
+        span.appendChild(viewBtn);
+      } else {
+        span.textContent = "No file";
+        span.style.color = "#999";
+        span.style.fontStyle = "italic";
       }
     });
-
-    span.appendChild(input);
-  } else {
-
-  }
-});
 
     // Educational Background
     renderEducationTable(data.educationalBackground || []);
@@ -222,128 +193,6 @@ function createEduRow(edu = {}) {
 const editBtn = document.getElementById("editBtn");
 let isEditing = false;
 let uploadedFiles = {}; // Store files to upload
-
-editBtn.addEventListener("click", async () => {
-  isEditing = !isEditing;
-
-  // Make basic & overview fields editable (but NOT shift)
-  Object.keys(basicInfoFields).forEach(key => {
-    if (key !== "shift") {
-      basicInfoFields[key].contentEditable = isEditing;
-    }
-  });
-  Object.values(overviewFields).forEach(f => f.contentEditable = isEditing);
-
-  // Make education table rows editable
-  const eduRows = document.querySelectorAll("#educationTable tbody tr td[contenteditable]");
-  eduRows.forEach(cell => cell.contentEditable = isEditing);
-
-  // Show/hide add row button based on edit mode
-  if (isEditing) {
-    if (!addRowBtn) {
-      addRowBtn = document.createElement("button");
-      addRowBtn.textContent = "Add Row";
-      addRowBtn.style.marginTop = "10px";
-      addRowBtn.style.padding = "0.6rem 1rem";
-      addRowBtn.style.background = "var(--clr-primary)";
-      addRowBtn.style.color = "white";
-      addRowBtn.style.border = "none";
-      addRowBtn.style.borderRadius = "6px";
-      addRowBtn.style.cursor = "pointer";
-      addRowBtn.style.fontWeight = "600";
-      addRowBtn.addEventListener("click", () => eduTableBody.appendChild(createEduRow()));
-      eduTableBody.parentElement.appendChild(addRowBtn);
-    }
-    addRowBtn.style.display = "block";
-  } else {
-    if (addRowBtn) addRowBtn.style.display = "none";
-  }
-
-  // Handle credentials fields - add file inputs in edit mode
-  Object.keys(credentialsFields).forEach(key => {
-  const span = credentialsFields[key];
-  if (key === "profileImage") return;
-
-  if (isEditing) {
-    // Store current button if exists
-    const hasFile = span.querySelector(".view-btn") !== null;
-
-    // Clear and add file input
-    span.innerHTML = "";
-    
-    // Show current file status
-    if (hasFile) {
-      const statusText = document.createElement("span");
-      statusText.textContent = "Current: ";
-      statusText.style.fontSize = "0.85rem";
-      statusText.style.color = "#666";
-      statusText.style.marginRight = "8px";
-      span.appendChild(statusText);
-
-      const fileLabel = document.createElement("span");
-      fileLabel.textContent = "File exists";
-      fileLabel.style.fontSize = "0.85rem";
-      fileLabel.style.color = "#4CAF50";
-      fileLabel.style.fontWeight = "600";
-      fileLabel.style.marginRight = "10px";
-      span.appendChild(fileLabel);
-
-      const separator = document.createElement("span");
-      separator.textContent = " | ";
-      separator.style.color = "#999";
-      separator.style.margin = "0 5px";
-      span.appendChild(separator);
-    } else {
-      const noFileLabel = document.createElement("span");
-      noFileLabel.textContent = "No file | ";
-      noFileLabel.style.fontSize = "0.85rem";
-      noFileLabel.style.color = "#999";
-      noFileLabel.style.marginRight = "8px";
-      span.appendChild(noFileLabel);
-    }
-
-    // Add file input
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".pdf";
-    input.style.fontSize = "0.85rem";
-    input.dataset.field = key;
-    
-    input.addEventListener("change", (e) => {
-      if (e.target.files && e.target.files[0]) {
-        uploadedFiles[key] = e.target.files[0];
-        console.log(`📎 File selected for ${key}:`, e.target.files[0].name);
-        
-        // Show selected file name
-        const fileNameSpan = span.querySelector(".selected-file");
-        if (fileNameSpan) {
-          fileNameSpan.textContent = ` → ${e.target.files[0].name}`;
-        } else {
-          const newFileNameSpan = document.createElement("span");
-          newFileNameSpan.className = "selected-file";
-          newFileNameSpan.style.fontSize = "0.8rem";
-          newFileNameSpan.style.color = "#2196F3";
-          newFileNameSpan.style.marginLeft = "8px";
-          newFileNameSpan.style.fontWeight = "600";
-          newFileNameSpan.textContent = ` → ${e.target.files[0].name}`;
-          span.appendChild(newFileNameSpan);
-        }
-      }
-    });
-
-    span.appendChild(input);
-  } else {
-    
-  }
-});
-
-  editBtn.textContent = isEditing ? "SAVE" : "EDIT";
-
-  if (!isEditing) {
-    await handleSave();
-  }
-});
-
 let isSaving = false; // ✅ Prevent double submissions
 
 async function handleSave() {
@@ -448,8 +297,132 @@ async function handleSave() {
   } catch (err) {
     console.error("❌ Error updating employee:", err);
     alert("Server error while saving: " + err.message);
+  } finally {
+    isSaving = false; // ✅ Re-enable saving
   }
 }
+
+editBtn.addEventListener("click", async () => {
+  isEditing = !isEditing;
+
+  // Make basic & overview fields editable (but NOT shift)
+  Object.keys(basicInfoFields).forEach(key => {
+    if (key !== "shift") {
+      basicInfoFields[key].contentEditable = isEditing;
+    }
+  });
+  Object.values(overviewFields).forEach(f => f.contentEditable = isEditing);
+
+  // Make education table rows editable
+  const eduRows = document.querySelectorAll("#educationTable tbody tr td[contenteditable]");
+  eduRows.forEach(cell => cell.contentEditable = isEditing);
+
+  // Show/hide add row button based on edit mode
+  if (isEditing) {
+    if (!addRowBtn) {
+      addRowBtn = document.createElement("button");
+      addRowBtn.textContent = "Add Row";
+      addRowBtn.style.marginTop = "10px";
+      addRowBtn.style.padding = "0.6rem 1rem";
+      addRowBtn.style.background = "var(--clr-primary)";
+      addRowBtn.style.color = "white";
+      addRowBtn.style.border = "none";
+      addRowBtn.style.borderRadius = "6px";
+      addRowBtn.style.cursor = "pointer";
+      addRowBtn.style.fontWeight = "600";
+      addRowBtn.addEventListener("click", () => eduTableBody.appendChild(createEduRow()));
+      eduTableBody.parentElement.appendChild(addRowBtn);
+    }
+    addRowBtn.style.display = "block";
+  } else {
+    if (addRowBtn) addRowBtn.style.display = "none";
+  }
+
+  // Handle credentials fields - add file inputs in edit mode
+  Object.keys(credentialsFields).forEach(key => {
+    const span = credentialsFields[key];
+    if (key === "profileImage") return;
+
+    if (isEditing) {
+      // Store current button if exists
+      const hasFile = span.querySelector(".view-btn") !== null;
+
+      // Clear and add file input
+      span.innerHTML = "";
+      
+      // Show current file status
+      if (hasFile) {
+        const statusText = document.createElement("span");
+        statusText.textContent = "Current: ";
+        statusText.style.fontSize = "0.85rem";
+        statusText.style.color = "#666";
+        statusText.style.marginRight = "8px";
+        span.appendChild(statusText);
+
+        const fileLabel = document.createElement("span");
+        fileLabel.textContent = "File exists";
+        fileLabel.style.fontSize = "0.85rem";
+        fileLabel.style.color = "#4CAF50";
+        fileLabel.style.fontWeight = "600";
+        fileLabel.style.marginRight = "10px";
+        span.appendChild(fileLabel);
+
+        const separator = document.createElement("span");
+        separator.textContent = " | ";
+        separator.style.color = "#999";
+        separator.style.margin = "0 5px";
+        span.appendChild(separator);
+      } else {
+        const noFileLabel = document.createElement("span");
+        noFileLabel.textContent = "No file | ";
+        noFileLabel.style.fontSize = "0.85rem";
+        noFileLabel.style.color = "#999";
+        noFileLabel.style.marginRight = "8px";
+        span.appendChild(noFileLabel);
+      }
+
+      // Add file input
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".pdf";
+      input.style.fontSize = "0.85rem";
+      input.dataset.field = key;
+      
+      input.addEventListener("change", (e) => {
+        if (e.target.files && e.target.files[0]) {
+          uploadedFiles[key] = e.target.files[0];
+          console.log(`📎 File selected for ${key}:`, e.target.files[0].name);
+          
+          // Show selected file name
+          const fileNameSpan = span.querySelector(".selected-file");
+          if (fileNameSpan) {
+            fileNameSpan.textContent = ` → ${e.target.files[0].name}`;
+          } else {
+            const newFileNameSpan = document.createElement("span");
+            newFileNameSpan.className = "selected-file";
+            newFileNameSpan.style.fontSize = "0.8rem";
+            newFileNameSpan.style.color = "#2196F3";
+            newFileNameSpan.style.marginLeft = "8px";
+            newFileNameSpan.style.fontWeight = "600";
+            newFileNameSpan.textContent = ` → ${e.target.files[0].name}`;
+            span.appendChild(newFileNameSpan);
+          }
+        }
+      });
+
+      span.appendChild(input);
+    } else {
+      // When exiting edit mode, reload to show proper view buttons
+      // This will be handled by loadEmployeeData()
+    }
+  });
+
+  editBtn.textContent = isEditing ? "SAVE" : "EDIT";
+
+  if (!isEditing) {
+    await handleSave();
+  }
+});
 
 // ===== ATTENDANCE SECTION =====
 async function loadAttendanceData() {
