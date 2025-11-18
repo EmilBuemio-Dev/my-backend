@@ -16,7 +16,7 @@ function ensureUploadPath(folder = "general") {
   return dest;
 }
 
-// ===== File naming map for applicant credentials =====
+// ===== File naming map for credentials =====
 const credentialFiles = {
   barangayClearance: "barangay.pdf",
   policeClearance: "police.pdf",
@@ -38,6 +38,12 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     let folder;
 
+    console.log("📁 Upload request detected:");
+    console.log("   Field:", file.fieldname);
+    console.log("   Body name:", req.body.name);
+    console.log("   Body familyName:", req.body.familyName);
+    console.log("   Body firstName:", req.body.firstName);
+
     // ✅ Employee profile upload → "employee_profiles" folder
     if (file.fieldname === "employeeProfile") {
       folder = "employee_profiles";
@@ -50,20 +56,31 @@ const storage = multer.diskStorage({
     else if (file.fieldname === "checkinImage") {
       folder = "attendance";
     }
-    // ✅ Employee credentials → employee-specific folder
-    else if (credentialFiles[file.fieldname]) {
-      // For employee credential updates
-      const name = req.body.name?.trim() || "employee";
-      folder = name.replace(/\s+/g, "_");
+    // ✅ Employee credentials (when editing existing employee)
+    // These have credentialFiles fieldnames AND a "name" in body (from employeeData)
+    else if (credentialFiles[file.fieldname] && req.body.name) {
+      const employeeName = req.body.name.trim().replace(/\s+/g, "_");
+      folder = employeeName;
+      console.log("   ✅ Detected EMPLOYEE credential upload");
+      console.log("   Folder:", folder);
     }
     // ✅ Applicant credentials → applicant-specific folder
-    else {
-      const familyName = req.body.familyName?.trim() || "general";
-      const firstName = req.body.firstName?.trim() || "applicant";
+    // These have familyName and firstName
+    else if (req.body.familyName && req.body.firstName) {
+      const familyName = req.body.familyName.trim();
+      const firstName = req.body.firstName.trim();
       folder = `${familyName}_${firstName}`.replace(/\s+/g, "_");
+      console.log("   ✅ Detected APPLICANT credential upload");
+      console.log("   Folder:", folder);
+    }
+    // ✅ Fallback for other credential files
+    else {
+      folder = "general";
+      console.log("   ⚠️ Using general folder (no name info found)");
     }
 
     const dest = ensureUploadPath(folder);
+    console.log("   Final destination:", dest);
     cb(null, dest);
   },
 
@@ -97,6 +114,7 @@ const storage = multer.diskStorage({
       credentialFiles[file.fieldname] ||
       `document-${Date.now()}${path.extname(file.originalname)}`;
 
+    console.log("   📄 Filename:", filename);
     cb(null, filename);
   },
 });
@@ -114,6 +132,7 @@ const fileFilter = (req, file, cb) => {
   }
 
   // Reject other file types
+  console.log("❌ Rejected file type:", file.mimetype);
   cb(new Error(`File type not allowed: ${file.mimetype}`));
 };
 

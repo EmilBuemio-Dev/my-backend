@@ -104,7 +104,7 @@ async function loadEmployeeData() {
 
     // Credentials - Display files with view buttons
     const creds = data.credentials || {};
-    Object.keys(credentialsFields).forEach(key => {
+   Object.keys(credentialsFields).forEach(key => {
   const span = credentialsFields[key];
   if (key === "profileImage") return;
 
@@ -131,6 +131,12 @@ async function loadEmployeeData() {
       fileLabel.style.fontWeight = "600";
       fileLabel.style.marginRight = "10px";
       span.appendChild(fileLabel);
+
+      const separator = document.createElement("span");
+      separator.textContent = " | ";
+      separator.style.color = "#999";
+      separator.style.margin = "0 5px";
+      span.appendChild(separator);
     } else {
       const noFileLabel = document.createElement("span");
       noFileLabel.textContent = "No file | ";
@@ -150,18 +156,20 @@ async function loadEmployeeData() {
     input.addEventListener("change", (e) => {
       if (e.target.files && e.target.files[0]) {
         uploadedFiles[key] = e.target.files[0];
+        console.log(`📎 File selected for ${key}:`, e.target.files[0].name);
         
         // Show selected file name
         const fileNameSpan = span.querySelector(".selected-file");
         if (fileNameSpan) {
-          fileNameSpan.textContent = e.target.files[0].name;
+          fileNameSpan.textContent = ` → ${e.target.files[0].name}`;
         } else {
           const newFileNameSpan = document.createElement("span");
           newFileNameSpan.className = "selected-file";
           newFileNameSpan.style.fontSize = "0.8rem";
           newFileNameSpan.style.color = "#2196F3";
           newFileNameSpan.style.marginLeft = "8px";
-          newFileNameSpan.textContent = e.target.files[0].name;
+          newFileNameSpan.style.fontWeight = "600";
+          newFileNameSpan.textContent = ` → ${e.target.files[0].name}`;
           span.appendChild(newFileNameSpan);
         }
       }
@@ -169,9 +177,9 @@ async function loadEmployeeData() {
 
     span.appendChild(input);
   } else {
-        span.textContent = "No file";
-      }
-    });
+
+  }
+});
 
     // Educational Background
     renderEducationTable(data.educationalBackground || []);
@@ -343,19 +351,28 @@ async function handleSave() {
       credentials: {} // Will be populated by backend after file upload
     };
 
+    // ✅ IMPORTANT: Append employee name at TOP LEVEL for multer
+    const employeeName = personalData.name || "employee";
+    formData.append("name", employeeName);
+    
+    console.log("📤 Uploading with employee name:", employeeName);
+
     // Append employeeData as JSON string
     formData.append("employeeData", JSON.stringify(employeeData));
 
     // Append files if any were uploaded
-    Object.keys(uploadedFiles).forEach(key => {
-      formData.append(key, uploadedFiles[key]);
-    });
-
-    // Get employee name for folder creation
-    const employeeName = personalData.name || "employee";
-    formData.append("name", employeeName);
+    if (Object.keys(uploadedFiles).length > 0) {
+      console.log("📎 Uploading files:", Object.keys(uploadedFiles));
+      Object.keys(uploadedFiles).forEach(key => {
+        formData.append(key, uploadedFiles[key]);
+        console.log(`   - ${key}: ${uploadedFiles[key].name}`);
+      });
+    } else {
+      console.log("ℹ️ No files to upload");
+    }
 
     // Send PATCH request with FormData
+    console.log("🚀 Sending PATCH request...");
     const res = await fetch(`${API_URL}/${employeeId}`, {
       method: "PATCH",
       headers: {
@@ -368,10 +385,11 @@ async function handleSave() {
     const result = await res.json();
     
     if (!res.ok) {
-      console.error("Update failed:", result);
+      console.error("❌ Update failed:", result);
       return alert(result.error || "Failed to update profile");
     }
 
+    console.log("✅ Update successful:", result);
     alert("Profile updated successfully!");
     
     // Clear uploaded files
@@ -380,7 +398,7 @@ async function handleSave() {
     // Reload employee data
     await loadEmployeeData();
   } catch (err) {
-    console.error("Error updating employee:", err);
+    console.error("❌ Error updating employee:", err);
     alert("Server error while saving: " + err.message);
   }
 }
