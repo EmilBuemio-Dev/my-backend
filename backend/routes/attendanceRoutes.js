@@ -1,15 +1,16 @@
 import express from "express";
 import Attendance from "../models/Attendance.js";
 import Employee from "../models/Employee.js";
+import Register from "../models/Register.js";
 import upload from "../middleware/upload.js";
 import jwt from "jsonwebtoken";
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 import cron from "node-cron";
+import { verifyFace } from "../services/faceService.js";
 
 const router = express.Router();
 
 // ===== TIMEZONE UTILITY =====
-// Get current time in Philippines timezone (UTC+8)
 function getNowInPH() {
   return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
 }
@@ -30,7 +31,6 @@ function parseShiftTimeToDate(shiftStr) {
 
   shiftDate.setHours(hour, minute, 0, 0);
 
-  // IMPORTANT FIX: midnight shift belongs to next day if current time is late night
   if (hour === 0 && now.getHours() >= 22) {
     shiftDate.setDate(shiftDate.getDate() + 1);
   }
@@ -52,12 +52,19 @@ function authenticateToken(req, res, next) {
   });
 }
 
-// ===== CHECK-IN =====
+// ===== CHECK-IN WITH FACE VERIFICATION =====
 router.post("/checkin", authenticateToken, upload.single("checkinImage"), async (req, res) => {
   try {
-    const { employeeId } = req.body;
+    const { employeeId, badgeNo, imageBase64 } = req.body;
+
+    // ===== VALIDATE REQUEST =====
     if (!employeeId) return res.status(400).json({ message: "Missing employee ID." });
-    if (!req.file) return res.status(400).json({ message: "Check-in image is required." });
+    if (!badgeNo) return res.status(400).json({ message: "Missing badge number." });
+    if (!req.file && !imageBase64) {
+      return res.status(400).json({ message: "Check-in image is required." });
+    }
+
+    console.log(`📝 Check-in attempt for badge: ${badgeNo}, employee: ${employeeId}`);
 
     // ===== FIND EMPLOYEE =====
     const employee = await Employee.findById(employeeId);
@@ -66,8 +73,74 @@ router.post("/checkin", authenticateToken, upload.single("checkinImage"), async 
     const employeeName = employee.employeeData?.personalData?.name || "Unknown Employee";
     const empShift = employee.employeeData?.basicInformation?.shift || "8:00 AM-5:00 PM";
 
-    console.log(`📝 Check-in attempt for: ${employeeName}`);
-    console.log(`🕐 Shift: ${empShift}`);
+    console.log(`👤 Employee: ${employeeName}, 🕐 Shift: ${empShift}`);
+
+    // ===== FETCH ENROLLED FACE =====
+    console.log("🔍 Fetching enrolled face from database...");
+    const register = await Register.findOne({
+      badgeNo,
+      faceEnrollmentStatus: "enrolled",
+    });
+
+    if (!register) {
+      return res.status(404).json({
+        success: false,
+        message: "No enrolled face found for this badge. Please enroll your face first.",
+        code: "NO_FACE_ENROLLED",
+        requiresEnrollment: true,
+      });
+    }
+
+    if (!register.descriptor) {
+      return res.status(400).json({
+        success: false,
+        message: "Face data corrupted. Please re-enroll your face.",
+        code: "INVALID_FACE_DATA",
+        requiresEnrollment: true,
+      });
+    }
+
+    console.log(`✓ Found enrolled face for: ${register.firstName} ${register.familyName}`);
+
+    // ===== GET IMAGE DATA =====
+    let finalImageBase64 = imageBase64;
+    
+    if (req.file && !imageBase64) {
+      const fs = await import("fs").then(m => m.promises);
+      const fileData = await fs.readFile(req.file.path);
+      finalImageBase64 = fileData.toString("base64");
+    }
+
+    if (!finalImageBase64) {
+      return res.status(400).json({
+        success: false,
+        message: "Failed to process image.",
+        code: "IMAGE_PROCESSING_ERROR",
+      });
+    }
+
+    // ===== VERIFY FACE =====
+    console.log("🔐 Verifying face against enrolled face...");
+    const verifyResult = await verifyFace(finalImageBase64, register.descriptor, 0.6);
+
+    if (!verifyResult.success) {
+      console.log(`❌ Face verification FAILED for badge ${badgeNo}`);
+      console.log(`   Distance: ${verifyResult.distance?.toFixed(2)}, Confidence: ${verifyResult.confidence?.toFixed(2)}`);
+
+      return res.status(401).json({
+        success: false,
+        message: "Face verification failed. Face does not match enrolled face.",
+        code: "FACE_NOT_RECOGNIZED",
+        detail: verifyResult.error,
+        distance: verifyResult.distance,
+        confidence: verifyResult.confidence,
+        requireRetake: true, // Signal frontend to force retake
+      });
+    }
+
+    console.log(`✅ Face verified! Distance: ${verifyResult.distance.toFixed(2)}, Confidence: ${verifyResult.confidence.toFixed(2)}`);
+
+    // ===== FACE VERIFICATION PASSED - PROCEED WITH ATTENDANCE =====
 
     // ===== EXTRACT SHIFT START TIME =====
     const timePattern = /(\d{1,2}):(\d{2})\s*([AP]M)/i;
@@ -124,32 +197,49 @@ router.post("/checkin", authenticateToken, upload.single("checkinImage"), async 
       });
     }
 
-    // ===== SAVE CHECK-IN =====
-    const checkinImageUrl = `/uploads/attendance/${req.file.filename}`;
+    // ===== SAVE CHECK-IN WITH FACE VERIFICATION CONFIRMATION =====
+    const checkinImageUrl = req.file ? `/uploads/attendance/${req.file.filename}` : null;
 
     const record = new Attendance({
       employeeId,
       employeeName,
-      checkinTime: new Date(), // saved in UTC
+      badgeNo, // Store badge number for tracking
+      checkinTime: new Date(),
       checkinImageUrl,
       shift: empShift,
       status,
       timezone: "Asia/Manila",
+      faceVerified: true, // Mark as face-verified
+      faceVerificationData: {
+        distance: verifyResult.distance,
+        confidence: verifyResult.confidence,
+        timestamp: new Date(),
+      },
     });
 
     await record.save();
 
-    console.log(`✅ Check-in successful for ${employeeName} (${status})`);
+    console.log(`✅ Check-in SUCCESSFUL for ${employeeName} (${status}) with face verification`);
 
     res.status(201).json({
-      message: "Check-in successful",
+      success: true,
+      message: "Check-in successful with face verification",
       record,
       displayTime: now.toLocaleString("en-US", { timeZone: "Asia/Manila" }),
+      faceVerification: {
+        verified: true,
+        distance: verifyResult.distance,
+        confidence: verifyResult.confidence,
+      },
     });
 
   } catch (err) {
     console.error("❌ Check-in error:", err);
-    res.status(500).json({ message: "Failed to check-in", error: err.message });
+    res.status(500).json({
+      success: false,
+      message: "Failed to check-in",
+      error: err.message,
+    });
   }
 });
 
@@ -171,14 +261,10 @@ router.post("/checkout", authenticateToken, async (req, res) => {
       return res.status(404).json({ message: "No active check-in found for today." });
     }
 
-    // ===== USE PHILIPPINES TIME =====
     const now = getNowInPH();
-    record.checkoutTime = new Date(); // Store as UTC
+    record.checkoutTime = new Date();
 
-    // ===== Determine shift end from employee shift =====
     const empShift = employee.employeeData?.basicInformation?.shift || "8:00 AM-5:00 PM";
-    
-    // Extract the second time (shift end)
     const timePattern = /(\d{1,2}):(\d{2})\s*([AP]M)/gi;
     const matches = [...empShift.matchAll(timePattern)];
     
@@ -187,7 +273,6 @@ router.post("/checkout", authenticateToken, async (req, res) => {
       const shiftEndTime = parseShiftTimeToDate(`${endTimeMatch[1]}:${endTimeMatch[2]} ${endTimeMatch[3]}`);
       
       if (shiftEndTime) {
-        // Check if leaving early
         if (now < shiftEndTime) {
           record.status = record.status ? record.status + ", Early Out" : "Early Out";
         }
@@ -196,19 +281,23 @@ router.post("/checkout", authenticateToken, async (req, res) => {
 
     await record.save();
 
-    res.json({ 
-      message: "Check-out successful", 
+    res.json({
+      success: true,
+      message: "Check-out successful",
       record,
       displayTime: now.toLocaleString("en-US", { timeZone: "Asia/Manila" })
     });
   } catch (err) {
     console.error("❌ Check-out error:", err);
-    res.status(500).json({ message: "Failed to check-out", error: err.message });
+    res.status(500).json({
+      success: false,
+      message: "Failed to check-out",
+      error: err.message
+    });
   }
 });
 
-
-/* ------------------------- GET ATTENDANCE (USER) ------------------------- */
+// ===== GET ATTENDANCE (USER) =====
 router.get("/attendance", authenticateToken, async (req, res) => {
   try {
     const employeeId = req.user.id;
@@ -220,7 +309,7 @@ router.get("/attendance", authenticateToken, async (req, res) => {
   }
 });
 
-// ===== GET /attendance/all (HR/Admin view - used for weekly report) =====
+// ===== GET ALL ATTENDANCE =====
 router.get("/attendance/all", async (req, res) => {
   try {
     const records = await Attendance.find().sort({ createdAt: -1 });
@@ -266,9 +355,10 @@ router.get("/attendance/:employeeId/monthly-summary", async (req, res) => {
       checkinTime: { $gte: monthStart, $lte: monthEnd },
     }).sort({ checkinTime: 1 });
 
-    const summary = { OnTime: 0, Late: 0, Absent: 0 };
+    const summary = { OnTime: 0, Late: 0, Absent: 0, FaceVerified: 0 };
 
     records.forEach((r) => {
+      if (r.faceVerified) summary.FaceVerified++;
       if (!r.status) return;
       const status = r.status.toLowerCase();
       if (status.includes("late")) summary.Late++;
@@ -283,6 +373,7 @@ router.get("/attendance/:employeeId/monthly-summary", async (req, res) => {
   }
 });
 
+// ===== GET ATTENDANCE BY ID =====
 router.get("/attendance/:employeeId", async (req, res) => {
   try {
     const { employeeId } = req.params;
@@ -296,6 +387,30 @@ router.get("/attendance/:employeeId", async (req, res) => {
   } catch (err) {
     console.error("❌ Fetch attendance by ID error:", err);
     res.status(500).json({ message: "Failed to fetch attendance by ID", error: err.message });
+  }
+});
+
+// ===== CHECK TODAY'S CHECK-IN STATUS =====
+router.get("/today-checkin", authenticateToken, async (req, res) => {
+  try {
+    const employeeId = req.user.id;
+    const now = getNowInPH();
+
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+
+    const todayEnd = new Date(now);
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const hasCheckedIn = await Attendance.exists({
+      employeeId,
+      checkinTime: { $gte: todayStart, $lte: todayEnd },
+    });
+
+    res.json({ hasCheckedIn: !!hasCheckedIn });
+  } catch (err) {
+    console.error("❌ Today check-in status error:", err);
+    res.status(500).json({ message: "Failed to check today's status" });
   }
 });
 
@@ -335,6 +450,7 @@ cron.schedule("0 3 * * *", async () => {
           status: "Absent",
           checkinImageUrl: null,
           timezone: "Asia/Manila",
+          faceVerified: false,
         });
         console.log(`❌ Marked Absent: ${empName}`);
       }

@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login Selection</title>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-  <script async defer src="https://cdn.faceio.net/faceio.js"></script>
   <style>
     :root {
       --clr-light: #f5f7fa;
@@ -749,7 +748,6 @@
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/face-api.js/0.22.2/face-api.min.js"></script>
   <script>
     // ===== GLOBAL VARIABLES =====
     const API_URL = "https://www.mither3security.com/api/users";
@@ -759,6 +757,63 @@
     let faceDescriptor = null;
     let videoStream = null;
     let isCameraActive = false;
+    let modelsLoaded = false;
+
+    // ===== LOAD FACE API AND MODELS =====
+    async function initFaceAPI() {
+      const cdns = [
+        'https://cdnjs.cloudflare.com/ajax/libs/face-api.js/0.22.2/face-api.min.js',
+        'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js',
+        'https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js'
+      ];
+
+      for (let cdn of cdns) {
+        try {
+          await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = cdn;
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+          
+          if (typeof faceapi !== 'undefined') {
+            console.log('✅ face-api loaded from:', cdn);
+            await loadFaceAPIModels();
+            return;
+          }
+        } catch (err) {
+          console.warn('Failed to load from:', cdn, err);
+        }
+      }
+      
+      console.error('❌ Could not load face-api from any CDN');
+    }
+
+    async function loadFaceAPIModels() {
+      const modelUrl = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+      
+      try {
+        console.log('📦 Loading face-api models...');
+        
+        await Promise.all([
+          faceapi.nets.ssdMobilenetv1.loadFromUri(modelUrl),
+          faceapi.nets.faceLandmark68Net.loadFromUri(modelUrl),
+          faceapi.nets.faceRecognitionNet.loadFromUri(modelUrl),
+          faceapi.nets.faceExpressionNet.loadFromUri(modelUrl)
+        ]);
+        
+        modelsLoaded = true;
+        console.log('✅ All models loaded successfully!');
+        return true;
+      } catch (err) {
+        console.error('❌ Failed to load models:', err);
+        return false;
+      }
+    }
+
+    // Initialize face-api on page load
+    window.addEventListener('load', initFaceAPI);
 
     // ===== HELPER FUNCTIONS =====
     function showRegistrationMessage(message, type = 'info') {
@@ -1349,9 +1404,21 @@
         }
       });
 
-      // ===== ENROLL FACE BUTTON =====
+      // ===== ENROLL FACE BUTTON - FIXED LINE 1542 =====
       enrollFaceBtn.addEventListener("click", async (e) => {
         e.preventDefault();
+
+        // FIXED: Check if models are loaded using the modelsLoaded variable instead of isLoaded()
+        if (!modelsLoaded) {
+          showRegistrationMessage('⏳ Face detection models are still loading. Please wait...', 'info');
+          // Attempt to load if not already loaded
+          const loaded = await loadFaceAPIModels();
+          if (!loaded) {
+            showRegistrationMessage('❌ Failed to load face detection models. Please refresh the page.', 'error');
+            enrollFaceBtn.disabled = false;
+            return;
+          }
+        }
 
         try {
           enrollFaceBtn.disabled = true;
