@@ -453,7 +453,6 @@ function initTicketSubmit() {
 
     const subject = document.getElementById("subject")?.value;
     const concern = document.getElementById("concern")?.value.trim();
-    const priority = document.getElementById("priority")?.value || "Pending";
     const reportedEmployeeId = document.getElementById("reportedEmployee")?.value || null;
     const fileInput = document.getElementById("ticketAttachment");
 
@@ -466,7 +465,6 @@ function initTicketSubmit() {
       const formData = new FormData();
       formData.append("subject", subject);
       formData.append("concern", concern);
-      formData.append("priority", priority);
       formData.append("reportedEmployeeId", reportedEmployeeId);
       formData.append("creatorId", user._id);
       formData.append("creatorEmail", user.email);
@@ -487,7 +485,7 @@ function initTicketSubmit() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to submit ticket");
 
-      alert(`✅ Ticket submitted successfully!\nStatus: ${data.ticket.status}\nPriority: ${data.ticket.priority}`);
+      alert(`✅ Ticket submitted successfully!\nStatus: ${data.ticket.status}`);
       ticketForm.reset();
       document.getElementById("attachmentPreview").innerHTML = "";
       await loadMyTickets();
@@ -585,7 +583,7 @@ async function openTicketModal(ticket) {
   if (ticket.attachments && ticket.attachments.length > 0) {
     attachmentHTML = `
       <div class="ticket-detail-item">
-        <strong>Attachments (${ticket.attachments.length}):</strong>
+        <strong>📎 Attachments (${ticket.attachments.length}):</strong>
         <div style="margin-top: 0.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 0.5rem;">
           ${ticket.attachments.map(att => `
             <a href="https://www.mither3security.com${att}" target="_blank" style="cursor: pointer;">
@@ -606,9 +604,6 @@ async function openTicketModal(ticket) {
     </div>
     <div class="ticket-detail-item">
       <strong>Status:</strong> <span class="status ${ticket.status.toLowerCase()}">${ticket.status}</span>
-    </div>
-    <div class="ticket-detail-item">
-      <strong>Priority:</strong> <span class="status ${(ticket.priority || 'pending').toLowerCase()}">${ticket.priority || 'Pending'}</span>
     </div>
     <div class="ticket-detail-item">
       <strong>Date:</strong> ${new Date(ticket.createdAt).toLocaleString()}

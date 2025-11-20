@@ -13,7 +13,7 @@ const router = new express.Router();
 // ===============================
 router.post("/", authMiddleware, upload.array("ticketAttachment", 10), async (req, res) => {
   try {
-    const { subject, concern, priority, reportedEmployeeId } = req.body;
+    const { subject, concern, reportedEmployeeId } = req.body;
 
     // ✅ Ensure the authenticated user is available
     const userId = req.user.id;
@@ -100,13 +100,8 @@ router.post("/", authMiddleware, upload.array("ticketAttachment", 10), async (re
       console.log("⚠️ No files received");
     }
 
-    // ===== Validate priority =====
-    const validPriorities = ["Pending", "Urgent"];
-    const ticketPriority = validPriorities.includes(priority) ? priority : "Pending";
-
     console.log("=== TICKET DATA ===");
     console.log("Subject:", subject);
-    console.log("Priority:", ticketPriority);
     console.log("Status: Pending (always)");
     console.log("Attachments:", attachmentPaths);
 
@@ -119,7 +114,6 @@ router.post("/", authMiddleware, upload.array("ticketAttachment", 10), async (re
       branch,
       subject,
       concern,
-      priority: ticketPriority,
       reportedEmployeeId: reportedEmployeeId || null,
       reportedEmployeeName,
       attachments: attachmentPaths,
@@ -132,7 +126,6 @@ router.post("/", authMiddleware, upload.array("ticketAttachment", 10), async (re
     console.log("✅ TICKET SAVED:");
     console.log("  ID:", newTicket._id);
     console.log("  Subject:", newTicket.subject);
-    console.log("  Priority:", newTicket.priority);
     console.log("  Status:", newTicket.status);
     console.log("  Attachments:", newTicket.attachments);
     console.log("=== TICKET CREATION END ===\n");

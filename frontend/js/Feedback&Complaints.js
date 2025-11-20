@@ -49,10 +49,7 @@ async function loadTickets() {
         <td>${ticket.creatorName || "Unknown"}</td>
         <td>${ticket.subject || "No Subject"}</td>
         <td>${ticket.creatorRole === "client" ? "Client" : "Employee"}</td>
-        <td>
-          <span class="status ${statusClass}">${statusText}</span>
-          ${ticket.priority ? `<br><span class="status ${ticket.priority.toLowerCase()}">${ticket.priority}</span>` : ""}
-        </td>
+        <td><span class="status ${statusClass}">${statusText}</span></td>
         <td>${ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : ""}</td>
         <td><button class="btn view-ticket" data-id="${ticket._id}">View</button></td>
       `;
@@ -105,32 +102,26 @@ async function openTicketModal(ticketId) {
     }
     
     document.getElementById("modalSource").innerText = ticket.creatorRole === "client" ? "Client" : "Employee";
-    document.getElementById("modalStatus").innerText = ticket.status || "Pending";
-    document.getElementById("modalStatus").className = "status " + (ticket.status?.toLowerCase() || "pending");
     
-    // Display priority
-    if (ticket.priority) {
-      const priorityEl = document.getElementById("modalPriority");
-      if (priorityEl) {
-        priorityEl.innerText = ticket.priority;
-        priorityEl.className = "status " + ticket.priority.toLowerCase();
-      }
-    }
+    // ✅ Status display (removed priority)
+    const statusElement = document.getElementById("modalStatus");
+    statusElement.innerText = ticket.status || "Pending";
+    statusElement.className = "status " + (ticket.status?.toLowerCase() || "pending");
 
     document.getElementById("modalDate").innerText = ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : "Unknown";
     document.getElementById("modalConcern").innerText = ticket.concern || "No concern";
 
-    // Display multiple attachments
+    // ✅ Display multiple attachments with proper image display
     const attachmentDiv = document.getElementById("modalAttachment");
     if (ticket.attachments && ticket.attachments.length > 0) {
       attachmentDiv.innerHTML = `
-        <p><strong>Attachments (${ticket.attachments.length}):</strong></p>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 0.5rem;">
+        <p><strong>📎 Attachments (${ticket.attachments.length}):</strong></p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 0.5rem; margin-top: 0.5rem;">
           ${ticket.attachments.map(att => `
             <a href="https://www.mither3security.com${att}" target="_blank" style="cursor: pointer;">
               <img src="https://www.mither3security.com${att}" 
                    alt="attachment" 
-                   style="max-width: 100%; height: 100px; border-radius: 8px; object-fit: cover; border: 2px solid #ddd; transition: transform 0.2s ease;"
+                   style="max-width: 100%; height: 100px; border-radius: 8px; object-fit: cover; border: 2px solid #ddd; transition: transform 0.2s ease; cursor: pointer;"
                    onmouseover="this.style.transform='scale(1.05)'"
                    onmouseout="this.style.transform='scale(1)'">
             </a>
@@ -464,17 +455,17 @@ async function openRemarkModal(remarkId) {
           document.getElementById("ticketSourceDisplay").innerText = ticketDetails.creatorRole === "client" ? "Client" : "Employee";
           document.getElementById("ticketDateDisplay").innerText = ticketDetails.createdAt ? new Date(ticketDetails.createdAt).toLocaleString() : "Unknown";
           
-          // Display multiple ticket attachments
+          // ✅ Display multiple ticket attachments with proper image rendering
           const ticketAttachmentDiv = document.getElementById("ticketAttachmentDisplay");
           if (ticketDetails.attachments && ticketDetails.attachments.length > 0) {
             ticketAttachmentDiv.innerHTML = `
-              <p style="margin-top: 1rem;"><strong>📎 Attached Images (${ticketDetails.attachments.length}):</strong></p>
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 0.5rem;">
+              <p style="margin-top: 1rem; font-weight: 600;"><strong>📎 Attached Images (${ticketDetails.attachments.length}):</strong></p>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 0.5rem; margin-top: 0.5rem;">
                 ${ticketDetails.attachments.map(att => `
                   <a href="https://www.mither3security.com${att}" target="_blank">
                     <img src="https://www.mither3security.com${att}" 
                          alt="attachment" 
-                         style="max-width: 100%; height: 100px; border-radius: 6px; object-fit: contain; border: 2px solid #007bff; transition: transform 0.2s ease; cursor: pointer;"
+                         style="max-width: 100%; height: 100px; border-radius: 6px; object-fit: cover; border: 2px solid #007bff; transition: transform 0.2s ease; cursor: pointer;"
                          onmouseover="this.style.transform='scale(1.05)'"
                          onmouseout="this.style.transform='scale(1)'">
                   </a>

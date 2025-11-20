@@ -10,13 +10,13 @@ const TicketSchema = new mongoose.Schema({
   reportedEmployeeName: { type: String, default: null },
   subject: { type: String, required: true },
   concern: { type: String, required: true },
-  priority: { type: String, enum: ["Pending", "Urgent"], default: "Pending" },
   // ✅ Multiple attachments array
   attachments: [
     { type: String }
   ],
   source: { type: String, default: "Guard" },
-  status: { type: String, enum: ["Pending", "Completed"], default: "Pending" },
+  // ✅ Only status field (removed priority)
+  status: { type: String, enum: ["Pending", "Completed", "In Progress"], default: "Pending" },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
