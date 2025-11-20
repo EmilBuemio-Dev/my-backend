@@ -9,11 +9,11 @@ import { authMiddleware } from "../middleware/auth.js";
 const router = express.Router();
 
 // ===============================
-// CREATE TICKET (with optional image)
+// CREATE TICKET (with multiple images)
 // ===============================
-router.post("/", authMiddleware, upload.single("ticketAttachment"), async (req, res) => {
+router.post("/", authMiddleware, upload.array("ticketAttachment", 10), async (req, res) => {
   try {
-    const { subject, concern, reportedEmployeeId } = req.body;
+    const { subject, concern, priority, reportedEmployeeId } = req.body;
 
     // ✅ Ensure the authenticated user is available
     const userId = req.user.id;
@@ -22,6 +22,11 @@ router.post("/", authMiddleware, upload.single("ticketAttachment"), async (req, 
 
     if (!userId || !userEmail) {
       return res.status(401).json({ message: "Invalid user session. Please log in again." });
+    }
+
+    // Validate inputs
+    if (!subject || !concern) {
+      return res.status(400).json({ message: "Subject and concern are required." });
     }
 
     let creatorRole = userRole || "employee";
@@ -68,12 +73,16 @@ router.post("/", authMiddleware, upload.single("ticketAttachment"), async (req, 
       }
     }
 
-    // ✅ Handle attachment (only for client tickets)
-    let attachmentPath = null;
-    if (creatorRole === "client" && req.file) {
-      attachmentPath = `/uploads/ticket_attachments/${req.file.filename}`;
-      console.log("✅ Client ticket attachment:", attachmentPath);
+    // ✅ Handle multiple attachments (only for client tickets)
+    let attachmentPaths = [];
+    if (creatorRole === "client" && req.files && req.files.length > 0) {
+      attachmentPaths = req.files.map(file => `/uploads/ticket_attachments/${file.filename}`);
+      console.log("✅ Client ticket attachments:", attachmentPaths);
     }
+
+    // ===== Validate priority =====
+    const validPriorities = ["Pending", "Urgent"];
+    const ticketPriority = validPriorities.includes(priority) ? priority : "Pending";
 
     // ===== Create Ticket =====
     const newTicket = new Ticket({
@@ -84,11 +93,12 @@ router.post("/", authMiddleware, upload.single("ticketAttachment"), async (req, 
       branch,
       subject,
       concern,
+      priority: ticketPriority,
       reportedEmployeeId: reportedEmployeeId || null,
       reportedEmployeeName,
-      attachment: attachmentPath,
+      attachments: attachmentPaths,
       source: creatorRole === "client" ? "Client" : "Guard",
-      status: creatorRole === "client" ? "Urgent" : "Pending",
+      status: "Pending", // ✅ No longer automatically "Urgent"
     });
 
     await newTicket.save();
@@ -165,7 +175,7 @@ router.patch("/:id", authMiddleware, async (req, res) => {
 });
 
 // ===============================
-// DELETE (Admin only)
+// DELETE TICKET (Admin only)
 // ===============================
 router.delete("/:id", authMiddleware, async (req, res) => {
   try {

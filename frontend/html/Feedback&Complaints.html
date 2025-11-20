@@ -11,7 +11,6 @@
       --clr-primary: #131315;
       --clr-white: #ffffff;
       --clr-dark: #222222;
-      --clr-color-dark: #2e2e2e;
       --clr-color-background: #f0f2f5;
       --clr-black-variant: #555555;
       --clr-info-dark: #7d8da1;
@@ -77,7 +76,6 @@
       height: 30px;
     }
 
-
     aside .logo h2 {
       font-size: 1.3rem;
       color: var(--clr-dark);
@@ -121,6 +119,7 @@
     aside .sidebar a.logout {
       margin-top: auto;
       margin-bottom: 1rem;
+      color: var(--clr-danger);
     }
 
     /* Main */
@@ -188,7 +187,6 @@
     .add-remark-btn:hover {
       background: #000;
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
     /* Table */
@@ -234,16 +232,9 @@
       display: inline-block;
     }
 
-    .status.urgent,
-    .status.grave {
+    .status.urgent {
       background: #ffebee;
       color: #c62828;
-    }
-
-    .status.completed,
-    .status.resolved {
-      background: #e8f5e9;
-      color: #2e7d32;
     }
 
     .status.pending {
@@ -251,20 +242,15 @@
       color: #1565c0;
     }
 
-    .status.light {
-      background: #fff3cd;
-      color: #856404;
-    }
-
-    .status.least-grave {
-      background: #fce4ec;
-      color: #c2185b;
+    .status.completed {
+      background: #e8f5e9;
+      color: #2e7d32;
     }
 
     /* Buttons */
     .btn {
       padding: 0.5rem 1rem;
-      border: 1px solid var(--clr-primary);
+      border: none;
       border-radius: 6px;
       background: var(--clr-primary);
       color: white;
@@ -293,25 +279,13 @@
       justify-content: center;
     }
 
-    #ticketModal {
-      z-index: 2000;
-    }
-
-    #addRemarkModal {
-      z-index: 1500;
-    }
-
-    #viewRemarkModal {
-      z-index: 1200;
-    }
-
     .modal.show {
       display: flex;
     }
 
     .modal-content {
       background: var(--clr-white);
-      width: 700px;
+      width: 800px;
       max-width: 90%;
       border-radius: var(--card-border-radius);
       padding: 2rem;
@@ -347,6 +321,81 @@
       color: var(--clr-dark);
     }
 
+    /* Ticket Details */
+    .ticket-detail-item {
+      background: var(--clr-light);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      border-left: 4px solid var(--clr-primary);
+    }
+
+    .ticket-detail-item strong {
+      color: var(--clr-dark);
+      font-weight: 600;
+    }
+
+    /* Chat Section */
+    #chatSection {
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 2px solid var(--clr-light);
+    }
+
+    #chatSection h3 {
+      font-size: 1.1rem;
+      color: var(--clr-dark);
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+
+    #chatBox {
+      background: var(--clr-light);
+      padding: 1rem;
+      border-radius: 8px;
+      max-height: 400px;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+      min-height: 250px;
+      border: 1px solid #e0e0e0;
+    }
+
+    #chatForm {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    #chatInput {
+      flex: 1;
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: inherit;
+    }
+
+    #chatInput:focus {
+      outline: none;
+      border-color: var(--clr-primary);
+      box-shadow: 0 0 0 3px rgba(19, 19, 21, 0.1);
+    }
+
+    #chatForm button {
+      padding: 0.8rem 1.5rem;
+      background: var(--clr-primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    #chatForm button:hover {
+      background: #000;
+    }
+
+    /* Form */
     .form-group {
       margin-bottom: 1rem;
       display: flex;
@@ -423,6 +472,10 @@
       .modal-content {
         width: 95%;
       }
+
+      #chatBox {
+        max-height: 300px;
+      }
     }
   </style>
 </head>
@@ -432,11 +485,11 @@
       <div class="top">
         <div class="logo">
           <img src="/image/logo.png" alt="Company Logo">
-          <h2><span class="Company">MITHER3</span></h2>
+          <h2>MITHER3</h2>
         </div>
       </div>
       <div class="sidebar">
-        <a href="dashboard.html" >
+        <a href="dashboard.html">
           <span class="material-symbols-outlined">grid_view</span>
           <h3>Dashboard</h3>
         </a>
@@ -451,7 +504,6 @@
         <a href="#" class="active">
           <span class="material-symbols-outlined">chat</span>
           <h3>Feedback/Complaints</h3>
-          <span class="badge" id="complaintsBadge"></span>
         </a>
         <a href="account.html">
           <span class="material-symbols-outlined">manage_accounts</span>
@@ -460,10 +512,6 @@
         <a href="accValidation.html">
           <span class="material-symbols-outlined">business</span>
           <h3>Accounts/Branch</h3>
-        </a>
-        <a href="monthlyDisposition.html">
-          <span class="material-symbols-outlined">description</span>
-          <h3>Monthly Disposition Report</h3>
         </a>
         <a id="logoutBtn" href="#" class="logout">
           <span class="material-symbols-outlined">logout</span>
@@ -521,7 +569,7 @@
     </main>
   </div>
 
-  <!-- TICKET MODAL -->
+  <!-- TICKET MODAL WITH CHAT -->
   <div id="ticketModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -534,13 +582,24 @@
         <p><strong>Reported Employee:</strong> <span id="modalReportedEmployee">N/A</span></p>
         <p><strong>Source:</strong> <span id="modalSource"></span></p>
         <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+        <p><strong>Priority:</strong> <span id="modalPriority" class="status"></span></p>
         <p><strong>Date:</strong> <span id="modalDate"></span></p>
         <hr>
         <p><strong>Concern:</strong></p>
         <div id="modalConcern" style="background: var(--clr-light); padding: 1rem; border-radius: 8px; margin: 0.5rem 0;"></div>
         
-        <!-- ✅ NEW: Attachment Display -->
+        <!-- Attachments Display -->
         <div id="modalAttachment" style="display: none; margin-top: 1.5rem; padding: 1rem; background: #f0f8ff; border-left: 4px solid #007bff; border-radius: 8px;"></div>
+
+        <!-- CHAT SECTION -->
+        <div id="chatSection">
+          <h3>💬 Chat with Client</h3>
+          <div id="chatBox"></div>
+          <form id="chatForm">
+            <input type="text" id="chatInput" placeholder="Type your message..." />
+            <button type="submit">Send</button>
+          </form>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn-cancel" id="closeFooterBtn">Close</button>
@@ -624,14 +683,13 @@
         
         <!-- TICKET DETAILS SECTION -->
         <div id="ticketDetailsSection" style="display: none; background: #f8f9ff; padding: 1rem; border-radius: 8px; border-left: 4px solid var(--clr-primary); margin: 1rem 0;">
-          <h4 style="margin: 0 0 1rem 0; color: var(--clr-primary); font-size: 1rem;">📎 Attached Ticket </h4>
+          <h4 style="margin: 0 0 1rem 0; color: var(--clr-primary); font-size: 1rem;">📎 Attached Ticket</h4>
           <p><strong>Subject:</strong> <span id="ticketSubjectDisplay"></span></p>
           <p><strong>Created By:</strong> <span id="ticketCreatorDisplay"></span></p>
           <p><strong>Source:</strong> <span id="ticketSourceDisplay"></span></p>
-          <p><strong>Rating:</strong> <span id="ticketRatingDisplay"></span></p>
           <p><strong>Date:</strong> <span id="ticketDateDisplay"></span></p>
           
-          <!-- ✅ NEW: Ticket Attachment Display -->
+          <!-- Ticket Attachments -->
           <div id="ticketAttachmentDisplay" style="display: none; margin-top: 1rem; padding: 1rem; background: white; border-radius: 6px; border: 1px solid #ddd;"></div>
           
           <button class="btn" id="viewFullTicketBtn" style="margin-top: 0.8rem; background: #007bff;">View Full Ticket</button>

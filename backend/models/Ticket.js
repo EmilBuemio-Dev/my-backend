@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const TicketSchema = new mongoose.Schema({
   creatorId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  creatorEmail: { type: String },
   creatorRole: { type: String, enum: ["employee", "client"], required: true },
   creatorName: { type: String },
   branch: { type: String, default: null },
@@ -9,21 +10,23 @@ const TicketSchema = new mongoose.Schema({
   reportedEmployeeName: { type: String, default: null },
   subject: { type: String, required: true },
   concern: { type: String, required: true },
-  // ✅ NEW: Optional attachment for client tickets
-  attachment: { 
-    type: String, 
-    default: null 
-  },
+  priority: { type: String, enum: ["Pending", "Urgent"], default: "Pending" },
+  // ✅ NEW: Multiple attachments array
+  attachments: [
+    { type: String, default: null }
+  ],
   source: { type: String, default: "Guard" },
   status: { type: String, default: "Pending" },
   createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
+// Pre-save hook to set source based on role
 TicketSchema.pre("save", function (next) {
   if (this.creatorRole === "client") {
-    this.status = "Urgent";
     this.source = "Client";
   }
+  this.updatedAt = new Date();
   next();
 });
 

@@ -23,6 +23,7 @@ import emailRoutes from "./routes/emailRoutes.js";
 import branchManagementRoutes from "./routes/branchManagementRoutes.js";
 import leaveRoutes from './routes/leaveRoutes.js';
 import remarksRoutes from "./routes/remarksRoutes.js";
+import ticketChatRoutes from "./routes/ticketChatRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -96,6 +97,7 @@ app.use("/api/email", emailRoutes);
 app.use("/api/branches-management", branchManagementRoutes);
 app.use('/', leaveRoutes);
 app.use("/remarks", remarksRoutes);
+app.use("/ticket-chats", ticketChatRoutes);
 
 // ===== Health Check Endpoint =====
 app.get("/api/health", (req, res) => {
