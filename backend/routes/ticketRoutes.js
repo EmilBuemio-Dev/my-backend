@@ -15,14 +15,13 @@ router.post("/", authMiddleware, upload.array("ticketAttachment", 10), async (re
   try {
     const { subject, concern, reportedEmployeeId } = req.body;
 
-    // ✅ Ensure the authenticated user is available
     const userId = req.user.id;
     const userEmail = req.user.email;
     const userRole = req.user.role;
 
-    console.log("\n" + "=".repeat(60));
+    console.log("\n" + "=".repeat(70));
     console.log("=== TICKET CREATION START ===");
-    console.log("=".repeat(60));
+    console.log("=".repeat(70));
     console.log("UserId:", userId);
     console.log("UserEmail:", userEmail);
     console.log("UserRole:", userRole);
@@ -30,29 +29,27 @@ router.post("/", authMiddleware, upload.array("ticketAttachment", 10), async (re
     // ===== CHECK FILES =====
     console.log("\n📁 FILES INFO:");
     console.log("req.files exists?", !!req.files);
-    console.log("req.files array length:", req.files?.length || 0);
+    console.log("req.files type:", Array.isArray(req.files) ? "Array" : typeof req.files);
+    console.log("req.files length:", req.files?.length || 0);
     
     if (req.files && req.files.length > 0) {
-      console.log("Files received:");
+      console.log(`\n✅ ${req.files.length} file(s) received:`);
       req.files.forEach((file, idx) => {
-        console.log(`  File ${idx + 1}:`);
-        console.log(`    - fieldname: ${file.fieldname}`);
-        console.log(`    - originalname: ${file.originalname}`);
-        console.log(`    - filename: ${file.filename}`);
-        console.log(`    - destination: ${file.destination}`);
-        console.log(`    - path: ${file.path}`);
-        console.log(`    - size: ${file.size} bytes`);
-        console.log(`    - mimetype: ${file.mimetype}`);
+        console.log(`\n  📄 File ${idx + 1}:`);
+        console.log(`     - fieldname: ${file.fieldname}`);
+        console.log(`     - originalname: ${file.originalname}`);
+        console.log(`     - filename: ${file.filename}`);
+        console.log(`     - size: ${file.size} bytes`);
+        console.log(`     - path: ${file.path}`);
       });
     } else {
-      console.log("⚠️ NO FILES RECEIVED!");
+      console.log("⚠️  NO FILES RECEIVED!");
     }
 
     if (!userId || !userEmail) {
       return res.status(401).json({ message: "Invalid user session. Please log in again." });
     }
 
-    // Validate inputs
     if (!subject || !concern) {
       return res.status(400).json({ message: "Subject and concern are required." });
     }
@@ -81,13 +78,12 @@ router.post("/", authMiddleware, upload.array("ticketAttachment", 10), async (re
         creatorName = branchClient.branchData?.name || "Unknown Client";
         branch = branchClient.branchData?.branch || null;
       } else {
-        // If not found in either Employee or Branch, use fallback from User model
         const user = await User.findById(userId);
         if (user) {
           creatorName = user.name;
           branch = user.branch || null;
         } else {
-          return res.status(400).json({ message: "User not found in Employee, Branch, or User collection" });
+          return res.status(400).json({ message: "User not found" });
         }
       }
     }
@@ -101,7 +97,7 @@ router.post("/", authMiddleware, upload.array("ticketAttachment", 10), async (re
       }
     }
 
-    // ✅ Handle multiple attachments - FIX: Use relative path format
+    // ✅ Handle MULTIPLE attachments
     let attachmentPaths = [];
     
     console.log("\n📎 PROCESSING ATTACHMENTS:");
@@ -110,20 +106,18 @@ router.post("/", authMiddleware, upload.array("ticketAttachment", 10), async (re
       console.log(`Processing ${req.files.length} file(s)...`);
       
       attachmentPaths = req.files.map((file, index) => {
-        // Use the exact path format: /uploads/ticket_attachments/filename
         const relativePath = `/uploads/ticket_attachments/${file.filename}`;
-        console.log(`\n  Attachment ${index + 1}:`);
-        console.log(`    - Original: ${file.originalname}`);
-        console.log(`    - Saved as: ${file.filename}`);
-        console.log(`    - Relative path: ${relativePath}`);
-        console.log(`    - Full path: ${file.path}`);
+        console.log(`\n  ✅ Attachment ${index + 1}:`);
+        console.log(`     - Original: ${file.originalname}`);
+        console.log(`     - Saved as: ${file.filename}`);
+        console.log(`     - Relative path: ${relativePath}`);
         return relativePath;
       });
       
-      console.log(`\n✅ Total attachments to save: ${attachmentPaths.length}`);
+      console.log(`\n✅ Total attachments processed: ${attachmentPaths.length}`);
       console.log(`Attachment paths:`, attachmentPaths);
     } else {
-      console.log("⚠️ No files to process - attachments will be empty");
+      console.log("ℹ️  No files to process - ticket will be saved without attachments");
     }
 
     console.log("\n📋 TICKET DATA:");
@@ -132,9 +126,10 @@ router.post("/", authMiddleware, upload.array("ticketAttachment", 10), async (re
     console.log("  Status: Pending");
     console.log("  Creator:", creatorName);
     console.log("  Branch:", branch);
+    console.log("  Reported Employee:", reportedEmployeeName || "N/A");
     console.log("  Attachments count:", attachmentPaths.length);
 
-    // ===== Create Ticket =====
+    // ===== Create Ticket with ALL attachments =====
     const newTicket = new Ticket({
       creatorId: userId,
       creatorEmail: userEmail,
@@ -145,7 +140,7 @@ router.post("/", authMiddleware, upload.array("ticketAttachment", 10), async (re
       concern,
       reportedEmployeeId: reportedEmployeeId || null,
       reportedEmployeeName,
-      attachments: attachmentPaths,
+      attachments: attachmentPaths, // ✅ Save ALL attachment paths
       source: creatorRole === "client" ? "Client" : "Guard",
       status: "Pending",
     });
@@ -156,11 +151,14 @@ router.post("/", authMiddleware, upload.array("ticketAttachment", 10), async (re
     console.log("  ID:", newTicket._id);
     console.log("  Subject:", newTicket.subject);
     console.log("  Status:", newTicket.status);
+    console.log("  Creator:", newTicket.creatorName);
     console.log("  Attachments saved:", newTicket.attachments.length);
-    console.log("  Attachments:", newTicket.attachments);
-    console.log("=".repeat(60));
+    newTicket.attachments.forEach((att, i) => {
+      console.log(`    ${i + 1}. ${att}`);
+    });
+    console.log("=".repeat(70));
     console.log("=== TICKET CREATION END ===");
-    console.log("=".repeat(60) + "\n");
+    console.log("=".repeat(70) + "\n");
 
     res.status(201).json({
       message: "Ticket created successfully",
@@ -170,7 +168,7 @@ router.post("/", authMiddleware, upload.array("ticketAttachment", 10), async (re
     console.error("\n❌ ERROR CREATING TICKET:");
     console.error("  Message:", err.message);
     console.error("  Stack:", err.stack);
-    console.error("=".repeat(60) + "\n");
+    console.error("=".repeat(70) + "\n");
     
     res.status(500).json({
       message: "Server error while creating ticket",

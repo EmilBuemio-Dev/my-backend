@@ -308,7 +308,6 @@ function renderGuardsTable(guards) {
   });
 }
 
-// ===== Initialize File Preview ===
 function initFilePreview() {
   const fileInput = document.getElementById("ticketAttachment");
   const preview = document.getElementById("attachmentPreview");
@@ -320,7 +319,11 @@ function initFilePreview() {
   fileInput.addEventListener("change", (e) => {
     const newFiles = Array.from(e.target.files);
     
-    newFiles.forEach(file => {
+    console.log(`📎 Files selected: ${newFiles.length}`);
+    
+    newFiles.forEach((file, idx) => {
+      console.log(`  File ${idx + 1}: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`);
+      
       if (!file.type.startsWith("image/")) {
         alert("Only image files allowed");
         return;
@@ -331,16 +334,21 @@ function initFilePreview() {
         return;
       }
 
-      if (selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
-        alert("File already added");
+      // Check for duplicates
+      const isDuplicate = selectedFiles.some(
+        f => f.name === file.name && f.size === file.size
+      );
+      
+      if (isDuplicate) {
+        alert(`File "${file.name}" already added`);
         return;
       }
 
       selectedFiles.push(file);
-      renderFilePreview();
     });
 
-    fileInput.value = "";
+    console.log(`✅ Total selected files now: ${selectedFiles.length}`);
+    renderFilePreview();
   });
 
   function renderFilePreview() {
@@ -376,7 +384,6 @@ function initFilePreview() {
         fileItem.style.padding = "0.5rem";
         fileItem.style.background = "var(--clr-white)";
         fileItem.style.borderRadius = "6px";
-        fileItem.style.position = "relative";
 
         const img = document.createElement("img");
         img.src = event.target.result;
@@ -414,7 +421,9 @@ function initFilePreview() {
         removeBtn.style.lineHeight = "1";
         removeBtn.addEventListener("click", (e) => {
           e.preventDefault();
+          console.log(`🗑️ Removing file: ${file.name}`);
           selectedFiles.splice(index, 1);
+          console.log(`Files remaining: ${selectedFiles.length}`);
           renderFilePreview();
         });
 
@@ -430,17 +439,32 @@ function initFilePreview() {
     preview.appendChild(container);
   }
 
-  const originalForm = document.getElementById("ticketForm");
-  originalForm.addEventListener("submit", (e) => {
+  // ===== On Form Submit: Build DataTransfer with all selectedFiles =====
+  const ticketForm = document.getElementById("ticketForm");
+  if (!ticketForm) return;
+
+  ticketForm.addEventListener("submit", (e) => {
+    // Before form submission, populate the file input with selectedFiles
     if (selectedFiles.length > 0) {
       const dataTransfer = new DataTransfer();
-      selectedFiles.forEach(file => dataTransfer.items.add(file));
+      
+      selectedFiles.forEach((file, idx) => {
+        console.log(`📦 Adding to DataTransfer: ${idx + 1}. ${file.name}`);
+        dataTransfer.items.add(file);
+      });
+
       fileInput.files = dataTransfer.files;
+      
+      console.log(`✅ DataTransfer ready with ${fileInput.files.length} files`);
+      console.log("Files in fileInput.files:");
+      Array.from(fileInput.files).forEach((f, i) => {
+        console.log(`  ${i + 1}. ${f.name} (${(f.size / 1024).toFixed(2)} KB)`);
+      });
     }
   });
 }
 
-// ===== Initialize Ticket Submission ===
+// ===== Initialize Ticket Submission (UPDATED) =====
 function initTicketSubmit() {
   const ticketForm = document.getElementById("ticketForm");
   if (!ticketForm) return;
@@ -469,29 +493,47 @@ function initTicketSubmit() {
       formData.append("creatorId", user._id);
       formData.append("creatorEmail", user.email);
 
+      // ✅ Append ALL files from fileInput
       if (fileInput?.files?.length > 0) {
-        Array.from(fileInput.files).forEach((file) => {
-          formData.append(`ticketAttachment`, file);
+        console.log(`📎 Appending ${fileInput.files.length} file(s) to FormData...`);
+        
+        Array.from(fileInput.files).forEach((file, idx) => {
+          console.log(`  Appending file ${idx + 1}: ${file.name}`);
+          formData.append("ticketAttachment", file);
         });
-        console.log("📎 Files attached:", fileInput.files.length);
+        
+        console.log("✅ All files appended to FormData");
+      } else {
+        console.log("⚠️ No files attached");
       }
+
+      console.log("📤 Submitting ticket...");
 
       const res = await fetch("https://www.mither3security.com/tickets", {
         method: "POST",
-        headers: { "Authorization": `Bearer ${user.token}` },
+        headers: { 
+          "Authorization": `Bearer ${user.token}`
+        },
         body: formData,
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to submit ticket");
 
-      alert(`✅ Ticket submitted successfully!\nStatus: ${data.ticket.status}`);
+      console.log("✅ Ticket submitted successfully!");
+      console.log("Attachments saved:", data.ticket.attachments.length);
+      console.log("Attachments:", data.ticket.attachments);
+
+      alert(`✅ Ticket submitted successfully!\nStatus: ${data.ticket.status}\nAttachments: ${data.ticket.attachments.length}`);
+      
       ticketForm.reset();
       document.getElementById("attachmentPreview").innerHTML = "";
+      fileInput.value = "";
+      
       await loadMyTickets();
     } catch (err) {
-      console.error("Error submitting ticket:", err);
-      alert("Error submitting ticket.");
+      console.error("❌ Error submitting ticket:", err);
+      alert("Error submitting ticket: " + err.message);
     }
   });
 }
