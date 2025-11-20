@@ -3,11 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reports Dashboard</title>
+  <title>Reports</title>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-  <!-- DataTables CSS -->
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css" />
-  <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css" />
   <style>
     :root {
       --clr-light: #f5f7fa;
@@ -42,7 +39,6 @@
       overflow-x: hidden;
     }
 
-    /* ==== GRID CONTAINER ==== */
     .container {
       display: grid;
       grid-template-columns: 250px 1fr;
@@ -101,7 +97,6 @@
       padding: 0.9rem 1.5rem;
       color: var(--clr-info-dark);
       transition: all 0.2s ease;
-      position: relative;
     }
 
     aside .sidebar a:hover {
@@ -143,21 +138,21 @@
     }
 
     .page-header h1 {
-      font-size: 1.8rem;
+      font-size: 2rem;
       color: var(--clr-dark);
       margin-bottom: 0.5rem;
     }
 
     .page-header p {
       color: var(--clr-info-dark);
-      font-size: 0.95rem;
     }
 
-    /* ==== STATS CARDS ==== */
-    .stats-grid {
+    /* ==== TICKET STATS CARDS ==== */
+    .ticket-stats {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 1.5rem;
+      margin-bottom: 1.5rem;
     }
 
     .stat-card {
@@ -165,131 +160,120 @@
       padding: var(--card-padding);
       border-radius: var(--card-border-radius);
       box-shadow: var(--card-box-shadow);
-      cursor: pointer;
-      transition: all 0.3s ease;
-      border-left: 4px solid transparent;
-    }
-
-    .stat-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
-    }
-
-    .stat-card.active {
-      border-left-color: var(--clr-primary);
-      background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-    }
-
-    .stat-card-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 1rem;
+      gap: 1.5rem;
     }
 
-    .stat-card-header h3 {
-      font-size: 0.9rem;
+    .stat-icon {
+      font-size: 2.5rem;
+      color: var(--clr-primary);
+      background: var(--clr-light);
+      padding: 1rem;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stat-content h3 {
+      font-size: 0.85rem;
       color: var(--clr-info-dark);
-      font-weight: 600;
+      margin-bottom: 0.5rem;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
-    .stat-card-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-    }
-
-    .stat-card-body {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .stat-value {
-      font-size: 2rem;
+    .stat-content .value {
+      font-size: 1.8rem;
       font-weight: 700;
       color: var(--clr-dark);
     }
 
-    .stat-label {
-      font-size: 0.85rem;
-      color: var(--clr-black-variant);
+    /* ==== SECTION TITLE ==== */
+    .section-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--clr-dark);
+      margin-top: 1.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--clr-primary);
     }
 
-    .stat-trend {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.85rem;
-      margin-top: 0.5rem;
-    }
-
-    .stat-trend.up {
-      color: var(--clr-success);
-    }
-
-    .stat-trend.down {
-      color: var(--clr-danger);
-    }
-
-    /* Icon colors */
-    .icon-primary { background: #e3f2fd; color: #1976d2; }
-    .icon-success { background: #e8f5e9; color: #388e3c; }
-    .icon-warning { background: #fff3e0; color: #f57c00; }
-    .icon-danger { background: #ffebee; color: #d32f2f; }
-
-    /* ==== REPORT SECTION ==== */
-    .report-section {
+    /* ==== FILTER SECTION ==== */
+    .filter-section {
       background: var(--clr-white);
       padding: var(--card-padding);
       border-radius: var(--card-border-radius);
       box-shadow: var(--card-box-shadow);
-      display: none;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 1.5rem;
     }
 
-    .report-section.active {
-      display: block;
+    .filter-group {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
     }
 
-    .report-header {
+    .filter-group label {
+      font-weight: 600;
+      color: var(--clr-dark);
+      font-size: 0.9rem;
+    }
+
+    .filter-group input,
+    .filter-group select {
+      padding: 0.6rem 1rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      min-width: 150px;
+    }
+
+    .filter-group button {
+      padding: 0.6rem 1.2rem;
+      background: var(--clr-primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .filter-group button:hover {
+      background: #000;
+    }
+
+    /* ==== REPORT ACTIONS ==== */
+    .report-actions {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
       gap: 1rem;
-    }
-
-    .report-header h2 {
-      font-size: 1.4rem;
-      color: var(--clr-dark);
-    }
-
-    .report-actions {
-      display: flex;
-      gap: 0.8rem;
       flex-wrap: wrap;
+      background: var(--clr-white);
+      padding: var(--card-padding);
+      border-radius: var(--card-border-radius);
+      box-shadow: var(--card-box-shadow);
     }
 
     .report-actions button {
-      padding: 0.7rem 1.3rem;
+      padding: 0.8rem 1.5rem;
       background: var(--clr-primary);
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       font-weight: 600;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
     }
 
     .report-actions button:hover {
@@ -298,178 +282,166 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
-    /* ==== FILTERS ==== */
-    .filters-container {
+    .pagination {
       display: flex;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.8rem;
     }
 
-    .filter-group {
-      flex: 1;
-      min-width: 200px;
-    }
-
-    .filter-group label {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--clr-dark);
-      margin-bottom: 0.5rem;
-    }
-
-    .filter-group select,
-    .filter-group input {
-      width: 100%;
-      padding: 0.7rem;
-      border: 1px solid #ddd;
+    .pagination button {
+      padding: 0.6rem 1rem;
+      background: var(--clr-primary);
+      color: white;
+      border: none;
       border-radius: 6px;
-      font-size: 0.9rem;
-      background: white;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.85rem;
       transition: all 0.2s ease;
     }
 
-    .filter-group select:focus,
-    .filter-group input:focus {
-      outline: none;
-      border-color: var(--clr-primary);
-      box-shadow: 0 0 0 3px rgba(19, 19, 21, 0.1);
+    .pagination button:hover {
+      background: #000;
     }
 
-    /* ==== DATATABLE CUSTOMIZATION ==== */
-    .dataTables_wrapper {
+    .pagination button:disabled {
+      background: var(--clr-info-dark);
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    #pageInfo {
+      font-weight: 600;
+      color: var(--clr-dark);
+      min-width: 80px;
+      text-align: center;
+      padding: 0.5rem 0.8rem;
+      background: var(--clr-light);
+      border-radius: 6px;
+    }
+
+    /* ==== TABLE STYLES ==== */
+    .table-container {
+      background: var(--clr-white);
+      padding: var(--card-padding);
+      border-radius: var(--card-border-radius);
+      box-shadow: var(--card-box-shadow);
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
       font-size: 0.9rem;
     }
 
-    table.dataTable {
-      border-collapse: collapse !important;
-      width: 100% !important;
-    }
-
-    table.dataTable thead th {
+    thead {
       background: linear-gradient(135deg, var(--clr-primary) 0%, #2c2c2e 100%);
       color: white;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    th {
       padding: 1rem;
+      text-align: left;
       font-weight: 600;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
+      letter-spacing: 0.3px;
       border: 1px solid #333;
+      word-wrap: break-word;
     }
 
-    table.dataTable tbody td {
-      padding: 0.8rem;
+    tbody tr {
       border: 1px solid #ddd;
-      vertical-align: top;
+      transition: background 0.2s ease;
     }
 
-    table.dataTable tbody tr:hover {
+    tbody tr:hover {
       background: var(--clr-light);
     }
 
-    table.dataTable tbody tr:nth-child(even) {
+    tbody tr:nth-child(even) {
       background: #fafafa;
     }
 
-    /* ==== NESTED TABLE ==== */
+    td {
+      padding: 0.8rem;
+      color: var(--clr-black-variant);
+      border: 1px solid #ddd;
+      word-wrap: break-word;
+    }
+
+    td strong {
+      color: var(--clr-dark);
+      font-weight: 600;
+    }
+
+    /* ==== NESTED TABLE STYLES ==== */
     .nested-table {
       width: 100%;
       border-collapse: collapse;
-      margin: 0;
       background: white;
-      font-size: 0.8rem;
+      border: none;
     }
 
     .nested-table td {
       padding: 0.4rem;
+      font-size: 0.75rem;
       border: 1px solid #ccc;
-      text-align: left;
+      text-align: center;
+      word-break: break-word;
     }
 
-    /* ==== TICKET CARDS ==== */
-    .tickets-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 1.2rem;
+    /* ==== TICKET REPORTS TABLE ==== */
+    .ticket-reports-table {
       margin-top: 1.5rem;
     }
 
-    .ticket-card {
-      background: white;
-      border-radius: 10px;
-      padding: 1.2rem;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      border-left: 4px solid #ddd;
-      transition: all 0.3s ease;
-    }
-
-    .ticket-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-    }
-
-    .ticket-card.pending { border-left-color: var(--clr-warning); }
-    .ticket-card.in-progress { border-left-color: #2196f3; }
-    .ticket-card.resolved { border-left-color: var(--clr-success); }
-    .ticket-card.closed { border-left-color: var(--clr-info-dark); }
-
-    .ticket-header {
+    .report-info {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 1rem;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      padding: 1rem;
+      background: var(--clr-light);
+      border-radius: 8px;
     }
 
-    .ticket-id {
-      font-size: 0.75rem;
-      color: var(--clr-info-dark);
-      font-weight: 600;
-    }
-
-    .ticket-status {
-      padding: 0.3rem 0.8rem;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-
-    .ticket-status.pending { background: #fff3cd; color: #856404; }
-    .ticket-status.in-progress { background: #cfe2ff; color: #084298; }
-    .ticket-status.resolved { background: #d1e7dd; color: #0f5132; }
-    .ticket-status.closed { background: #e2e3e5; color: #41464b; }
-
-    .ticket-subject {
-      font-size: 1rem;
-      font-weight: 600;
+    .report-info p {
+      font-size: 0.95rem;
       color: var(--clr-dark);
-      margin-bottom: 0.5rem;
-    }
-
-    .ticket-concern {
-      font-size: 0.85rem;
-      color: var(--clr-black-variant);
-      margin-bottom: 1rem;
-      line-height: 1.5;
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .ticket-meta {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      font-size: 0.8rem;
-      color: var(--clr-black-variant);
-    }
-
-    .ticket-meta-item {
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
 
-    .ticket-meta-item .material-symbols-outlined {
-      font-size: 1rem;
+    .report-info strong {
+      font-weight: 600;
+      color: var(--clr-primary);
+    }
+
+    .report-info span {
+      color: var(--clr-black-variant);
+      font-weight: 500;
+    }
+
+    /* ==== LOADING STATE ==== */
+    .loading {
+      text-align: center;
+      color: var(--clr-info-dark);
+      font-style: italic;
+      padding: 2rem !important;
+    }
+
+    .no-data {
+      text-align: center;
+      color: var(--clr-info-dark);
+      padding: 2rem;
+      background: var(--clr-light);
+      border-radius: 8px;
     }
 
     /* ==== RESPONSIVE ==== */
@@ -478,56 +450,141 @@
         grid-template-columns: 1fr;
       }
 
-      .stats-grid {
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      table {
+        font-size: 0.85rem;
+      }
+
+      th, td {
+        padding: 0.7rem;
       }
     }
 
     @media (max-width: 768px) {
-      .page-header h1 {
-        font-size: 1.4rem;
+      .container {
+        padding: 0.5rem;
+        gap: 1rem;
       }
 
-      .stat-value {
-        font-size: 1.6rem;
+      aside {
+        height: auto;
+        position: relative;
       }
 
-      .filters-container {
+      aside .sidebar {
+        flex-direction: row;
+        overflow-x: auto;
+      }
+
+      aside .sidebar a {
+        padding: 0.5rem 1rem;
+        white-space: nowrap;
+      }
+
+      .report-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .report-actions button,
+      .pagination button {
+        width: 100%;
+      }
+
+      .filter-section {
         flex-direction: column;
       }
 
       .filter-group {
-        min-width: 100%;
+        width: 100%;
       }
 
-      .report-header {
-        flex-direction: column;
-        align-items: flex-start;
+      .filter-group input,
+      .filter-group select {
+        width: 100%;
       }
 
-      .tickets-grid {
+      .ticket-stats {
         grid-template-columns: 1fr;
+      }
+
+      table {
+        font-size: 0.75rem;
+      }
+
+      th, td {
+        padding: 0.5rem;
+      }
+
+      .page-header h1 {
+        font-size: 1.5rem;
       }
     }
 
-    /* ==== PRINT STYLES ==== */
+    @media (max-width: 480px) {
+      .container {
+        padding: 0.5rem;
+      }
+
+      table {
+        font-size: 0.7rem;
+        min-width: 600px;
+      }
+
+      th, td {
+        padding: 0.4rem;
+      }
+
+      .page-header h1 {
+        font-size: 1.2rem;
+      }
+    }
+
     @media print {
-      aside, .stat-card, .report-actions, .filters-container {
-        display: none !important;
-      }
-
-      .report-section {
-        display: block !important;
-      }
-
       body {
         background: white;
       }
 
+      .report-actions,
+      .filter-section,
+      .page-header {
+        display: none;
+      }
+
       .container {
         grid-template-columns: 1fr;
-        width: 100%;
+        gap: 0;
         padding: 0;
+      }
+
+      aside {
+        display: none;
+      }
+
+      .table-container {
+        box-shadow: none;
+        padding: 0;
+        border-radius: 0;
+      }
+
+      table {
+        page-break-inside: avoid;
+      }
+
+      thead {
+        background: var(--clr-primary) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      th {
+        background: var(--clr-primary) !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      td {
+        border: 1px solid #999 !important;
       }
     }
   </style>
@@ -539,7 +596,8 @@
     <aside>
       <div class="top">
         <div class="logo">
-          <img src="../../image/logo.png" alt="Company Logo" style="height:30px; vertical-align:middle;">
+          <img src="../../image/logo.png" alt="Company Logo" 
+          style="height:30px; vertical-align:middle;">
           <h2>MITHER3</h2>
         </div>
       </div>
@@ -569,7 +627,7 @@
           <h3>Accounts/Branch</h3>
         </a>
         <a href="#" class="active">
-          <span class="material-symbols-outlined">assessment</span>
+          <span class="material-symbols-outlined">description</span>
           <h3>Reports</h3>
         </a>
         <a id="logoutBtn" href="#" class="logout">
@@ -583,171 +641,153 @@
     <main>
       <!-- Page Header -->
       <div class="page-header">
-        <h1>Reports Dashboard</h1>
-        <p id="reportDate"></p>
+        <h1>📊 Reports</h1>
+        <p>Monthly Disposition & Ticket Analytics</p>
       </div>
 
-      <!-- Stats Cards -->
-      <div class="stats-grid">
-        <div class="stat-card active" data-report="disposition">
-          <div class="stat-card-header">
-            <h3>Monthly Disposition</h3>
-            <div class="stat-card-icon icon-primary">
-              <span class="material-symbols-outlined">description</span>
-            </div>
+      <!-- Ticket Stats Cards -->
+      <div class="ticket-stats">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <span class="material-symbols-outlined">description</span>
           </div>
-          <div class="stat-card-body">
-            <div class="stat-value" id="clientCount">0</div>
-            <div class="stat-label">Total Clients/Branches</div>
-            <div class="stat-label" style="margin-top: 0.5rem;">
-              <strong id="guardCount">0</strong> Guards Deployed
-            </div>
+          <div class="stat-content">
+            <h3>Total Tickets</h3>
+            <div class="value" id="totalTickets">0</div>
           </div>
         </div>
-
-        <div class="stat-card" data-report="tickets">
-          <div class="stat-card-header">
-            <h3>Monthly Tickets</h3>
-            <div class="stat-card-icon icon-warning">
-              <span class="material-symbols-outlined">support_agent</span>
-            </div>
+        <div class="stat-card">
+          <div class="stat-icon">
+            <span class="material-symbols-outlined">pending_actions</span>
           </div>
-          <div class="stat-card-body">
-            <div class="stat-value" id="totalTickets">0</div>
-            <div class="stat-label">Total Tickets This Month</div>
-            <div class="stat-trend up" id="ticketTrend">
-              <span class="material-symbols-outlined">trending_up</span>
-              <span>View Details</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="stat-card" data-report="pending">
-          <div class="stat-card-header">
+          <div class="stat-content">
             <h3>Pending Tickets</h3>
-            <div class="stat-card-icon icon-danger">
-              <span class="material-symbols-outlined">pending_actions</span>
-            </div>
-          </div>
-          <div class="stat-card-body">
-            <div class="stat-value" id="pendingTickets">0</div>
-            <div class="stat-label">Requires Attention</div>
+            <div class="value" id="pendingTickets">0</div>
           </div>
         </div>
-
-        <div class="stat-card" data-report="resolved">
-          <div class="stat-card-header">
-            <h3>Resolved Tickets</h3>
-            <div class="stat-card-icon icon-success">
-              <span class="material-symbols-outlined">check_circle</span>
-            </div>
+        <div class="stat-card">
+          <div class="stat-icon">
+            <span class="material-symbols-outlined">done_all</span>
           </div>
-          <div class="stat-card-body">
-            <div class="stat-value" id="resolvedTickets">0</div>
-            <div class="stat-label">Successfully Closed</div>
+          <div class="stat-content">
+            <h3>Resolved Tickets</h3>
+            <div class="value" id="resolvedTickets">0</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">
+            <span class="material-symbols-outlined">groups</span>
+          </div>
+          <div class="stat-content">
+            <h3>Total Guards</h3>
+            <div class="value" id="totalGuards">0</div>
           </div>
         </div>
       </div>
 
       <!-- Monthly Disposition Report Section -->
-      <div class="report-section active" id="dispositionReport">
-        <div class="report-header">
-          <h2>Monthly Disposition Report</h2>
-          <div class="report-actions">
-            <button id="downloadBtn">
-              <span class="material-symbols-outlined">download</span>
-              Download PDF
-            </button>
-          </div>
+      <h2 class="section-title">📋 Monthly Disposition Report</h2>
+
+      <!-- Filter Section -->
+      <div class="filter-section">
+        <div class="filter-group">
+          <label for="branchFilter">Filter by Branch (Letter):</label>
+          <input type="text" id="branchFilter" placeholder="e.g., A, B, C...">
+          <button id="filterByBranchBtn">Filter</button>
+        </div>
+        <div class="filter-group">
+          <label for="guardCountFilter">Filter by Guard Count:</label>
+          <select id="guardCountFilter">
+            <option value="">All</option>
+            <option value="1-5">1-5 Guards</option>
+            <option value="6-10">6-10 Guards</option>
+            <option value="11-20">11-20 Guards</option>
+            <option value="21+">21+ Guards</option>
+          </select>
+          <button id="filterByGuardCountBtn">Filter</button>
+        </div>
+        <button id="resetFiltersBtn" style="margin-left: auto;">🔄 Reset Filters</button>
+      </div>
+
+      <!-- Report Actions -->
+      <div class="report-actions">
+        <button id="downloadDispositionBtn">⬇️ Download PDF</button>
+        <div class="pagination">
+          <button id="prevPageBtn">⬅ Prev</button>
+          <span id="pageInfo">Page 1</span>
+          <button id="nextPageBtn">Next ➡</button>
+        </div>
+      </div>
+
+      <!-- Disposition Report Table -->
+      <div class="table-container" id="dispositionContent">
+        <h3 style="margin-bottom: 1rem; color: var(--clr-dark);">Disposition Report - <span id="reportMonth"></span></h3>
+        <div class="report-info">
+          <p><strong>Report Date:</strong> <span id="reportDate"></span></p>
+          <p><strong>Total Clients:</strong> <span id="clientCount">0</span></p>
+          <p><strong>Total Guards:</strong> <span id="guardCount">0</span></p>
         </div>
 
-        <div class="filters-container">
-          <div class="filter-group">
-            <label>Filter by Client/Branch</label>
-            <select id="branchFilter">
-              <option value="">All Branches</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label>Filter by Guards Count</label>
-            <select id="guardsFilter">
-              <option value="">All</option>
-              <option value="0">No Guards</option>
-              <option value="1-5">1-5 Guards</option>
-              <option value="6-10">6-10 Guards</option>
-              <option value="11+">11+ Guards</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label>Search</label>
-            <input type="text" id="searchFilter" placeholder="Search by name, badge, etc...">
-          </div>
-        </div>
-
-        <table id="dispositionTable" class="display responsive nowrap" style="width:100%">
+        <table id="dispositionTable">
           <thead>
             <tr>
               <th>CLIENT / BRANCH</th>
-              <th>NAME OF GUARDS</th>
+              <th>NAME OF GUARDS<br>(FAMILY NAME, FIRST NAME, MID NAME)</th>
               <th>EDUCATIONAL ATTAINMENT</th>
-              <th>LICENSE & EXPIRY</th>
+              <th>LICENSE NR & EXPIRY DATE</th>
               <th>BADGE NO</th>
-              <th>FIREARMS ISSUED</th>
+              <th>FIREARMS ISSUED<br>(KIND, MAKE, SN)</th>
             </tr>
           </thead>
           <tbody id="reportBody">
+            <tr><td colspan="6" class="loading">Loading data...</td></tr>
           </tbody>
         </table>
       </div>
 
-      <!-- Monthly Tickets Report Section -->
-      <div class="report-section" id="ticketsReport">
-        <div class="report-header">
-          <h2>Monthly Ticket Reports</h2>
-          <div class="report-actions">
-            <button id="exportTicketsBtn">
-              <span class="material-symbols-outlined">file_download</span>
-              Export Data
-            </button>
-          </div>
+      <!-- Monthly Ticket Report Section -->
+      <h2 class="section-title">🎟️ Monthly Ticket Report</h2>
+
+      <!-- Ticket Report Actions -->
+      <div class="report-actions">
+        <button id="downloadTicketReportBtn">⬇️ Download Ticket Report</button>
+        <div class="pagination">
+          <button id="prevTicketPageBtn">⬅ Prev</button>
+          <span id="ticketPageInfo">Page 1</span>
+          <button id="nextTicketPageBtn">Next ➡</button>
+        </div>
+      </div>
+
+      <!-- Ticket Reports Table -->
+      <div class="table-container ticket-reports-table" id="ticketReportContent">
+        <h3 style="margin-bottom: 1rem; color: var(--clr-dark);">Tickets Submitted - <span id="ticketReportMonth"></span></h3>
+        <div class="report-info">
+          <p><strong>Report Date:</strong> <span id="ticketReportDate"></span></p>
+          <p><strong>Total Tickets:</strong> <span id="monthlyTicketCount">0</span></p>
         </div>
 
-        <div class="filters-container">
-          <div class="filter-group">
-            <label>Filter by Status</label>
-            <select id="ticketStatusFilter">
-              <option value="">All Status</option>
-              <option value="Pending">Pending</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Resolved">Resolved</option>
-              <option value="Closed">Closed</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label>Filter by Source</label>
-            <select id="ticketSourceFilter">
-              <option value="">All Sources</option>
-              <option value="Guard">Guard</option>
-              <option value="Client">Client</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="tickets-grid" id="ticketsGrid">
-          <!-- Ticket cards will be inserted here -->
-        </div>
+        <table id="ticketTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>TICKET ID</th>
+              <th>SUBJECT</th>
+              <th>CREATOR</th>
+              <th>ROLE</th>
+              <th>BRANCH</th>
+              <th>STATUS</th>
+              <th>SUBMITTED DATE</th>
+            </tr>
+          </thead>
+          <tbody id="ticketReportBody">
+            <tr><td colspan="8" class="loading">Loading tickets...</td></tr>
+          </tbody>
+        </table>
       </div>
     </main>
   </div>
 
-  <!-- jQuery (required for DataTables) -->
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <!-- DataTables JS -->
-  <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-  <!-- html2pdf -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  
   <script src="../js/reports.js"></script>
 </body>
 </html>
