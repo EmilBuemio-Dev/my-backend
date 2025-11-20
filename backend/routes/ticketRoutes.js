@@ -85,6 +85,8 @@ router.post("/", authMiddleware, upload.array("ticketAttachment", 10), async (re
     const ticketPriority = validPriorities.includes(priority) ? priority : "Pending";
 
     // ===== Create Ticket =====
+    // Status is always "Pending" - NOT automatically "Urgent"
+    // Only the priority field reflects the client's selection
     const newTicket = new Ticket({
       creatorId: userId,
       creatorEmail: userEmail,
@@ -98,7 +100,7 @@ router.post("/", authMiddleware, upload.array("ticketAttachment", 10), async (re
       reportedEmployeeName,
       attachments: attachmentPaths,
       source: creatorRole === "client" ? "Client" : "Guard",
-      status: "Pending", // ✅ No longer automatically "Urgent"
+      status: "Pending", // Always Pending, not Urgent
     });
 
     await newTicket.save();

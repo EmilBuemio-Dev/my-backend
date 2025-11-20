@@ -11,17 +11,17 @@ const TicketSchema = new mongoose.Schema({
   subject: { type: String, required: true },
   concern: { type: String, required: true },
   priority: { type: String, enum: ["Pending", "Urgent"], default: "Pending" },
-  // ✅ NEW: Multiple attachments array
+  // ✅ Multiple attachments array
   attachments: [
-    { type: String, default: null }
+    { type: String }
   ],
   source: { type: String, default: "Guard" },
-  status: { type: String, default: "Pending" },
+  status: { type: String, enum: ["Pending", "Completed"], default: "Pending" },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
 
-// Pre-save hook to set source based on role
+// Pre-save hook to set source based on role (do NOT automatically set status)
 TicketSchema.pre("save", function (next) {
   if (this.creatorRole === "client") {
     this.source = "Client";

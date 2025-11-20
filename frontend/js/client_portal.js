@@ -356,6 +356,8 @@ function initFilePreview() {
 
     const title = document.createElement("p");
     title.style.fontWeight = "600";
+    title.style.color = "var(--clr-dark)";
+    title.style.marginBottom = "0.5rem";
     title.textContent = `Selected Files (${selectedFiles.length})`;
     container.appendChild(title);
 
@@ -370,10 +372,11 @@ function initFilePreview() {
         const fileItem = document.createElement("div");
         fileItem.style.display = "flex";
         fileItem.style.gap = "0.5rem";
-        fileItem.style.alignItems = "flex-start";
+        fileItem.style.alignItems = "center";
         fileItem.style.padding = "0.5rem";
         fileItem.style.background = "var(--clr-white)";
         fileItem.style.borderRadius = "6px";
+        fileItem.style.position = "relative";
 
         const img = document.createElement("img");
         img.src = event.target.result;
@@ -381,12 +384,14 @@ function initFilePreview() {
         img.style.height = "60px";
         img.style.borderRadius = "4px";
         img.style.objectFit = "cover";
+        img.style.flexShrink = "0";
 
         const info = document.createElement("div");
         info.style.flex = "1";
+        info.style.minWidth = "0";
         info.innerHTML = `
-          <p style="font-size: 0.85rem; margin: 0;">${file.name}</p>
-          <p style="font-size: 0.75rem; color: #999; margin: 0.25rem 0 0 0;">${(file.size / 1024).toFixed(2)} KB</p>
+          <p style="font-size: 0.85rem; color: var(--clr-dark); font-weight: 500; margin: 0; word-break: break-word;">${file.name}</p>
+          <p style="font-size: 0.75rem; color: var(--clr-black-variant); margin: 0.25rem 0 0 0;">${(file.size / 1024).toFixed(2)} KB</p>
         `;
 
         const removeBtn = document.createElement("button");
@@ -396,9 +401,17 @@ function initFilePreview() {
         removeBtn.style.color = "white";
         removeBtn.style.border = "none";
         removeBtn.style.borderRadius = "50%";
-        removeBtn.style.width = "24px";
-        removeBtn.style.height = "24px";
+        removeBtn.style.width = "28px";
+        removeBtn.style.height = "28px";
+        removeBtn.style.minWidth = "28px";
         removeBtn.style.cursor = "pointer";
+        removeBtn.style.fontSize = "1.4rem";
+        removeBtn.style.padding = "0";
+        removeBtn.style.display = "flex";
+        removeBtn.style.alignItems = "center";
+        removeBtn.style.justifyContent = "center";
+        removeBtn.style.flexShrink = "0";
+        removeBtn.style.lineHeight = "1";
         removeBtn.addEventListener("click", (e) => {
           e.preventDefault();
           selectedFiles.splice(index, 1);
@@ -462,6 +475,7 @@ function initTicketSubmit() {
         Array.from(fileInput.files).forEach((file) => {
           formData.append(`ticketAttachment`, file);
         });
+        console.log("📎 Files attached:", fileInput.files.length);
       }
 
       const res = await fetch("https://www.mither3security.com/tickets", {
@@ -473,7 +487,7 @@ function initTicketSubmit() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to submit ticket");
 
-      alert(`✅ Ticket submitted successfully!\nStatus: ${data.ticket.status}`);
+      alert(`✅ Ticket submitted successfully!\nStatus: ${data.ticket.status}\nPriority: ${data.ticket.priority}`);
       ticketForm.reset();
       document.getElementById("attachmentPreview").innerHTML = "";
       await loadMyTickets();
@@ -571,11 +585,15 @@ async function openTicketModal(ticket) {
   if (ticket.attachments && ticket.attachments.length > 0) {
     attachmentHTML = `
       <div class="ticket-detail-item">
-        <strong>Attachments:</strong>
+        <strong>Attachments (${ticket.attachments.length}):</strong>
         <div style="margin-top: 0.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 0.5rem;">
           ${ticket.attachments.map(att => `
-            <img src="https://www.mither3security.com${att}" alt="attachment" 
-                 style="max-width: 100%; height: 100px; border-radius: 6px; object-fit: cover; cursor: pointer;">
+            <a href="https://www.mither3security.com${att}" target="_blank" style="cursor: pointer;">
+              <img src="https://www.mither3security.com${att}" alt="attachment" 
+                   style="max-width: 100%; height: 100px; border-radius: 6px; object-fit: cover; cursor: pointer; border: 2px solid #ddd; transition: transform 0.2s ease;"
+                   onmouseover="this.style.transform='scale(1.05)'"
+                   onmouseout="this.style.transform='scale(1)'">
+            </a>
           `).join("")}
         </div>
       </div>
@@ -590,7 +608,7 @@ async function openTicketModal(ticket) {
       <strong>Status:</strong> <span class="status ${ticket.status.toLowerCase()}">${ticket.status}</span>
     </div>
     <div class="ticket-detail-item">
-      <strong>Priority:</strong> <span class="status ${ticket.priority?.toLowerCase() || 'pending'}">${ticket.priority || 'Pending'}</span>
+      <strong>Priority:</strong> <span class="status ${(ticket.priority || 'pending').toLowerCase()}">${ticket.priority || 'Pending'}</span>
     </div>
     <div class="ticket-detail-item">
       <strong>Date:</strong> ${new Date(ticket.createdAt).toLocaleString()}
