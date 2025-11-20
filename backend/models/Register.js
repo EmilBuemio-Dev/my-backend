@@ -28,7 +28,5 @@ const registerSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-registerSchema.index({ email: 1 });
-registerSchema.index({ faceEnrollmentId: 1 });
 
 export default mongoose.model("Register", registerSchema);
