@@ -21,7 +21,7 @@ const TicketSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-// Pre-save hook to set source based on role (do NOT automatically set status)
+// Pre-save hook to set source based on role
 TicketSchema.pre("save", function (next) {
   if (this.creatorRole === "client") {
     this.source = "Client";

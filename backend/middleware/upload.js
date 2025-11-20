@@ -43,6 +43,9 @@ const storage = multer.diskStorage({
     if (file.fieldname === "ticketAttachment") {
       folder = "ticket_attachments";
       console.log("   ✅ Ticket attachment detected → folder: ticket_attachments");
+      const dest = ensureUploadPath(folder);
+      console.log("   📍 Destination:", dest);
+      return cb(null, dest);
     }
     // ✅ Employee profile upload → "employee_profiles" folder
     else if (file.fieldname === "employeeProfile") {
@@ -113,7 +116,17 @@ const storage = multer.diskStorage({
   },
 
   filename: (req, file, cb) => {
-        // ✅ Employee profile image
+    // ✅ TICKET ATTACHMENT - Unique timestamp-based filename
+    if (file.fieldname === "ticketAttachment") {
+      const timestamp = Date.now();
+      const random = Math.floor(Math.random() * 10000);
+      const ext = path.extname(file.originalname);
+      const filename = `ticket-${timestamp}-${random}${ext}`;
+      console.log(`   📄 Ticket filename: ${filename}`);
+      return cb(null, filename);
+    }
+
+    // ✅ Employee profile image
     if (file.fieldname === "employeeProfile") {
       return cb(
         null,
@@ -145,14 +158,6 @@ const storage = multer.diskStorage({
       );
     }
 
-    // ✅ TICKET ATTACHMENT
-    if (file.fieldname === "ticketAttachment") {
-      return cb(
-        null,
-        `ticket-${Date.now()}${path.extname(file.originalname)}`
-      );
-    }
-
     // ✅ Credential files (both applicant and employee)
     const filename =
       credentialFiles[file.fieldname] ||
@@ -165,28 +170,39 @@ const storage = multer.diskStorage({
 
 // ===== File Filter (Accept only PDFs and images) =====
 const fileFilter = (req, file, cb) => {
-  // Allow images for ticket attachments, profiles and attendance
-  if (file.fieldname === "ticketAttachment" && file.mimetype.startsWith("image/")) {
-    return cb(null, true);
+  console.log(`🔍 File filter check: ${file.fieldname} (${file.mimetype})`);
+
+  // Allow images for ticket attachments
+  if (file.fieldname === "ticketAttachment") {
+    if (file.mimetype.startsWith("image/")) {
+      console.log(`   ✅ Ticket image accepted: ${file.mimetype}`);
+      return cb(null, true);
+    } else {
+      console.log(`   ❌ Ticket file rejected: ${file.mimetype} (only images allowed)`);
+      return cb(new Error(`Only image files allowed for tickets. Received: ${file.mimetype}`));
+    }
   }
 
   // Allow PDFs for credentials and contracts
   if (file.mimetype === "application/pdf") {
+    console.log(`   ✅ PDF accepted`);
     return cb(null, true);
   }
 
   if (file.fieldname === "contract" && 
       (file.mimetype === "application/msword" || 
        file.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document")) {
+    console.log(`   ✅ Word document accepted`);
     return cb(null, true);
   }
 
   // Allow images for profiles and attendance
   if (file.mimetype.startsWith("image/")) {
+    console.log(`   ✅ Image accepted: ${file.mimetype}`);
     return cb(null, true);
   }
 
-  console.log("❌ Rejected file type:", file.mimetype);
+  console.log(`   ❌ File type rejected: ${file.mimetype}`);
   cb(new Error(`File type not allowed: ${file.mimetype}`));
 };
 

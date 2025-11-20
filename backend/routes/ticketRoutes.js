@@ -1,16 +1,3 @@
-import express from "express";
-import Ticket from "../models/Ticket.js";
-import User from "../models/User.js";
-import Employee from "../models/Employee.js";
-import Branch from "../models/Branch.js";
-import upload from "../middleware/upload.js";
-import { authMiddleware } from "../middleware/auth.js";
-
-const router = express.Router();
-
-// ===============================
-// CREATE TICKET (with multiple images)
-// ===============================
 router.post("/", authMiddleware, upload.array("ticketAttachment", 10), async (req, res) => {
   try {
     const { subject, concern, priority, reportedEmployeeId } = req.body;
@@ -19,6 +6,11 @@ router.post("/", authMiddleware, upload.array("ticketAttachment", 10), async (re
     const userId = req.user.id;
     const userEmail = req.user.email;
     const userRole = req.user.role;
+
+    console.log("=== TICKET CREATION START ===");
+    console.log("UserId:", userId);
+    console.log("UserEmail:", userEmail);
+    console.log("UserRole:", userRole);
 
     if (!userId || !userEmail) {
       return res.status(401).json({ message: "Invalid user session. Please log in again." });
@@ -73,20 +65,39 @@ router.post("/", authMiddleware, upload.array("ticketAttachment", 10), async (re
       }
     }
 
-    // ✅ Handle multiple attachments (only for client tickets)
+    // ✅ Handle multiple attachments - FIX: Use relative path format
     let attachmentPaths = [];
-    if (creatorRole === "client" && req.files && req.files.length > 0) {
-      attachmentPaths = req.files.map(file => `/uploads/ticket_attachments/${file.filename}`);
-      console.log("✅ Client ticket attachments:", attachmentPaths);
+    if (req.files && req.files.length > 0) {
+      console.log("=== FILES RECEIVED ===");
+      console.log("Number of files:", req.files.length);
+      
+      attachmentPaths = req.files.map((file, index) => {
+        // Use the exact path format: /uploads/ticket_attachments/filename
+        const relativePath = `/uploads/ticket_attachments/${file.filename}`;
+        console.log(`File ${index + 1}:`);
+        console.log("  Fieldname:", file.fieldname);
+        console.log("  Original:", file.originalname);
+        console.log("  Filename:", file.filename);
+        console.log("  Path:", relativePath);
+        return relativePath;
+      });
+      
+      console.log("Final attachmentPaths:", attachmentPaths);
+    } else {
+      console.log("⚠️ No files received");
     }
 
     // ===== Validate priority =====
     const validPriorities = ["Pending", "Urgent"];
     const ticketPriority = validPriorities.includes(priority) ? priority : "Pending";
 
+    console.log("=== TICKET DATA ===");
+    console.log("Subject:", subject);
+    console.log("Priority:", ticketPriority);
+    console.log("Status: Pending (always)");
+    console.log("Attachments:", attachmentPaths);
+
     // ===== Create Ticket =====
-    // Status is always "Pending" - NOT automatically "Urgent"
-    // Only the priority field reflects the client's selection
     const newTicket = new Ticket({
       creatorId: userId,
       creatorEmail: userEmail,
@@ -100,16 +111,25 @@ router.post("/", authMiddleware, upload.array("ticketAttachment", 10), async (re
       reportedEmployeeName,
       attachments: attachmentPaths,
       source: creatorRole === "client" ? "Client" : "Guard",
-      status: "Pending", // Always Pending, not Urgent
+      status: "Pending",
     });
 
     await newTicket.save();
+    
+    console.log("✅ TICKET SAVED:");
+    console.log("  ID:", newTicket._id);
+    console.log("  Subject:", newTicket.subject);
+    console.log("  Priority:", newTicket.priority);
+    console.log("  Status:", newTicket.status);
+    console.log("  Attachments:", newTicket.attachments);
+    console.log("=== TICKET CREATION END ===\n");
+
     res.status(201).json({
       message: "Ticket created successfully",
       ticket: newTicket,
     });
   } catch (err) {
-    console.error("Error creating ticket:", err);
+    console.error("❌ Error creating ticket:", err);
     res.status(500).json({
       message: "Server error while creating ticket",
       error: err.message,
@@ -126,13 +146,10 @@ router.get("/", authMiddleware, async (req, res) => {
     let tickets;
 
     if (reportedEmployeeId) {
-      // ✅ If client wants to see all concerns for a specific guard
       tickets = await Ticket.find({ reportedEmployeeId }).sort({ createdAt: -1 });
     } else if (req.user.role === "admin" || req.user.role === "hr") {
-      // ✅ Admin/HR can see all tickets
       tickets = await Ticket.find().sort({ createdAt: -1 });
     } else {
-      // ✅ Regular user sees only their own tickets
       tickets = await Ticket.find({ creatorId: req.user.id }).sort({ createdAt: -1 });
     }
 
