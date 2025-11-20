@@ -12,6 +12,7 @@ export const authMiddleware = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    // ===== BUILD USER OBJECT FROM DECODED TOKEN =====
     req.user = {
       id: decoded.id,
       email: decoded.email || null,
@@ -19,15 +20,25 @@ export const authMiddleware = async (req, res, next) => {
       role: decoded.role || null,
       branch: decoded.branch || null,
       clientIdNumber: decoded.clientIdNumber || null,
+      badgeNo: decoded.badgeNo || null, // ✅ Extract badgeNo from token
     };
 
+    // ===== FALLBACK: Fetch missing data from database if needed =====
     if (!req.user.email || !req.user.name) {
-      let foundUser = await User.findById(decoded.id).select("email name role branch");
+      let foundUser = await User.findById(decoded.id).select(
+        "email name role branch badgeNumber"
+      );
+      
       if (!foundUser) {
-        foundUser = await Employee.findById(decoded.id).select("employeeData.personalData.email employeeData.personalData.name employeeData.basicInformation.branch");
+        foundUser = await Employee.findById(decoded.id).select(
+          "employeeData.personalData.email employeeData.personalData.name employeeData.basicInformation.branch"
+        );
       }
+      
       if (!foundUser) {
-        foundUser = await Branch.findById(decoded.id).select("branchData.email branchData.name branchData.branch");
+        foundUser = await Branch.findById(decoded.id).select(
+          "branchData.email branchData.name branchData.branch"
+        );
       }
 
       if (foundUser) {
@@ -50,12 +61,23 @@ export const authMiddleware = async (req, res, next) => {
           req.user.branch;
 
         req.user.role = req.user.role || foundUser.role || "client";
+
+        // ✅ Fetch badgeNumber if not in token
+        if (!req.user.badgeNo && foundUser.badgeNumber) {
+          req.user.badgeNo = foundUser.badgeNumber;
+        }
       }
     }
 
     if (!req.user.email) {
       return res.status(401).json({ msg: "User email missing in token or database" });
     }
+
+    console.log("✅ Auth middleware - User:", {
+      id: req.user.id,
+      role: req.user.role,
+      badgeNo: req.user.badgeNo, // ✅ Log badgeNo for debugging
+    });
 
     next();
   } catch (err) {

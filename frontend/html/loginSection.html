@@ -1131,7 +1131,7 @@
         }
       });
 
-      // ===== USER LOGIN =====
+      // ===== USER LOGIN - UPDATED TO INCLUDE BADGE NO IN TOKEN =====
       userGetOtpBtn.addEventListener("click", async () => {
         userErrorP.textContent = "";
         userSuccessP.textContent = "";
@@ -1247,7 +1247,16 @@
           localStorage.setItem("role", data.role);
 
           if (userType === "employee") {
+            // ✅ UPDATED: Store badgeNo from response for time-in operations
             localStorage.setItem("employeeId", data.employeeId || "N/A");
+            localStorage.setItem("badgeNo", data.badgeNo || data.badgeNumber || "N/A");
+            
+            console.log("✅ Employee login successful");
+            console.log("🔐 Stored Values:");
+            console.log("  - Token:", localStorage.getItem("token") ? "✓" : "✗");
+            console.log("  - Employee ID:", localStorage.getItem("employeeId"));
+            console.log("  - Badge No:", localStorage.getItem("badgeNo"));
+            
             if (data.requirePasswordChange) {
               changePasswordModal.classList.add("show");
               return;
@@ -1404,14 +1413,12 @@
         }
       });
 
-      // ===== ENROLL FACE BUTTON - FIXED LINE 1542 =====
+      // ===== ENROLL FACE BUTTON =====
       enrollFaceBtn.addEventListener("click", async (e) => {
         e.preventDefault();
 
-        // FIXED: Check if models are loaded using the modelsLoaded variable instead of isLoaded()
         if (!modelsLoaded) {
           showRegistrationMessage('⏳ Face detection models are still loading. Please wait...', 'info');
-          // Attempt to load if not already loaded
           const loaded = await loadFaceAPIModels();
           if (!loaded) {
             showRegistrationMessage('❌ Failed to load face detection models. Please refresh the page.', 'error');

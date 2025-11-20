@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Branch from "../models/Branch.js";
 import User from "../models/User.js";
-import resend from "../config/email.js"; // ✅ Import from config, not initialize here
+import resend from "../config/email.js";
 import { authMiddleware, roleMiddleware } from "../middleware/auth.js";
 
 const router = express.Router();
@@ -218,7 +218,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// ===== VERIFY OTP =====
+// ===== VERIFY OTP - WITH BADGE NO IN TOKEN =====
 router.post("/verify-otp", async (req, res) => {
   let { email, otp } = req.body;
 
@@ -239,12 +239,15 @@ router.post("/verify-otp", async (req, res) => {
     user.otpExpires = undefined;
     await user.save();
 
-    // Create JWT payload
+    // ===== CREATE JWT PAYLOAD WITH BADGE NO FOR EMPLOYEES =====
     const payload = {
       id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
+      badgeNo: user.role === "employee" ? user.badgeNumber : undefined, // ✅ Add badgeNo for employees
+      branch: user.branch || undefined,
+      clientIdNumber: user.role === "client" ? user.clientIdNumber : undefined,
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
@@ -258,6 +261,7 @@ router.post("/verify-otp", async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      badgeNo: user.role === "employee" ? user.badgeNumber : null, // ✅ Include in response
       clientIdNumber: user.clientIdNumber || null,
       badgeNumber: user.badgeNumber || null,
       employeeId: user.employeeId || null,
