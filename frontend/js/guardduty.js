@@ -194,6 +194,41 @@ document.addEventListener("DOMContentLoaded", () => {
   const uploadBtn = document.getElementById("usePhotoBtn");
   let stream;
 
+  // ===== IMAGE COMPRESSION FUNCTION =====
+  function compressImage(imageData, maxWidth = 320, maxHeight = 240, quality = 0.6) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+
+        // Calculate new dimensions
+        if (width > height) {
+          if (width > maxWidth) {
+            height *= maxWidth / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width *= maxHeight / height;
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Compress and return
+        const compressedData = canvas.toDataURL("image/jpeg", quality);
+        resolve(compressedData);
+      };
+      img.src = imageData;
+    });
+  }
+
   // ===== STATUS INDICATOR FOR FACE DETECTION =====
   let faceDetectionStatus = document.createElement("div");
   faceDetectionStatus.id = "faceDetectionStatus";
@@ -271,7 +306,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==== SUBMIT CHECK-IN WITH FACE VERIFICATION ====
   checkinForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const imageData = capturedImageInput.value;
+    let imageData = capturedImageInput.value;
     if (!imageData) return alert("Please take a photo first!");
 
     const token = localStorage.getItem("token");
@@ -283,15 +318,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     console.log("🔐 Starting face verification for check-in...");
+    console.log("📷 Original image size:", (imageData.length / 1024).toFixed(2), "KB");
 
     try {
       // ===== SHOW PROCESSING STATE =====
       checkinResultDiv.style.display = "block";
       checkinResultDiv.innerHTML = `
         <div style="background-color: #e3f2fd; border: 1px solid #90caf9; color: #1565c0; padding: 15px; border-radius: 4px;">
-          <p style="margin: 0;">⏳ Processing face verification... Please wait.</p>
+          <p style="margin: 0;">⏳ Compressing image and processing face verification... Please wait.</p>
         </div>
       `;
+
+      // ===== COMPRESS IMAGE BEFORE SENDING =====
+      imageData = await compressImage(imageData, 320, 240, 0.5);
+      console.log("📦 Compressed image size:", (imageData.length / 1024).toFixed(2), "KB");
 
       // ===== SUBMIT WITH FACE VERIFICATION =====
       const res = await fetch("https://www.mither3security.com/checkin", {
@@ -618,6 +658,5 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("Failed to load tickets or leave requests.");
     }
   }
-
   loadMyTickets();
 });
