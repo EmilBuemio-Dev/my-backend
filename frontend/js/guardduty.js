@@ -304,122 +304,134 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==== SUBMIT CHECK-IN WITH FACE VERIFICATION ====
-  checkinForm?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    let imageData = capturedImageInput.value;
-    if (!imageData) return alert("Please take a photo first!");
+ // ==== SUBMIT CHECK-IN WITH FACE VERIFICATION ====
+checkinForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  let imageData = capturedImageInput.value;
+  if (!imageData) return alert("Please take a photo first!");
 
-    const token = localStorage.getItem("token");
-    const employeeId = localStorage.getItem("employeeId");
-    const badgeNo = localStorage.getItem("badgeNo");
+  const token = localStorage.getItem("token");
+  const employeeId = localStorage.getItem("employeeId");
+  const badgeNo = localStorage.getItem("badgeNo");
 
-    if (!token || !employeeId || !badgeNo) {
-      return alert("Missing token, employee ID, or badge number.");
+  if (!token || !employeeId || !badgeNo) {
+    return alert("Missing token, employee ID, or badge number.");
+  }
+
+  console.log("🔐 Starting face verification for check-in...");
+  console.log("📷 Original image size:", (imageData.length / 1024).toFixed(2), "KB");
+
+  try {
+    // ===== SHOW PROCESSING STATE =====
+    checkinResultDiv.style.display = "block";
+    checkinResultDiv.innerHTML = `
+      <div style="background-color: #e3f2fd; border: 1px solid #90caf9; color: #1565c0; padding: 15px; border-radius: 4px;">
+        <p style="margin: 0;">⏳ Compressing image and processing face verification... Please wait.</p>
+      </div>
+    `;
+
+    // ===== COMPRESS IMAGE BEFORE SENDING =====
+    imageData = await compressImage(imageData, 320, 240, 0.5);
+    console.log("📦 Compressed image size:", (imageData.length / 1024).toFixed(2), "KB");
+
+    // ===== REMOVE DATA URL PREFIX IF PRESENT =====
+    const base64Only = imageData.replace(/^data:image\/\w+;base64,/, "");
+
+    // ===== SUBMIT WITH FACE VERIFICATION =====
+    const res = await fetch("https://www.mither3security.com/checkin", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        employeeId,
+        badgeNo,
+        imageBase64: base64Only, // Send clean base64 without prefix
+      }),
+    });
+
+    // ===== CHECK IF RESPONSE IS JSON =====
+    const contentType = res.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      console.error("❌ Server returned non-JSON response");
+      throw new Error("Server error. Please try again later.");
     }
 
-    console.log("🔐 Starting face verification for check-in...");
-    console.log("📷 Original image size:", (imageData.length / 1024).toFixed(2), "KB");
+    const data = await res.json();
 
-    try {
-      // ===== SHOW PROCESSING STATE =====
-      checkinResultDiv.style.display = "block";
-      checkinResultDiv.innerHTML = `
-        <div style="background-color: #e3f2fd; border: 1px solid #90caf9; color: #1565c0; padding: 15px; border-radius: 4px;">
-          <p style="margin: 0;">⏳ Compressing image and processing face verification... Please wait.</p>
-        </div>
-      `;
+    if (!res.ok) {
+      console.log("❌ Check-in failed:", data);
 
-      // ===== COMPRESS IMAGE BEFORE SENDING =====
-      imageData = await compressImage(imageData, 320, 240, 0.5);
-      console.log("📦 Compressed image size:", (imageData.length / 1024).toFixed(2), "KB");
-
-      // ===== SUBMIT WITH FACE VERIFICATION =====
-      const res = await fetch("https://www.mither3security.com/checkin", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          employeeId,
-          badgeNo,
-          imageBase64: imageData,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        console.log("❌ Check-in failed:", data);
-
-        // ===== HANDLE FACE VERIFICATION FAILURE =====
-        if (data.requireRetake) {
-          checkinResultDiv.innerHTML = `
-            <div style="background-color: #ffebee; border: 1px solid #ef5350; color: #c62828; padding: 15px; border-radius: 4px;">
-              <p style="margin: 0 0 10px 0;"><strong>❌ Face Verification Failed</strong></p>
-              <p style="margin: 5px 0;">Reason: ${data.message || data.detail || "Face does not match enrolled face."}</p>
-              ${data.distance ? `<p style="margin: 5px 0; font-size: 0.9rem;">Distance: ${data.distance.toFixed(2)}</p>` : ''}
-              ${data.confidence ? `<p style="margin: 5px 0; font-size: 0.9rem;">Confidence: ${(data.confidence * 100).toFixed(1)}%</p>` : ''}
-              <p style="margin: 10px 0 0 0; font-size: 0.9rem; font-weight: 600;">Please retake your photo and ensure:</p>
-              <ul style="margin: 5px 0 0 0; font-size: 0.9rem;">
-                <li>Your face is clearly visible</li>
-                <li>Good lighting in the area</li>
-                <li>Face is centered in camera</li>
-                <li>Similar to enrolled face photo</li>
-              </ul>
-            </div>
-          `;
-        } else if (data.code === "NO_FACE_ENROLLED") {
-          checkinResultDiv.innerHTML = `
-            <div style="background-color: #fff3cd; border: 1px solid #ffc107; color: #856404; padding: 15px; border-radius: 4px;">
-              <p style="margin: 0;"><strong>⚠️ ${data.message}</strong></p>
-              <p style="margin: 10px 0 0 0; font-size: 0.9rem;">Please contact HR to enroll your face.</p>
-            </div>
-          `;
-        } else {
-          checkinResultDiv.innerHTML = `
-            <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 4px;">
-              <p style="margin: 0;"><strong>❌ Error:</strong> ${data.message || "Check-in failed"}</p>
-            </div>
-          `;
-        }
-
-        capturedImageInput.value = "";
-        return;
+      // ===== HANDLE FACE VERIFICATION FAILURE =====
+      if (data.code === "FACE_NOT_RECOGNIZED" || data.requireRetake) {
+        checkinResultDiv.innerHTML = `
+          <div style="background-color: #ffebee; border: 1px solid #ef5350; color: #c62828; padding: 15px; border-radius: 4px;">
+            <p style="margin: 0 0 10px 0;"><strong>❌ Face Verification Failed</strong></p>
+            <p style="margin: 5px 0;">Reason: ${data.message || data.detail || "Face does not match enrolled face."}</p>
+            ${data.distance ? `<p style="margin: 5px 0; font-size: 0.9rem;">Distance: ${data.distance.toFixed(2)}</p>` : ''}
+            ${data.confidence ? `<p style="margin: 5px 0; font-size: 0.9rem;">Confidence: ${(data.confidence * 100).toFixed(1)}%</p>` : ''}
+            <p style="margin: 10px 0 0 0; font-size: 0.9rem; font-weight: 600;">Please retake your photo and ensure:</p>
+            <ul style="margin: 5px 0 0 0; font-size: 0.9rem;">
+              <li>Your face is clearly visible</li>
+              <li>Good lighting in the area</li>
+              <li>Face is centered in camera</li>
+              <li>Similar angle/expression to enrolled face</li>
+            </ul>
+          </div>
+        `;
+      } else if (data.code === "NO_FACE_ENROLLED") {
+        checkinResultDiv.innerHTML = `
+          <div style="background-color: #fff3cd; border: 1px solid #ffc107; color: #856404; padding: 15px; border-radius: 4px;">
+            <p style="margin: 0;"><strong>⚠️ ${data.message}</strong></p>
+            <p style="margin: 10px 0 0 0; font-size: 0.9rem;">Please contact HR to enroll your face.</p>
+          </div>
+        `;
+      } else {
+        checkinResultDiv.innerHTML = `
+          <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 4px;">
+            <p style="margin: 0;"><strong>❌ Error:</strong> ${data.message || "Check-in failed"}</p>
+          </div>
+        `;
       }
 
-      // ===== SUCCESS =====
-      console.log("✅ Check-in successful with face verification!");
-      checkinResultDiv.innerHTML = `
-        <div style="background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 4px;">
-          <p style="margin: 0 0 10px 0;"><strong>✅ ${data.message}</strong></p>
-          <p style="margin: 5px 0;"><strong>Employee:</strong> ${data.record.employeeName}</p>
-          <p style="margin: 5px 0;"><strong>Check-in Time:</strong> ${new Date(data.record.checkinTime).toLocaleString()}</p>
-          <p style="margin: 5px 0;"><strong>Status:</strong> ${data.record.status}</p>
-          ${data.faceVerification ? `
-            <p style="margin: 5px 0; font-size: 0.9rem; color: #0c5460;">
-              ✓ Face Verified | Confidence: ${(data.faceVerification.confidence * 100).toFixed(1)}%
-            </p>
-          ` : ''}
-          <p style="margin: 10px 0 0 0; font-size: 12px; color: #0c5460; background-color: #d1ecf1; padding: 8px; border-radius: 3px; border-left: 4px solid #0c5460;">
-            ⚠️ <strong>Notice:</strong> You can only time-in once per day. Your next time-in will be available tomorrow.
-          </p>
-        </div>
-      `;
       capturedImageInput.value = "";
-      openCameraBtn.disabled = true;
-      openCameraBtn.style.opacity = "0.5";
-      openCameraBtn.style.cursor = "not-allowed";
-
-    } catch (err) {
-      console.error("❌ Check-in submission error:", err);
-      checkinResultDiv.innerHTML = `
-        <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 4px;">
-          <p style="margin: 0;"><strong>❌ Error:</strong> ${err.message}</p>
-        </div>
-      `;
+      return;
     }
-  });
+
+    // ===== SUCCESS =====
+    console.log("✅ Check-in successful with face verification!");
+    checkinResultDiv.innerHTML = `
+      <div style="background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 4px;">
+        <p style="margin: 0 0 10px 0;"><strong>✅ ${data.message}</strong></p>
+        <p style="margin: 5px 0;"><strong>Employee:</strong> ${data.record.employeeName}</p>
+        <p style="margin: 5px 0;"><strong>Check-in Time:</strong> ${new Date(data.record.checkinTime).toLocaleString()}</p>
+        <p style="margin: 5px 0;"><strong>Status:</strong> ${data.record.status}</p>
+        ${data.faceVerification ? `
+          <p style="margin: 5px 0; font-size: 0.9rem; color: #0c5460;">
+            ✓ Face Verified | Confidence: ${(data.faceVerification.confidence * 100).toFixed(1)}%
+          </p>
+        ` : ''}
+        <p style="margin: 10px 0 0 0; font-size: 12px; color: #0c5460; background-color: #d1ecf1; padding: 8px; border-radius: 3px; border-left: 4px solid #0c5460;">
+          ⚠️ <strong>Notice:</strong> You can only time-in once per day. Your next time-in will be available tomorrow.
+        </p>
+      </div>
+    `;
+    capturedImageInput.value = "";
+    openCameraBtn.disabled = true;
+    openCameraBtn.style.opacity = "0.5";
+    openCameraBtn.style.cursor = "not-allowed";
+
+  } catch (err) {
+    console.error("❌ Check-in submission error:", err);
+    checkinResultDiv.innerHTML = `
+      <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 4px;">
+        <p style="margin: 0;"><strong>❌ Error:</strong> ${err.message}</p>
+        <p style="margin: 5px 0; font-size: 0.85rem;">Please try again or contact support if the problem persists.</p>
+      </div>
+    `;
+  }
+});
 
   // ====== CHECK-OUT SCRIPT ======
   const checkoutForm = document.getElementById("checkoutForm");

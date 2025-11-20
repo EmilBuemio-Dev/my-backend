@@ -32,6 +32,34 @@ export async function loadModels() {
   }
 }
 
+// ===== CRITICAL: Load image properly before face detection =====
+function loadImageFromBase64(base64Data) {
+  return new Promise((resolve, reject) => {
+    try {
+      const img = new Image();
+      
+      img.onload = () => {
+        console.log("✅ Image loaded successfully");
+        resolve(img);
+      };
+      
+      img.onerror = (err) => {
+        console.error("❌ Image loading failed:", err);
+        reject(new Error("Failed to load image"));
+      };
+
+      // Remove data URL prefix if present
+      const base64String = base64Data.replace(/^data:image\/\w+;base64,/, "");
+      const buffer = Buffer.from(base64String, "base64");
+      
+      // Set the buffer as the image source
+      img.src = buffer;
+    } catch (err) {
+      reject(new Error(`Image conversion failed: ${err.message}`));
+    }
+  });
+}
+
 // Euclidean distance between descriptors
 function euclideanDistance(desc1, desc2) {
   if (!desc1 || !desc2 || desc1.length !== desc2.length) {
@@ -45,12 +73,10 @@ export async function enrollFace(imageBase64, badgeNo, email) {
   try {
     if (!modelsLoaded) await loadModels();
 
-    // Convert base64 to buffer
-    const buffer = Buffer.from(imageBase64, "base64");
-    const img = new Image();
-    img.src = buffer;
+    console.log("🔍 Loading image for enrollment...");
+    const img = await loadImageFromBase64(imageBase64);
 
-    console.log("🔍 Detecting face...");
+    console.log("🔍 Detecting face for enrollment...");
     const detection = await faceapi
       .detectSingleFace(img)
       .withFaceLandmarks()
@@ -96,35 +122,40 @@ export async function enrollFace(imageBase64, badgeNo, email) {
   }
 }
 
-// Verify face during login
+// Verify face during check-in/login
 export async function verifyFace(imageBase64, registeredDescriptor, threshold = 0.6) {
   try {
     if (!modelsLoaded) await loadModels();
 
-    const buffer = Buffer.from(imageBase64, "base64");
-    const img = new Image();
-    img.src = buffer;
+    console.log("🔍 Loading image for verification...");
+    const img = await loadImageFromBase64(imageBase64);
 
-    console.log("🔐 Verifying face...");
+    console.log("🔐 Detecting face in captured image...");
     const detection = await faceapi
       .detectSingleFace(img)
       .withFaceLandmarks()
       .withFaceDescriptor();
 
     if (!detection) {
+      console.log("❌ No face detected in verification image");
       return {
         success: false,
-        error: "No face detected",
+        error: "No face detected in image. Please ensure your face is clearly visible and well-lit.",
       };
     }
 
+    console.log("✅ Face detected, computing similarity...");
     const incomingDescriptor = Array.from(detection.descriptor);
     const distance = euclideanDistance(incomingDescriptor, registeredDescriptor);
     const confidence = Math.max(0, 1 - distance);
 
-    console.log(`Distance: ${distance.toFixed(2)}, Confidence: ${confidence.toFixed(2)}`);
+    console.log(`📊 Verification Results:`);
+    console.log(`   Distance: ${distance.toFixed(4)}`);
+    console.log(`   Confidence: ${(confidence * 100).toFixed(2)}%`);
+    console.log(`   Threshold: ${threshold}`);
 
     if (distance < threshold) {
+      console.log("✅ Face verification PASSED");
       return {
         success: true,
         distance,
@@ -132,11 +163,12 @@ export async function verifyFace(imageBase64, registeredDescriptor, threshold = 
         message: "Face verified successfully",
       };
     } else {
+      console.log("❌ Face verification FAILED (distance too high)");
       return {
         success: false,
         distance,
         confidence,
-        error: "Face does not match. Please try again.",
+        error: "Face does not match enrolled face. Please retake the photo.",
       };
     }
   } catch (err) {
