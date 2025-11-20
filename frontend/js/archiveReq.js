@@ -436,11 +436,46 @@ async function checkIfRegisteredAndFillForm() {
   const middleName = document.getElementById("approveMiddleName")?.value.trim();
   const badgeNo = document.getElementById("approvedBadgeNo")?.value.trim();
   const emailInput = document.getElementById("approveEmail");
-  if (emailInput) {
-    const fetchedEmail = data?.register?.email || selectedRecord?.email || "N/A";
-    console.log("✅ Email found:", fetchedEmail);
-    emailInput.value = fetchedEmail;
+
+  if (!familyName || !firstName || !badgeNo) {
+    console.warn("⚠️ Missing required fields for email lookup");
+    // Set fallback email from selectedRecord
+    if (emailInput && selectedRecord?.email) {
+      emailInput.value = selectedRecord.email;
+    }
+    return;
   }
+
+  try {
+    console.log("🔍 Checking registration for:", { familyName, firstName, middleName, badgeNo });
+
+    let url = `https://www.mither3security.com/api/registers/search?familyName=${encodeURIComponent(
+      familyName
+    )}&firstName=${encodeURIComponent(firstName)}&badgeNo=${encodeURIComponent(badgeNo)}`;
+
+    if (middleName) url += `&middleName=${encodeURIComponent(middleName)}`;
+
+    console.log("📡 Fetching from:", url);
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    console.log("📦 Response:", data);
+
+    if (emailInput) {
+      // ✅ FIXED: Now data is defined before using it
+      const fetchedEmail = data?.register?.email || selectedRecord?.email || "";
+      console.log("✅ Email found:", fetchedEmail);
+      emailInput.value = fetchedEmail;
+    }
+  } catch (err) {
+    console.error("❌ Registration check failed:", err);
+    // Fallback to selectedRecord email
+    if (emailInput && selectedRecord?.email) {
+      emailInput.value = selectedRecord.email;
+    }
+  }
+}
 
 
   if (!familyName || !firstName || !badgeNo) {
@@ -478,7 +513,6 @@ async function checkIfRegisteredAndFillForm() {
       emailInput.value = selectedRecord.email;
     }
   }
-}
 
 // ✅ HELPER: Check if branch is valid
 function isValidBranch(branch) {
