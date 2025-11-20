@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Monthly Disposition Report</title>
+  <title>Reports Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <!-- DataTables CSS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css" />
+  <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css" />
   <style>
     :root {
       --clr-light: #f5f7fa;
@@ -131,30 +134,162 @@
       width: 100%;
     }
 
-    /* ==== REPORT ACTIONS ==== */
-    .report-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
-      flex-wrap: wrap;
+    /* ==== PAGE HEADER ==== */
+    .page-header {
       background: var(--clr-white);
       padding: var(--card-padding);
       border-radius: var(--card-border-radius);
       box-shadow: var(--card-box-shadow);
     }
 
+    .page-header h1 {
+      font-size: 1.8rem;
+      color: var(--clr-dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .page-header p {
+      color: var(--clr-info-dark);
+      font-size: 0.95rem;
+    }
+
+    /* ==== STATS CARDS ==== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--clr-white);
+      padding: var(--card-padding);
+      border-radius: var(--card-border-radius);
+      box-shadow: var(--card-box-shadow);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border-left: 4px solid transparent;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-card.active {
+      border-left-color: var(--clr-primary);
+      background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    }
+
+    .stat-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .stat-card-header h3 {
+      font-size: 0.9rem;
+      color: var(--clr-info-dark);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .stat-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--clr-dark);
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--clr-black-variant);
+    }
+
+    .stat-trend {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
+
+    .stat-trend.up {
+      color: var(--clr-success);
+    }
+
+    .stat-trend.down {
+      color: var(--clr-danger);
+    }
+
+    /* Icon colors */
+    .icon-primary { background: #e3f2fd; color: #1976d2; }
+    .icon-success { background: #e8f5e9; color: #388e3c; }
+    .icon-warning { background: #fff3e0; color: #f57c00; }
+    .icon-danger { background: #ffebee; color: #d32f2f; }
+
+    /* ==== REPORT SECTION ==== */
+    .report-section {
+      background: var(--clr-white);
+      padding: var(--card-padding);
+      border-radius: var(--card-border-radius);
+      box-shadow: var(--card-box-shadow);
+      display: none;
+    }
+
+    .report-section.active {
+      display: block;
+    }
+
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .report-header h2 {
+      font-size: 1.4rem;
+      color: var(--clr-dark);
+    }
+
+    .report-actions {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+
     .report-actions button {
-      padding: 0.8rem 1.5rem;
+      padding: 0.7rem 1.3rem;
       background: var(--clr-primary);
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       font-weight: 600;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       transition: all 0.2s ease;
-      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .report-actions button:hover {
@@ -163,184 +298,178 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
-    .pagination {
+    /* ==== FILTERS ==== */
+    .filters-container {
       display: flex;
-      align-items: center;
-      gap: 0.8rem;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
     }
 
-    .pagination button {
-      padding: 0.6rem 1rem;
-      background: var(--clr-primary);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 500;
+    .filter-group {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .filter-group label {
+      display: block;
       font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--clr-dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .filter-group select,
+    .filter-group input {
+      width: 100%;
+      padding: 0.7rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      background: white;
       transition: all 0.2s ease;
     }
 
-    .pagination button:hover {
-      background: #000;
-      transform: translateY(-1px);
+    .filter-group select:focus,
+    .filter-group input:focus {
+      outline: none;
+      border-color: var(--clr-primary);
+      box-shadow: 0 0 0 3px rgba(19, 19, 21, 0.1);
     }
 
-    .pagination button:disabled {
-      background: var(--clr-info-dark);
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
-
-    #pageInfo {
-      font-weight: 600;
-      color: var(--clr-dark);
-      min-width: 80px;
-      text-align: center;
-      padding: 0.5rem 0.8rem;
-      background: var(--clr-light);
-      border-radius: 6px;
-    }
-
-    /* ==== REPORT CONTAINER ==== */
-    .report-container {
-      background: var(--clr-white);
-      padding: var(--card-padding);
-      border-radius: var(--card-border-radius);
-      box-shadow: var(--card-box-shadow);
-      overflow-x: auto;
-    }
-
-    .report-container h1 {
-      text-align: center;
-      text-transform: uppercase;
-      color: var(--clr-dark);
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 1.5rem;
-      letter-spacing: 0.5px;
-    }
-
-    /* ==== REPORT INFO ==== */
-    .report-info {
-      display: flex;
-      justify-content: center;
-      gap: 2rem;
-      margin-bottom: 2rem;
-      flex-wrap: wrap;
-      padding: 1rem;
-      background: var(--clr-light);
-      border-radius: 8px;
-    }
-
-    .report-info p {
-      font-size: 0.95rem;
-      color: var(--clr-dark);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .report-info strong {
-      font-weight: 600;
-      color: var(--clr-primary);
-    }
-
-    .report-info span {
-      color: var(--clr-black-variant);
-      font-weight: 500;
-    }
-
-    /* ==== TABLE STYLES ==== */
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    /* ==== DATATABLE CUSTOMIZATION ==== */
+    .dataTables_wrapper {
       font-size: 0.9rem;
     }
 
-    thead {
+    table.dataTable {
+      border-collapse: collapse !important;
+      width: 100% !important;
+    }
+
+    table.dataTable thead th {
       background: linear-gradient(135deg, var(--clr-primary) 0%, #2c2c2e 100%);
       color: white;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    th {
       padding: 1rem;
-      text-align: left;
       font-weight: 600;
-      font-size: 0.8rem;
-      letter-spacing: 0.3px;
+      font-size: 0.85rem;
       border: 1px solid #333;
-      word-wrap: break-word;
-      vertical-align: middle;
     }
 
-    tbody tr {
+    table.dataTable tbody td {
+      padding: 0.8rem;
       border: 1px solid #ddd;
-      transition: background 0.2s ease;
+      vertical-align: top;
     }
 
-    tbody tr:hover {
+    table.dataTable tbody tr:hover {
       background: var(--clr-light);
     }
 
-    tbody tr:nth-child(even) {
+    table.dataTable tbody tr:nth-child(even) {
       background: #fafafa;
     }
 
-    td {
-      padding: 0.8rem;
-      color: var(--clr-black-variant);
-      vertical-align: top;
-      border: 1px solid #ddd;
-      word-wrap: break-word;
-      word-break: break-word;
-    }
-
-    td strong {
-      color: var(--clr-dark);
-      font-weight: 600;
-    }
-
-    /* ==== NESTED TABLE STYLES ==== */
+    /* ==== NESTED TABLE ==== */
     .nested-table {
       width: 100%;
       border-collapse: collapse;
       margin: 0;
       background: white;
-      border: none;
+      font-size: 0.8rem;
     }
 
     .nested-table td {
       padding: 0.4rem;
-      font-size: 0.75rem;
       border: 1px solid #ccc;
-      text-align: center;
-      word-break: break-word;
+      text-align: left;
     }
 
-    .nested-table tr {
-      height: auto;
+    /* ==== TICKET CARDS ==== */
+    .tickets-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.2rem;
+      margin-top: 1.5rem;
     }
 
-    /* ==== LOADING STATE ==== */
-    .loading {
-      text-align: center;
+    .ticket-card {
+      background: white;
+      border-radius: 10px;
+      padding: 1.2rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      border-left: 4px solid #ddd;
+      transition: all 0.3s ease;
+    }
+
+    .ticket-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .ticket-card.pending { border-left-color: var(--clr-warning); }
+    .ticket-card.in-progress { border-left-color: #2196f3; }
+    .ticket-card.resolved { border-left-color: var(--clr-success); }
+    .ticket-card.closed { border-left-color: var(--clr-info-dark); }
+
+    .ticket-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .ticket-id {
+      font-size: 0.75rem;
       color: var(--clr-info-dark);
-      font-style: italic;
-      padding: 2rem !important;
+      font-weight: 600;
     }
 
-    /* ==== NO DATA STATE ==== */
-    .no-data {
-      text-align: center;
-      color: var(--clr-info-dark);
-      padding: 3rem 1.2rem;
-      background: var(--clr-light);
-      border-radius: 8px;
-      margin-top: 1rem;
+    .ticket-status {
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .ticket-status.pending { background: #fff3cd; color: #856404; }
+    .ticket-status.in-progress { background: #cfe2ff; color: #084298; }
+    .ticket-status.resolved { background: #d1e7dd; color: #0f5132; }
+    .ticket-status.closed { background: #e2e3e5; color: #41464b; }
+
+    .ticket-subject {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--clr-dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .ticket-concern {
+      font-size: 0.85rem;
+      color: var(--clr-black-variant);
+      margin-bottom: 1rem;
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .ticket-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--clr-black-variant);
+    }
+
+    .ticket-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .ticket-meta-item .material-symbols-outlined {
+      font-size: 1rem;
     }
 
     /* ==== RESPONSIVE ==== */
@@ -349,184 +478,56 @@
         grid-template-columns: 1fr;
       }
 
-      .report-container {
-        padding: 1.2rem;
-      }
-
-      table {
-        font-size: 0.85rem;
-      }
-
-      th, td {
-        padding: 0.7rem;
+      .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       }
     }
 
     @media (max-width: 768px) {
-      .container {
-        padding: 0.5rem;
-        gap: 1rem;
+      .page-header h1 {
+        font-size: 1.4rem;
       }
 
-      aside {
-        height: auto;
-        position: relative;
+      .stat-value {
+        font-size: 1.6rem;
       }
 
-      aside .sidebar {
-        flex-direction: row;
-        overflow-x: auto;
-        padding: 0.5rem;
-      }
-
-      aside .sidebar a {
-        padding: 0.5rem 1rem;
-        white-space: nowrap;
-      }
-
-      .report-actions {
+      .filters-container {
         flex-direction: column;
-        align-items: stretch;
       }
 
-      .report-actions button,
-      .pagination button {
-        width: 100%;
+      .filter-group {
+        min-width: 100%;
       }
 
-      .pagination {
-        width: 100%;
-        justify-content: space-between;
-      }
-
-      #pageInfo {
-        width: 100%;
-      }
-
-      .report-container {
-        padding: 1rem;
-      }
-
-      .report-container h1 {
-        font-size: 1.3rem;
-        margin-bottom: 1rem;
-      }
-
-      .report-info {
+      .report-header {
         flex-direction: column;
-        gap: 0.8rem;
-        padding: 0.8rem;
+        align-items: flex-start;
       }
 
-      .report-info p {
-        font-size: 0.85rem;
-      }
-
-      table {
-        font-size: 0.75rem;
-      }
-
-      th, td {
-        padding: 0.5rem;
+      .tickets-grid {
+        grid-template-columns: 1fr;
       }
     }
 
-    @media (max-width: 480px) {
-      .container {
-        padding: 0.5rem;
-      }
-
-      .report-container {
-        padding: 0.8rem;
-        overflow-x: auto;
-      }
-
-      .report-container h1 {
-        font-size: 1.1rem;
-      }
-
-      table {
-        font-size: 0.7rem;
-        min-width: 600px;
-      }
-
-      th, td {
-        padding: 0.4rem;
-      }
-
-      .report-info {
-        flex-direction: column;
-        gap: 0.5rem;
-      }
-
-      .report-actions {
-        flex-direction: column;
-        gap: 0.5rem;
-      }
-    }
-
+    /* ==== PRINT STYLES ==== */
     @media print {
+      aside, .stat-card, .report-actions, .filters-container {
+        display: none !important;
+      }
+
+      .report-section {
+        display: block !important;
+      }
+
       body {
         background: white;
       }
 
-      .report-actions {
-        display: none;
-      }
-
       .container {
         grid-template-columns: 1fr;
-        gap: 0;
-        max-width: 100%;
         width: 100%;
         padding: 0;
-        margin: 0;
-      }
-
-      aside {
-        display: none;
-      }
-
-      .report-container {
-        box-shadow: none;
-        padding: 0.8rem;
-        border-radius: 0;
-        page-break-after: avoid;
-      }
-
-      table {
-        page-break-inside: avoid;
-        width: 100%;
-      }
-
-      thead {
-        background: var(--clr-primary) !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-
-      th {
-        background: var(--clr-primary) !important;
-        color: white !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-
-      td {
-        border: 1px solid #999 !important;
-      }
-
-      .nested-table {
-        border: none !important;
-      }
-
-      .nested-table td {
-        border: 1px solid #ccc !important;
-        padding: 0.3rem !important;
-      }
-
-      .report-info {
-        page-break-after: avoid;
       }
     }
   </style>
@@ -538,8 +539,7 @@
     <aside>
       <div class="top">
         <div class="logo">
-          <img src="../../image/logo.png" alt="Company Logo" 
-          style="height:30px; vertical-align:middle;">
+          <img src="../../image/logo.png" alt="Company Logo" style="height:30px; vertical-align:middle;">
           <h2>MITHER3</h2>
         </div>
       </div>
@@ -559,7 +559,6 @@
         <a href="Feedback&Complaints.html">
           <span class="material-symbols-outlined">chat</span>
           <h3>Feedback/Complaints</h3>
-          <span class="badge" id="complaintsBadge"></span>
         </a>
         <a href="account.html">
           <span class="material-symbols-outlined">manage_accounts</span>
@@ -570,8 +569,8 @@
           <h3>Accounts/Branch</h3>
         </a>
         <a href="#" class="active">
-          <span class="material-symbols-outlined">description</span>
-          <h3>Monthly Disposition Report</h3>
+          <span class="material-symbols-outlined">assessment</span>
+          <h3>Reports</h3>
         </a>
         <a id="logoutBtn" href="#" class="logout">
           <span class="material-symbols-outlined">logout</span>
@@ -580,87 +579,175 @@
       </div>
     </aside>
 
-    <!-- Main Report Content -->
+    <!-- Main Content -->
     <main>
-      <!-- Action Buttons -->
-      <div class="report-actions">
-        <button id="editBtn">✏️ Edit Report</button>
-        <button id="downloadBtn">⬇️ Download PDF</button>
-        <div class="pagination">
-          <button id="prevPageBtn">⬅ Prev</button>
-          <span id="pageInfo">Page 1</span>
-          <button id="nextPageBtn">Next ➡</button>
+      <!-- Page Header -->
+      <div class="page-header">
+        <h1>Reports Dashboard</h1>
+        <p id="reportDate"></p>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card active" data-report="disposition">
+          <div class="stat-card-header">
+            <h3>Monthly Disposition</h3>
+            <div class="stat-card-icon icon-primary">
+              <span class="material-symbols-outlined">description</span>
+            </div>
+          </div>
+          <div class="stat-card-body">
+            <div class="stat-value" id="clientCount">0</div>
+            <div class="stat-label">Total Clients/Branches</div>
+            <div class="stat-label" style="margin-top: 0.5rem;">
+              <strong id="guardCount">0</strong> Guards Deployed
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card" data-report="tickets">
+          <div class="stat-card-header">
+            <h3>Monthly Tickets</h3>
+            <div class="stat-card-icon icon-warning">
+              <span class="material-symbols-outlined">support_agent</span>
+            </div>
+          </div>
+          <div class="stat-card-body">
+            <div class="stat-value" id="totalTickets">0</div>
+            <div class="stat-label">Total Tickets This Month</div>
+            <div class="stat-trend up" id="ticketTrend">
+              <span class="material-symbols-outlined">trending_up</span>
+              <span>View Details</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card" data-report="pending">
+          <div class="stat-card-header">
+            <h3>Pending Tickets</h3>
+            <div class="stat-card-icon icon-danger">
+              <span class="material-symbols-outlined">pending_actions</span>
+            </div>
+          </div>
+          <div class="stat-card-body">
+            <div class="stat-value" id="pendingTickets">0</div>
+            <div class="stat-label">Requires Attention</div>
+          </div>
+        </div>
+
+        <div class="stat-card" data-report="resolved">
+          <div class="stat-card-header">
+            <h3>Resolved Tickets</h3>
+            <div class="stat-card-icon icon-success">
+              <span class="material-symbols-outlined">check_circle</span>
+            </div>
+          </div>
+          <div class="stat-card-body">
+            <div class="stat-value" id="resolvedTickets">0</div>
+            <div class="stat-label">Successfully Closed</div>
+          </div>
         </div>
       </div>
 
-      <div class="report-container" id="reportContent">
-        <h1>Monthly Disposition Report</h1>
-
-        <div class="report-info">
-          <p><strong>Date:</strong> <span id="reportDate"></span></p>
-          <p><strong>No. of Clients:</strong> <span id="clientCount">0</span></p>
-          <p><strong>No. of Guards:</strong> <span id="guardCount">0</span></p>
+      <!-- Monthly Disposition Report Section -->
+      <div class="report-section active" id="dispositionReport">
+        <div class="report-header">
+          <h2>Monthly Disposition Report</h2>
+          <div class="report-actions">
+            <button id="downloadBtn">
+              <span class="material-symbols-outlined">download</span>
+              Download PDF
+            </button>
+          </div>
         </div>
 
-        <table id="dispositionTable">
+        <div class="filters-container">
+          <div class="filter-group">
+            <label>Filter by Client/Branch</label>
+            <select id="branchFilter">
+              <option value="">All Branches</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Filter by Guards Count</label>
+            <select id="guardsFilter">
+              <option value="">All</option>
+              <option value="0">No Guards</option>
+              <option value="1-5">1-5 Guards</option>
+              <option value="6-10">6-10 Guards</option>
+              <option value="11+">11+ Guards</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Search</label>
+            <input type="text" id="searchFilter" placeholder="Search by name, badge, etc...">
+          </div>
+        </div>
+
+        <table id="dispositionTable" class="display responsive nowrap" style="width:100%">
           <thead>
             <tr>
               <th>CLIENT / BRANCH</th>
-              <th>NAME OF GUARDS<br>(FAMILY NAME, FIRST NAME, MID NAME)</th>
+              <th>NAME OF GUARDS</th>
               <th>EDUCATIONAL ATTAINMENT</th>
-              <th>LICENSE NR & EXPIRY DATE</th>
+              <th>LICENSE & EXPIRY</th>
               <th>BADGE NO</th>
-              <th>FIREARMS ISSUED<br>(KIND, MAKE, SN)</th>
+              <th>FIREARMS ISSUED</th>
             </tr>
           </thead>
           <tbody id="reportBody">
-            <tr><td colspan="6" class="loading">Loading data...</td></tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Monthly Tickets Report Section -->
+      <div class="report-section" id="ticketsReport">
+        <div class="report-header">
+          <h2>Monthly Ticket Reports</h2>
+          <div class="report-actions">
+            <button id="exportTicketsBtn">
+              <span class="material-symbols-outlined">file_download</span>
+              Export Data
+            </button>
+          </div>
+        </div>
+
+        <div class="filters-container">
+          <div class="filter-group">
+            <label>Filter by Status</label>
+            <select id="ticketStatusFilter">
+              <option value="">All Status</option>
+              <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved</option>
+              <option value="Closed">Closed</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Filter by Source</label>
+            <select id="ticketSourceFilter">
+              <option value="">All Sources</option>
+              <option value="Guard">Guard</option>
+              <option value="Client">Client</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="tickets-grid" id="ticketsGrid">
+          <!-- Ticket cards will be inserted here -->
+        </div>
       </div>
     </main>
   </div>
 
+  <!-- jQuery (required for DataTables) -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <!-- DataTables JS -->
+  <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+  <!-- html2pdf -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script>
-    // Helper to create nested table with visible rows and columns for each line of info
-    function createDetailedNestedTable(dataArray) {
-      if (!dataArray || dataArray.length === 0) return '<div>N/A</div>';
-      
-      let html = '<table class="nested-table"><tbody>';
-      dataArray.forEach((item) => {
-        html += '<tr><td>';
-        if (typeof item === 'object') {
-          html += Object.values(item).join(' | ');
-        } else {
-          html += item;
-        }
-        html += '</td></tr>';
-      });
-      html += '</tbody></table>';
-      return html;
-    }
-
-    // Helper to create nested table for array items (like firearms) with proper row/col structure
-    function createArrayNestedTable(items) {
-      if (!items || items.length === 0) return '<div>N/A</div>';
-      
-      let html = '<table class="nested-table"><tbody>';
-      items.forEach((item) => {
-        html += '<tr>';
-        if (typeof item === 'object') {
-          Object.values(item).forEach(value => {
-            html += `<td>${value || 'N/A'}</td>`;
-          });
-        } else {
-          html += `<td>${item}</td>`;
-        }
-        html += '</tr>';
-      });
-      html += '</tbody></table>';
-      return html;
-    }
-  </script>
-  <script src="../js/monthlyDisposition.js"></script>
+  
+  <script src="../js/reports.js"></script>
 </body>
 </html>

@@ -1,24 +1,25 @@
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("role");
-if (!token || (role !== "admin")) {
-    window.location.href = "dashboard.html";
+if (!token || role !== "admin") {
+  window.location.href = "dashboard.html";
 }
 
 const logoutBtn = document.getElementById("logoutBtn");
 if (logoutBtn) {
   logoutBtn.addEventListener("click", (e) => {
     e.preventDefault();
-    const userRole = localStorage.getItem("role");
     localStorage.clear();
-    if (userRole === "hr") {
-      window.location.href = "loginSection.html";
-    } else {
-      window.location.href = "loginSection.html";
-    }
+    window.location.href = "loginSection.html";
   });
 }
 
-// ===== HELPER FUNCTIONS FOR NESTED TABLES =====
+// Global variables
+let allBranches = [];
+let allEmployees = [];
+let allTickets = [];
+let dispositionTable = null;
+
+// Helper functions for nested tables
 function createDetailedNestedTable(dataArray) {
   if (!dataArray || dataArray.length === 0) return '<div>N/A</div>';
   
@@ -57,76 +58,123 @@ function createArrayNestedTable(items) {
 
 document.addEventListener("DOMContentLoaded", async () => {
   const dateEl = document.getElementById("reportDate");
-  const clientCountEl = document.getElementById("clientCount");
-  const guardCountEl = document.getElementById("guardCount");
-  const tbody = document.getElementById("reportBody");
-
-  const prevBtn = document.getElementById("prevPageBtn");
-  const nextBtn = document.getElementById("nextPageBtn");
-  const pageInfo = document.getElementById("pageInfo");
-  const downloadBtn = document.getElementById("downloadBtn");
-  const editBtn = document.getElementById("editBtn");
-
-  let currentPage = 1;
-  const rowsPerPage = 10;
-  let branchRows = [];
-
   const now = new Date();
+  
   dateEl.textContent = now.toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
   });
 
+  // Initialize
+  await loadAllData();
+  setupEventListeners();
+});
+
+async function loadAllData() {
   try {
-    const [branchesRes, employeesRes] = await Promise.all([
+    // Fetch branches, employees, and tickets
+    const [branchesRes, employeesRes, ticketsRes] = await Promise.all([
       fetch("https://www.mither3security.com/api/branches"),
       fetch("https://www.mither3security.com/employees"),
+      fetch("https://www.mither3security.com/tickets", {
+        headers: { Authorization: `Bearer ${token}` }
+      })
     ]);
 
-    if (!branchesRes.ok || !employeesRes.ok)
+    if (!branchesRes.ok || !employeesRes.ok) {
       throw new Error("Failed to fetch data.");
+    }
 
-    const branches = await branchesRes.json();
-    const employees = await employeesRes.json();
+    allBranches = await branchesRes.json();
+    allEmployees = await employeesRes.json();
+    allTickets = ticketsRes.ok ? await ticketsRes.json() : [];
 
-    clientCountEl.textContent = branches.length;
-    guardCountEl.textContent = employees.length;
+    // Update stats
+    updateStats();
+    
+    // Load disposition report
+    loadDispositionReport();
+    
+    // Load tickets report
+    loadTicketsReport();
 
-    // Build all rows first
-    let branchIndex = 1;
-    branchRows = branches.map(branch => {
-      const branchName = branch.branchData?.branch || "N/A";
-      const guards = employees.filter(
-        e => e.employeeData?.basicInformation?.branch === branchName
-      );
+  } catch (err) {
+    console.error("Error loading data:", err);
+    document.getElementById("reportBody").innerHTML = 
+      `<tr><td colspan="6" style="color:red;text-align:center;">Failed to load data</td></tr>`;
+  }
+}
 
-      if (!guards.length) {
-        return `
-          <tr>
-            <td><strong>${branchIndex++}. ${branchName}</strong></td>
-            <td colspan="5" style="text-align:center;">No guards assigned</td>
-          </tr>`;
-      }
+function updateStats() {
+  // Update counts
+  document.getElementById("clientCount").textContent = allBranches.length;
+  document.getElementById("guardCount").textContent = allEmployees.length;
 
-      // ===== BUILD GUARD NAMES WITH NESTED TABLE =====
+  // Filter tickets from current month
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  
+  const monthlyTickets = allTickets.filter(ticket => {
+    const ticketDate = new Date(ticket.createdAt);
+    return ticketDate.getMonth() === currentMonth && 
+           ticketDate.getFullYear() === currentYear;
+  });
+
+  const pendingTickets = monthlyTickets.filter(t => t.status === "Pending");
+  const resolvedTickets = monthlyTickets.filter(t => 
+    t.status === "Resolved" || t.status === "Closed"
+  );
+
+  document.getElementById("totalTickets").textContent = monthlyTickets.length;
+  document.getElementById("pendingTickets").textContent = pendingTickets.length;
+  document.getElementById("resolvedTickets").textContent = resolvedTickets.length;
+}
+
+function loadDispositionReport() {
+  const tbody = document.getElementById("reportBody");
+  const branchFilter = document.getElementById("branchFilter");
+  
+  // Build table data
+  const tableData = [];
+  const branchNames = new Set();
+
+  allBranches.forEach(branch => {
+    const branchName = branch.branchData?.branch || "N/A";
+    branchNames.add(branchName);
+    
+    const guards = allEmployees.filter(
+      e => e.employeeData?.basicInformation?.branch === branchName
+    );
+
+    const guardsCount = guards.length;
+
+    if (guardsCount === 0) {
+      tableData.push({
+        branch: branchName,
+        guardsCount: 0,
+        guards: "No guards assigned",
+        education: "N/A",
+        license: "N/A",
+        badge: "N/A",
+        firearms: "N/A"
+      });
+    } else {
+      // Build guard names
       const guardNames = guards.map((g) => {
-        const family = g.employeeData?.personalData?.familyName || "";
-        const first = g.employeeData?.personalData?.firstName || "";
-        const middle = g.employeeData?.personalData?.middleName || "";
         const fullName = g.employeeData?.personalData?.name || "";
-        
-        // Try to use name field first, then construct from parts
         if (fullName && fullName.trim()) {
           return fullName;
         }
-        
-        const constructed = `${family}, ${first} ${middle}`.trim();
-        return constructed || "N/A";
+        const family = g.employeeData?.personalData?.familyName || "";
+        const first = g.employeeData?.personalData?.firstName || "";
+        const middle = g.employeeData?.personalData?.middleName || "";
+        return `${family}, ${first} ${middle}`.trim() || "N/A";
       });
       const guardListHTML = createDetailedNestedTable(guardNames);
 
-      // ===== BUILD EDUCATION WITH NESTED TABLE =====
+      // Build education
       const educationData = guards.map(g => {
         const degree = g.employeeData?.educationalBackground?.[0]?.degree;
         const school = g.employeeData?.educationalBackground?.[0]?.school;
@@ -134,7 +182,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
       const educationListHTML = createDetailedNestedTable(educationData);
 
-      // ===== BUILD LICENSE WITH NESTED TABLE =====
+      // Build license
       const licenseData = guards.map(g => {
         const license = g.employeeData?.basicInformation?.pslNo || "N/A";
         const expiry = g.employeeData?.basicInformation?.expiryDate
@@ -144,13 +192,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
       const licenseListHTML = createArrayNestedTable(licenseData);
 
-      // ===== BUILD BADGE NO WITH NESTED TABLE =====
+      // Build badge
       const badgeData = guards.map(g =>
         g.employeeData?.basicInformation?.badgeNo || "N/A"
       );
       const badgeListHTML = createDetailedNestedTable(badgeData);
 
-      // ===== BUILD FIREARMS WITH NESTED TABLE =====
+      // Build firearms
       const firearmsList = guards.map(g => {
         if (g.employeeData?.firearmsIssued?.length) {
           return g.employeeData.firearmsIssued.map(f => ({
@@ -163,51 +211,230 @@ document.addEventListener("DOMContentLoaded", async () => {
       }).flat();
       const firearmListHTML = createArrayNestedTable(firearmsList);
 
-      return `
-        <tr>
-          <td><strong>${branchIndex++}. ${branchName}</strong></td>
-          <td>${guardListHTML}</td>
-          <td>${educationListHTML}</td>
-          <td>${licenseListHTML}</td>
-          <td>${badgeListHTML}</td>
-          <td>${firearmListHTML}</td>
-        </tr>`;
+      tableData.push({
+        branch: branchName,
+        guardsCount: guardsCount,
+        guards: guardListHTML,
+        education: educationListHTML,
+        license: licenseListHTML,
+        badge: badgeListHTML,
+        firearms: firearmListHTML
+      });
+    }
+  });
+
+  // Populate branch filter
+  branchFilter.innerHTML = '<option value="">All Branches</option>';
+  Array.from(branchNames).sort().forEach(name => {
+    branchFilter.innerHTML += `<option value="${name}">${name}</option>`;
+  });
+
+  // Initialize DataTable
+  if (dispositionTable) {
+    dispositionTable.destroy();
+  }
+
+  dispositionTable = $('#dispositionTable').DataTable({
+    data: tableData,
+    columns: [
+      { data: 'branch' },
+      { data: 'guards' },
+      { data: 'education' },
+      { data: 'license' },
+      { data: 'badge' },
+      { data: 'firearms' }
+    ],
+    responsive: true,
+    pageLength: 10,
+    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+    order: [[0, 'asc']],
+    language: {
+      search: "Search:",
+      lengthMenu: "Show _MENU_ entries",
+      info: "Showing _START_ to _END_ of _TOTAL_ entries",
+      infoEmpty: "No entries available",
+      infoFiltered: "(filtered from _MAX_ total entries)",
+      paginate: {
+        first: "First",
+        last: "Last",
+        next: "Next",
+        previous: "Previous"
+      }
+    }
+  });
+
+  // Custom filters
+  $('#branchFilter').on('change', function() {
+    dispositionTable.column(0).search(this.value).draw();
+  });
+
+  $('#guardsFilter').on('change', function() {
+    const value = this.value;
+    dispositionTable.rows().every(function() {
+      const data = this.data();
+      const count = data.guardsCount;
+      let show = true;
+
+      if (value === "0") {
+        show = count === 0;
+      } else if (value === "1-5") {
+        show = count >= 1 && count <= 5;
+      } else if (value === "6-10") {
+        show = count >= 6 && count <= 10;
+      } else if (value === "11+") {
+        show = count >= 11;
+      }
+
+      if (show) {
+        $(this.node()).show();
+      } else {
+        $(this.node()).hide();
+      }
     });
-
-    renderPage();
-
-  } catch (err) {
-    console.error("Error loading disposition report:", err);
-    tbody.innerHTML = `<tr><td colspan="6" style="color:red;text-align:center;">Failed to load data</td></tr>`;
-  }
-
-  // ✅ Pagination Functions
-  function renderPage() {
-    const start = (currentPage - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    tbody.innerHTML = branchRows.slice(start, end).join("");
-    pageInfo.textContent = `Page ${currentPage} of ${Math.ceil(branchRows.length / rowsPerPage)}`;
-    prevBtn.disabled = currentPage === 1;
-    nextBtn.disabled = currentPage === Math.ceil(branchRows.length / rowsPerPage);
-  }
-
-  prevBtn.addEventListener("click", () => {
-    if (currentPage > 1) {
-      currentPage--;
-      renderPage();
-    }
   });
 
-  nextBtn.addEventListener("click", () => {
-    if (currentPage < Math.ceil(branchRows.length / rowsPerPage)) {
-      currentPage++;
-      renderPage();
-    }
+  $('#searchFilter').on('keyup', function() {
+    dispositionTable.search(this.value).draw();
+  });
+}
+
+function loadTicketsReport() {
+  const ticketsGrid = document.getElementById("ticketsGrid");
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  
+  // Filter tickets from current month
+  let monthlyTickets = allTickets.filter(ticket => {
+    const ticketDate = new Date(ticket.createdAt);
+    return ticketDate.getMonth() === currentMonth && 
+           ticketDate.getFullYear() === currentYear;
   });
 
-  // ✅ Download PDF
-  downloadBtn.addEventListener("click", () => {
-    const element = document.getElementById("reportContent");
+  if (monthlyTickets.length === 0) {
+    ticketsGrid.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--clr-info-dark);">
+        No tickets submitted this month
+      </div>`;
+    return;
+  }
+
+  // Sort by date (newest first)
+  monthlyTickets.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  renderTickets(monthlyTickets);
+
+  // Setup filters
+  document.getElementById("ticketStatusFilter").addEventListener("change", filterTickets);
+  document.getElementById("ticketSourceFilter").addEventListener("change", filterTickets);
+}
+
+function renderTickets(tickets) {
+  const ticketsGrid = document.getElementById("ticketsGrid");
+  
+  if (tickets.length === 0) {
+    ticketsGrid.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--clr-info-dark);">
+        No tickets match the selected filters
+      </div>`;
+    return;
+  }
+
+  ticketsGrid.innerHTML = tickets.map(ticket => {
+    const date = new Date(ticket.createdAt).toLocaleDateString();
+    const statusClass = ticket.status.toLowerCase().replace(" ", "-");
+    
+    return `
+      <div class="ticket-card ${statusClass}">
+        <div class="ticket-header">
+          <div class="ticket-id">#${ticket._id.slice(-6).toUpperCase()}</div>
+          <div class="ticket-status ${statusClass}">${ticket.status}</div>
+        </div>
+        <div class="ticket-subject">${ticket.subject}</div>
+        <div class="ticket-concern">${ticket.concern}</div>
+        <div class="ticket-meta">
+          <div class="ticket-meta-item">
+            <span class="material-symbols-outlined">person</span>
+            <span>${ticket.creatorName} (${ticket.source})</span>
+          </div>
+          <div class="ticket-meta-item">
+            <span class="material-symbols-outlined">location_on</span>
+            <span>${ticket.branch || "N/A"}</span>
+          </div>
+          <div class="ticket-meta-item">
+            <span class="material-symbols-outlined">calendar_today</span>
+            <span>${date}</span>
+          </div>
+          ${ticket.reportedEmployeeName ? `
+          <div class="ticket-meta-item">
+            <span class="material-symbols-outlined">flag</span>
+            <span>Reported: ${ticket.reportedEmployeeName}</span>
+          </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function filterTickets() {
+  const statusFilter = document.getElementById("ticketStatusFilter").value;
+  const sourceFilter = document.getElementById("ticketSourceFilter").value;
+  
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  
+  let filtered = allTickets.filter(ticket => {
+    const ticketDate = new Date(ticket.createdAt);
+    const isCurrentMonth = ticketDate.getMonth() === currentMonth && 
+                           ticketDate.getFullYear() === currentYear;
+    
+    if (!isCurrentMonth) return false;
+    
+    if (statusFilter && ticket.status !== statusFilter) return false;
+    if (sourceFilter && ticket.source !== sourceFilter) return false;
+    
+    return true;
+  });
+
+  renderTickets(filtered);
+}
+
+function setupEventListeners() {
+  // Stat cards navigation
+  document.querySelectorAll('.stat-card').forEach(card => {
+    card.addEventListener('click', function() {
+      const reportType = this.dataset.report;
+      
+      // Update active card
+      document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+      
+      // Show relevant report
+      document.querySelectorAll('.report-section').forEach(section => {
+        section.classList.remove('active');
+      });
+      
+      if (reportType === 'disposition') {
+        document.getElementById('dispositionReport').classList.add('active');
+      } else {
+        document.getElementById('ticketsReport').classList.add('active');
+      }
+    });
+  });
+
+  // Download PDF
+  document.getElementById("downloadBtn").addEventListener("click", () => {
+    const element = document.getElementById("dispositionReport");
+    const now = new Date();
+    
+    // Hide filters and actions before printing
+    const filters = element.querySelector('.filters-container');
+    const actions = element.querySelector('.report-actions');
+    filters.style.display = 'none';
+    actions.style.display = 'none';
+    
     const opt = {
       margin: 0.5,
       filename: `Monthly_Disposition_Report_${now.toLocaleDateString()}.pdf`,
@@ -215,11 +442,50 @@ document.addEventListener("DOMContentLoaded", async () => {
       html2canvas: { scale: 2 },
       jsPDF: { unit: "in", format: "a4", orientation: "landscape" }
     };
-    html2pdf().from(element).set(opt).save();
+    
+    html2pdf().from(element).set(opt).save().then(() => {
+      filters.style.display = '';
+      actions.style.display = '';
+    });
   });
 
-  // ✅ Edit Button (placeholder)
-  editBtn.addEventListener("click", () => {
-    alert("Edit functionality coming soon! You can link this to an edit form or modal.");
+  // Export tickets
+  document.getElementById("exportTicketsBtn").addEventListener("click", () => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    const monthlyTickets = allTickets.filter(ticket => {
+      const ticketDate = new Date(ticket.createdAt);
+      return ticketDate.getMonth() === currentMonth && 
+             ticketDate.getFullYear() === currentYear;
+    });
+
+    // Create CSV
+    const headers = ["ID", "Subject", "Status", "Creator", "Source", "Branch", "Date", "Concern"];
+    const rows = monthlyTickets.map(t => [
+      t._id,
+      t.subject,
+      t.status,
+      t.creatorName,
+      t.source,
+      t.branch || "N/A",
+      new Date(t.createdAt).toLocaleDateString(),
+      t.concern.replace(/,/g, ";")
+    ]);
+
+    let csv = headers.join(",") + "\n";
+    rows.forEach(row => {
+      csv += row.map(cell => `"${cell}"`).join(",") + "\n";
+    });
+
+    // Download
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Monthly_Tickets_Report_${now.toLocaleDateString()}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   });
-});
+}

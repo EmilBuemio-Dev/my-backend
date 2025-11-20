@@ -374,14 +374,11 @@ async function openApproveModal() {
     }
   };
 
-  // Fill name & badge fields FIRST
+  // Fill name & badge fields
   setField("approveFamilyName", selectedRecord.familyName);
   setField("approveFirstName", selectedRecord.firstName);
   setField("approveMiddleName", selectedRecord.middleName || "");
   setField("approvedBadgeNo", selectedRecord.badgeNo);
-
-  // ✅ IMMEDIATELY FETCH AND SET EMAIL BEFORE OTHER OPERATIONS
-  await fetchAndSetEmail();
 
   // Fill status directly—no fallback
   const statusInput = document.querySelector('input[name="status"]');
@@ -405,12 +402,11 @@ async function openApproveModal() {
     for (let el of formElements) {
       const id = el.id || el.name || "";
       
-      // ✅ Skip branch search input, email, and other allowed fields
+      // ✅ Skip branch search input and other allowed fields
       if (
         el.tagName.toLowerCase() === "button" ||
         el.type === "hidden" ||
         id === "archiveModalBranchSearch" ||
-        id === "approveEmail" || // Don't override email
         allowedFields.includes(id)
       )
         continue;
@@ -428,73 +424,70 @@ async function openApproveModal() {
       }
     }
   }
+
+  // ✅ NOW FETCH EMAIL AFTER ALL FIELDS ARE FILLED
+  await checkIfRegisteredAndFillForm();
 }
 
-// ✅ SEPARATE FUNCTION TO FETCH AND SET EMAIL
-async function fetchAndSetEmail() {
+// ✅ CHECK REGISTRATION & AUTO-FILL EMAIL
+async function checkIfRegisteredAndFillForm() {
   const familyName = document.getElementById("approveFamilyName")?.value.trim();
   const firstName = document.getElementById("approveFirstName")?.value.trim();
   const middleName = document.getElementById("approveMiddleName")?.value.trim();
   const badgeNo = document.getElementById("approvedBadgeNo")?.value.trim();
-
-  console.log("🔍 Fetching email for:", { familyName, firstName, middleName, badgeNo });
-
-  // ✅ FALLBACK TO SELECTED RECORD EMAIL IF API FAILS
   const emailInput = document.getElementById("approveEmail");
-  if (!emailInput) {
-    console.warn("⚠️ Email input not found");
-    return;
+  if (emailInput) {
+    const fetchedEmail = data?.register?.email || selectedRecord?.email || "N/A";
+    console.log("✅ Email found:", fetchedEmail);
+    emailInput.value = fetchedEmail;
   }
 
-  // If we have email in selectedRecord, use it as default
-  if (selectedRecord?.email) {
-    console.log("✅ Using email from selectedRecord:", selectedRecord.email);
-    emailInput.value = selectedRecord.email;
-  }
 
-  // If we don't have required fields for API call, stop here
   if (!familyName || !firstName || !badgeNo) {
     console.warn("⚠️ Missing required fields for email lookup");
     return;
   }
 
-  // Try to fetch from API
   try {
+    console.log("🔍 Checking registration for:", { familyName, firstName, middleName, badgeNo });
+
     let url = `https://www.mither3security.com/api/registers/search?familyName=${encodeURIComponent(
       familyName
     )}&firstName=${encodeURIComponent(firstName)}&badgeNo=${encodeURIComponent(badgeNo)}`;
 
     if (middleName) url += `&middleName=${encodeURIComponent(middleName)}`;
 
-    console.log("📡 Fetching email from API:", url);
+    console.log("📡 Fetching from:", url);
 
     const res = await fetch(url);
     const data = await res.json();
 
-    console.log("📦 API Response:", data);
+    console.log("📦 Response:", data);
 
-    if (data?.register?.email) {
-      console.log("✅ Email found from API:", data.register.email);
-      emailInput.value = data.register.email;
-    } else if (!emailInput.value && selectedRecord?.email) {
-      // If API didn't return email but we have it in selectedRecord
-      console.log("⚠️ API didn't return email, using selectedRecord:", selectedRecord.email);
-      emailInput.value = selectedRecord.email;
+    const emailInput = document.getElementById("approveEmail");
+    if (emailInput) {
+      const fetchedEmail = data?.register?.email || selectedRecord?.email || "";
+      console.log("✅ Email found:", fetchedEmail);
+      emailInput.value = fetchedEmail;
     }
   } catch (err) {
-    console.error("❌ Email fetch failed:", err);
-    // Ensure fallback email is set
-    if (!emailInput.value && selectedRecord?.email) {
-      console.log("⚠️ Using fallback email:", selectedRecord.email);
+    console.error("❌ Registration check failed:", err);
+    // Fallback to selectedRecord email
+    const emailInput = document.getElementById("approveEmail");
+    if (emailInput && selectedRecord?.email) {
       emailInput.value = selectedRecord.email;
     }
   }
 }
 
-// ✅ REMOVE OLD checkIfRegisteredAndFillForm FUNCTION
-// (It's replaced by fetchAndSetEmail above)
+// ✅ HELPER: Check if branch is valid
+function isValidBranch(branch) {
+  if (!branch) return false;
+  const invalidValues = ["toBeSet", "N/A", "", null, undefined];
+  return !invalidValues.includes(branch);
+}
 
-// ✅ UPDATED getValue HELPER IN SUBMIT HANDLER
+// ✅ INIT SUBMIT HANDLER - CORE LOGIC
 function initSubmitHandler() {
   const form = document.getElementById("approveForm");
   if (!form) return;
@@ -517,19 +510,7 @@ function initSubmitHandler() {
       return val || "N/A";
     }
 
-    // ✅ FOR EMAIL: Use form value, fallback to selectedRecord
-    if (key === "approveEmail") {
-      if (val) {
-        console.log("✅ Using email from form:", val);
-        return val;
-      }
-      if (selectedRecord?.email) {
-        console.log("✅ Using email from selectedRecord:", selectedRecord.email);
-        return selectedRecord.email;
-      }
-      console.warn("⚠️ No email found in form or selectedRecord");
-      return "";
-    }
+    if (key === "approveEmail" && !val) return selectedRecord?.email || "";
 
     // ✅ Handle different field types
     if (type === "date") {
@@ -587,15 +568,12 @@ function initSubmitHandler() {
       role: "employee"
     };
 
-    // ✅ GET EMAIL USING getValue (with fallback logic)
-    const emailValue = getValue('input[name="approveEmail"]', "approveEmail");
-    console.log("📧 Final email value:", emailValue);
-
+    // ✅ FIXED: Middle name now properly returns empty string instead of "N/A"
     const personalData = {
       familyName: getValue('input[name="approveFamilyName"]', "approveFamilyName"),
       firstName: getValue('input[name="approveFirstName"]', "approveFirstName"),
       middleName: getValue('input[name="approveMiddleName"]', "approveMiddleName"),
-      email: emailValue,
+      email: getValue('input[name="approveEmail"]', "approveEmail"),
       dateOfBirth: getValue('input[name="dateOfBirth"]', null, "date"),
       presentAddress: getValue('input[name="presentAddress"]'),
       placeOfBirth: getValue('input[name="placeOfBirth"]'),
