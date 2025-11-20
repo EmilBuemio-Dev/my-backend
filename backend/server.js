@@ -85,7 +85,17 @@ if (fs.existsSync(publicDir)) {
   console.warn("⚠ Public directory not found:", publicDir);
 }
 
-// ===== Routes =====
+// ===== Health Check Endpoint =====
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "✅ Server is running",
+    resendConfigured: !!process.env.RESEND_API_KEY,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// ===== ALL API ROUTES MUST GO BEFORE GENERIC ROUTES =====
+// ✅ IMPORTANT: These specific routes must be registered FIRST
 app.use("/archive", archiveRoutes);
 app.use("/tickets", ticketRoutes);
 app.use("/", attendanceRoutes);
@@ -97,43 +107,21 @@ app.use("/api/requirements", requirementRoutes);
 app.use("/api/registers", registerRoutes);
 app.use("/api/email", emailRoutes);
 app.use("/api/branches-management", branchManagementRoutes);
-app.use('/', leaveRoutes);
+app.use("/", leaveRoutes);
 app.use("/remarks", remarksRoutes);
 app.use("/ticket-chats", ticketChatRoutes);
 app.use("/api/face", faceRoutes);
 app.use("/models", express.static(path.join(__dirname, "models-api")));
-// ===== Health Check Endpoint =====
-app.get("/api/health", (req, res) => {
-  res.json({
-    status: "✅ Server is running",
-    resendConfigured: !!process.env.RESEND_API_KEY,
-    timestamp: new Date().toISOString(),
-  });
-});
 
-// ===== Dynamic HTML Routes - Handles all HTML files automatically =====
+// ===== Dynamic HTML Routes - COMES AFTER ALL API ROUTES =====
 const htmlDir = path.join(frontendDir, "html");
-
-// Function to serve HTML files dynamically
-const serveHtmlFile = (req, res, filename) => {
-  const filePath = path.join(htmlDir, filename);
-  
-  if (fs.existsSync(filePath)) {
-    res.sendFile(filePath);
-  } else {
-    res.status(404).json({ 
-      error: `${filename} not found`,
-      looked_in: filePath
-    });
-  }
-};
 
 // Generic route: /pagename or /pagename.html serves pagename.html
 app.get("/:page", (req, res) => {
   const page = req.params.page;
   
   // Skip if it looks like an API route or special path
-  if (page.startsWith("api") || page === "uploads") {
+  if (page.startsWith("api") || page === "uploads" || page === "models") {
     return res.status(404).json({ error: "Not Found" });
   }
   
@@ -152,10 +140,15 @@ app.get("/:page", (req, res) => {
 
 // ===== Serve loginSection.html as home page =====
 app.get("/", (req, res) => {
-  serveHtmlFile(req, res, "loginSection.html");
+  const filePath = path.join(htmlDir, "loginSection.html");
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).json({ error: "loginSection.html not found" });
+  }
 });
 
-// ===== 404 Handler =====
+// ===== 404 Handler - MUST BE LAST =====
 app.use((req, res) => {
   res.status(404).json({
     error: "Not Found",
