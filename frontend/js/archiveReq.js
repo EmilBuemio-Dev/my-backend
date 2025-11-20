@@ -353,7 +353,6 @@ function closeModal() {
 }
 
 // ✅ APPROVE MODAL - FIXED LOGIC
-// ✅ APPROVE MODAL - FIXED LOGIC
 async function openApproveModal() {
   if (!selectedRecord) return;
 
@@ -368,22 +367,17 @@ async function openApproveModal() {
   if (!modal) return;
   modal.style.display = "flex";
 
-        const setField = (id, value) => {
-        const el = document.getElementById(id);
-        if (el) {
-          // ✅ For middle name, allow empty string instead of "N/A"
-          if (id === "approveMiddleName") {
-            el.value = value?.trim() || "";
-          } else {
-            el.value = value?.trim() || "N/A";
-          }
-        }
-      };
+  const setField = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.value = value?.trim() || "";
+    }
+  };
 
   // Fill name & badge fields
   setField("approveFamilyName", selectedRecord.familyName);
   setField("approveFirstName", selectedRecord.firstName);
-  setField("approveMiddleName", selectedRecord.middleName);
+  setField("approveMiddleName", selectedRecord.middleName || "");
   setField("approvedBadgeNo", selectedRecord.badgeNo);
 
   // Fill status directly—no fallback
@@ -391,35 +385,6 @@ async function openApproveModal() {
   if (statusInput) {
     statusInput.value = selectedRecord.status || "Pending";
     statusInput.style.fontWeight = "bold";
-  }
-
-  // Fill email (try archive > fetch > fallback)
-  const emailInput = document.getElementById("approveEmail");
-  if (emailInput) {
-    if (selectedRecord.email?.trim()) {
-      emailInput.value = selectedRecord.email.trim();
-    } else {
-      try {
-        let url = `https://www.mither3security.com/api/registers/search?familyName=${encodeURIComponent(
-          selectedRecord.familyName
-        )}&firstName=${encodeURIComponent(selectedRecord.firstName)}&badgeNo=${encodeURIComponent(
-          selectedRecord.badgeNo
-        )}`;
-
-        if (selectedRecord.middleName)
-          url += `&middleName=${encodeURIComponent(selectedRecord.middleName)}`;
-
-        const res = await fetch(url);
-        const data = await res.json();
-
-        const fetchedEmail = data?.register?.email || "N/A";
-        selectedRecord.email = fetchedEmail;
-        emailInput.value = fetchedEmail;
-      } catch (err) {
-        console.error("❌ Email fetch failed:", err);
-        emailInput.value = "N/A";
-      }
-    }
   }
 
   // Load branches, preselect existing
@@ -459,33 +424,52 @@ async function openApproveModal() {
       }
     }
   }
+
+  // ✅ NOW FETCH EMAIL AFTER ALL FIELDS ARE FILLED
+  await checkIfRegisteredAndFillForm();
 }
 
-// CHECK REGISTRATION & AUTO-FILL EMAIL
+// ✅ CHECK REGISTRATION & AUTO-FILL EMAIL
 async function checkIfRegisteredAndFillForm() {
   const familyName = document.getElementById("approveFamilyName")?.value.trim();
   const firstName = document.getElementById("approveFirstName")?.value.trim();
   const middleName = document.getElementById("approveMiddleName")?.value.trim();
   const badgeNo = document.getElementById("approvedBadgeNo")?.value.trim();
 
-  if (!familyName || !firstName || !badgeNo) return;
+  if (!familyName || !firstName || !badgeNo) {
+    console.warn("⚠️ Missing required fields for email lookup");
+    return;
+  }
 
   try {
+    console.log("🔍 Checking registration for:", { familyName, firstName, middleName, badgeNo });
+
     let url = `https://www.mither3security.com/api/registers/search?familyName=${encodeURIComponent(
       familyName
     )}&firstName=${encodeURIComponent(firstName)}&badgeNo=${encodeURIComponent(badgeNo)}`;
 
     if (middleName) url += `&middleName=${encodeURIComponent(middleName)}`;
 
+    console.log("📡 Fetching from:", url);
+
     const res = await fetch(url);
     const data = await res.json();
 
+    console.log("📦 Response:", data);
+
     const emailInput = document.getElementById("approveEmail");
     if (emailInput) {
-      emailInput.value = data?.register?.email || "N/A";
+      const fetchedEmail = data?.register?.email || selectedRecord?.email || "";
+      console.log("✅ Email found:", fetchedEmail);
+      emailInput.value = fetchedEmail;
     }
   } catch (err) {
     console.error("❌ Registration check failed:", err);
+    // Fallback to selectedRecord email
+    const emailInput = document.getElementById("approveEmail");
+    if (emailInput && selectedRecord?.email) {
+      emailInput.value = selectedRecord.email;
+    }
   }
 }
 
@@ -510,32 +494,32 @@ function initSubmitHandler() {
   };
 
   const getValue = (selector, key, type = "string") => {
-  const el = form.querySelector(selector);
-  let val = el?.value?.trim();
+    const el = form.querySelector(selector);
+    let val = el?.value?.trim();
 
-  const critical = ["status", "branch", "shift", "salary", "expiryDate"];
+    const critical = ["status", "branch", "shift", "salary", "expiryDate"];
 
-  if (critical.includes(key)) {
-    return val || "N/A";
-  }
+    if (critical.includes(key)) {
+      return val || "N/A";
+    }
 
-  if (key === "approveEmail" && !val) return selectedRecord?.email || "N/A";
+    if (key === "approveEmail" && !val) return selectedRecord?.email || "";
 
-  // ✅ Handle different field types
-  if (type === "date") {
-    return val || null;
-  }
-  if (type === "number") {
-    return val ? Number(val) : 0;
-  }
+    // ✅ Handle different field types
+    if (type === "date") {
+      return val || null;
+    }
+    if (type === "number") {
+      return val ? Number(val) : 0;
+    }
 
-  // ✅ For middle name, return empty string if not provided
-  if (key === "approveMiddleName") {
-    return val || "";
-  }
+    // ✅ For middle name, return empty string if not provided
+    if (key === "approveMiddleName") {
+      return val || "";
+    }
 
-  return val || selectedRecord?.[mapArchiveField[key]] || "N/A";
-};
+    return val || selectedRecord?.[mapArchiveField[key]] || "";
+  };
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -577,25 +561,26 @@ function initSubmitHandler() {
       role: "employee"
     };
 
-   const personalData = {
-  familyName: getValue('input[name="approveFamilyName"]', "approveFamilyName"),
-  firstName: getValue('input[name="approveFirstName"]', "approveFirstName"),
-  middleName: getValue('input[name="approveMiddleName"]', "approveMiddleName"), // Returns "" if empty
-  email: getValue('input[name="approveEmail"]', "approveEmail"),
-  dateOfBirth: getValue('input[name="dateOfBirth"]', null, "date"),
-  presentAddress: getValue('input[name="presentAddress"]'),
-  placeOfBirth: getValue('input[name="placeOfBirth"]'),
-  prevAddress: getValue('input[name="prevAddress"]'),
-  citizenship: getValue('input[name="citizenship"]'),
-  weight: getValue('input[name="weight"]'),
-  languageSpoken: getValue('input[name="languageSpoken"]'),
-  age: getValue('input[name="age"]', null, "number"),
-  height: getValue('input[name="height"]'),
-  religion: getValue('input[name="religion"]'),
-  civilStatus: getValue('input[name="civilStatus"]'),
-  colorOfHair: getValue('input[name="colorOfHair"]'),
-  colorOfEyes: getValue('input[name="colorOfEyes"]'),
-};
+    // ✅ FIXED: Middle name now properly returns empty string instead of "N/A"
+    const personalData = {
+      familyName: getValue('input[name="approveFamilyName"]', "approveFamilyName"),
+      firstName: getValue('input[name="approveFirstName"]', "approveFirstName"),
+      middleName: getValue('input[name="approveMiddleName"]', "approveMiddleName"),
+      email: getValue('input[name="approveEmail"]', "approveEmail"),
+      dateOfBirth: getValue('input[name="dateOfBirth"]', null, "date"),
+      presentAddress: getValue('input[name="presentAddress"]'),
+      placeOfBirth: getValue('input[name="placeOfBirth"]'),
+      prevAddress: getValue('input[name="prevAddress"]'),
+      citizenship: getValue('input[name="citizenship"]'),
+      weight: getValue('input[name="weight"]'),
+      languageSpoken: getValue('input[name="languageSpoken"]'),
+      age: getValue('input[name="age"]', null, "number"),
+      height: getValue('input[name="height"]'),
+      religion: getValue('input[name="religion"]'),
+      civilStatus: getValue('input[name="civilStatus"]'),
+      colorOfHair: getValue('input[name="colorOfHair"]'),
+      colorOfEyes: getValue('input[name="colorOfEyes"]'),
+    };
 
     const educationalBackground = [
       ...form.querySelectorAll("#educationTable tbody tr")
