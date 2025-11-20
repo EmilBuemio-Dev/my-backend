@@ -13,6 +13,12 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+  
+  // Initialize all functions
+  loadArchives();
+  initEducationTable();
+  initProfilePreview();
+  initSubmitHandler();
 });
 
 let archives = [];
@@ -429,7 +435,7 @@ async function openApproveModal() {
   await checkIfRegisteredAndFillForm();
 }
 
-// ✅ CHECK REGISTRATION & AUTO-FILL EMAIL
+// ✅ CHECK REGISTRATION & AUTO-FILL EMAIL (FIXED - NO DUPLICATE)
 async function checkIfRegisteredAndFillForm() {
   const familyName = document.getElementById("approveFamilyName")?.value.trim();
   const firstName = document.getElementById("approveFirstName")?.value.trim();
@@ -463,7 +469,6 @@ async function checkIfRegisteredAndFillForm() {
     console.log("📦 Response:", data);
 
     if (emailInput) {
-      // ✅ FIXED: Now data is defined before using it
       const fetchedEmail = data?.register?.email || selectedRecord?.email || "";
       console.log("✅ Email found:", fetchedEmail);
       emailInput.value = fetchedEmail;
@@ -476,43 +481,6 @@ async function checkIfRegisteredAndFillForm() {
     }
   }
 }
-
-
-  if (!familyName || !firstName || !badgeNo) {
-    console.warn("⚠️ Missing required fields for email lookup");
-    return;
-  }
-
-  try {
-    console.log("🔍 Checking registration for:", { familyName, firstName, middleName, badgeNo });
-
-    let url = `https://www.mither3security.com/api/registers/search?familyName=${encodeURIComponent(
-      familyName
-    )}&firstName=${encodeURIComponent(firstName)}&badgeNo=${encodeURIComponent(badgeNo)}`;
-
-    if (middleName) url += `&middleName=${encodeURIComponent(middleName)}`;
-
-    console.log("📡 Fetching from:", url);
-
-    const res = await fetch(url);
-    const data = await res.json();
-
-    console.log("📦 Response:", data);
-
-    const emailInput = document.getElementById("approveEmail");
-    if (emailInput) {
-      const fetchedEmail = data?.register?.email || selectedRecord?.email || "";
-      console.log("✅ Email found:", fetchedEmail);
-      emailInput.value = fetchedEmail;
-    }
-  } catch (err) {
-    console.error("❌ Registration check failed:", err);
-    // Fallback to selectedRecord email
-    const emailInput = document.getElementById("approveEmail");
-    if (emailInput && selectedRecord?.email) {
-      emailInput.value = selectedRecord.email;
-    }
-  }
 
 // ✅ HELPER: Check if branch is valid
 function isValidBranch(branch) {
@@ -852,12 +820,4 @@ document.getElementById("multiStepForm")?.addEventListener("submit", async funct
       statusEl.innerText = "⚠️ Error: " + err.message;
     }
   }
-});
-
-// === INIT ===
-document.addEventListener("DOMContentLoaded", () => {
-  loadArchives();
-  initEducationTable();
-  initProfilePreview();
-  initSubmitHandler();
 });

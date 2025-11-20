@@ -143,6 +143,57 @@ router.post("/", async (req, res) => {
   }
 });
 
+// ✅ SEARCH ENDPOINT - NEW
+router.get("/search", async (req, res) => {
+  try {
+    const { badgeNo, familyName, firstName, middleName, email } = req.query;
+
+    // Build query
+    let query = {};
+    if (badgeNo) query.badgeNo = badgeNo.trim();
+    if (familyName) query.familyName = { $regex: `^${familyName}$`, $options: "i" };
+    if (firstName) query.firstName = { $regex: `^${firstName}$`, $options: "i" };
+    if (middleName) query.middleName = { $regex: `^${middleName}$`, $options: "i" };
+    if (email) query.email = email.toLowerCase().trim();
+
+    console.log("🔍 Search query:", query);
+
+    // Search in Register collection
+    const register = await Register.findOne(query).select("-descriptor");
+
+    if (!register) {
+      console.log("❌ No registration found for query:", query);
+      return res.status(404).json({
+        msg: "No registration found",
+        register: null,
+      });
+    }
+
+    console.log("✅ Registration found:", register.email);
+
+    res.status(200).json({
+      msg: "Registration found",
+      register: {
+        _id: register._id,
+        badgeNo: register.badgeNo,
+        email: register.email,
+        familyName: register.familyName,
+        firstName: register.firstName,
+        middleName: register.middleName,
+        status: register.status,
+        faceEnrollmentStatus: register.faceEnrollmentStatus,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Search error:", err);
+    res.status(500).json({
+      msg: "Error searching registration",
+      code: "SERVER_ERROR",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  }
+});
+
 // VERIFY FACE for login
 router.post("/verify-face", async (req, res) => {
   try {
