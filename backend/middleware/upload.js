@@ -38,26 +38,31 @@ const storage = multer.diskStorage({
 
     console.log("📁 Upload request detected:");
     console.log("   Field:", file.fieldname);
+    console.log("   Mimetype:", file.mimetype);
 
-    // ✅ TICKET ATTACHMENT - Must come FIRST
+    // ✅ TICKET ATTACHMENT - Must come FIRST (Priority!)
     if (file.fieldname === "ticketAttachment") {
       folder = "ticket_attachments";
-      console.log("   ✅ Ticket attachment detected → folder: ticket_attachments");
+      console.log("   ✅ TICKET ATTACHMENT DETECTED → folder: ticket_attachments");
       const dest = ensureUploadPath(folder);
       console.log("   📍 Destination:", dest);
+      console.log("   ✅ Will save to:", path.join(dest, file.originalname));
       return cb(null, dest);
     }
     // ✅ Employee profile upload → "employee_profiles" folder
     else if (file.fieldname === "employeeProfile") {
       folder = "employee_profiles";
+      console.log("   ✅ Employee profile detected");
     }
     // ✅ Client profile upload → "client_profiles" folder
     else if (file.fieldname === "profileImage") {
       folder = "client_profiles";
+      console.log("   ✅ Client profile detected");
     }
     // ✅ Attendance photo → "attendance" folder
     else if (file.fieldname === "checkinImage") {
       folder = "attendance";
+      console.log("   ✅ Attendance photo detected");
     }
     // ✅ Client contract
     else if (file.fieldname === "contract") {
@@ -116,46 +121,44 @@ const storage = multer.diskStorage({
   },
 
   filename: (req, file, cb) => {
+    console.log("📄 Generating filename for:", file.fieldname);
+
     // ✅ TICKET ATTACHMENT - Unique timestamp-based filename
     if (file.fieldname === "ticketAttachment") {
       const timestamp = Date.now();
       const random = Math.floor(Math.random() * 10000);
       const ext = path.extname(file.originalname);
       const filename = `ticket-${timestamp}-${random}${ext}`;
-      console.log(`   📄 Ticket filename: ${filename}`);
+      console.log(`   ✅ Ticket filename generated: ${filename}`);
       return cb(null, filename);
     }
 
     // ✅ Employee profile image
     if (file.fieldname === "employeeProfile") {
-      return cb(
-        null,
-        `profile-${Date.now()}${path.extname(file.originalname)}`
-      );
+      const filename = `profile-${Date.now()}${path.extname(file.originalname)}`;
+      console.log(`   ✅ Employee profile filename: ${filename}`);
+      return cb(null, filename);
     }
 
     // ✅ Client profile image
     if (file.fieldname === "profileImage") {
-      return cb(
-        null,
-        `profile-${Date.now()}${path.extname(file.originalname)}`
-      );
+      const filename = `profile-${Date.now()}${path.extname(file.originalname)}`;
+      console.log(`   ✅ Client profile filename: ${filename}`);
+      return cb(null, filename);
     }
 
     // ✅ Attendance photo
     if (file.fieldname === "checkinImage") {
-      return cb(
-        null,
-        `checkin-${Date.now()}${path.extname(file.originalname)}`
-      );
+      const filename = `checkin-${Date.now()}${path.extname(file.originalname)}`;
+      console.log(`   ✅ Attendance filename: ${filename}`);
+      return cb(null, filename);
     }
 
     // ✅ CLIENT CONTRACT - Use descriptive filename
     if (file.fieldname === "contract") {
-      return cb(
-        null,
-        `contract${path.extname(file.originalname)}`
-      );
+      const filename = `contract${path.extname(file.originalname)}`;
+      console.log(`   ✅ Contract filename: ${filename}`);
+      return cb(null, filename);
     }
 
     // ✅ Credential files (both applicant and employee)
@@ -170,15 +173,19 @@ const storage = multer.diskStorage({
 
 // ===== File Filter (Accept only PDFs and images) =====
 const fileFilter = (req, file, cb) => {
-  console.log(`🔍 File filter check: ${file.fieldname} (${file.mimetype})`);
+  console.log(`🔍 File filter check: ${file.fieldname}`);
+  console.log(`   Mimetype: ${file.mimetype}`);
+  console.log(`   Original name: ${file.originalname}`);
 
   // Allow images for ticket attachments
   if (file.fieldname === "ticketAttachment") {
+    console.log(`   Checking if image...`);
+    
     if (file.mimetype.startsWith("image/")) {
-      console.log(`   ✅ Ticket image accepted: ${file.mimetype}`);
+      console.log(`   ✅ TICKET IMAGE ACCEPTED: ${file.mimetype}`);
       return cb(null, true);
     } else {
-      console.log(`   ❌ Ticket file rejected: ${file.mimetype} (only images allowed)`);
+      console.log(`   ❌ TICKET FILE REJECTED: ${file.mimetype} (only images allowed)`);
       return cb(new Error(`Only image files allowed for tickets. Received: ${file.mimetype}`));
     }
   }
