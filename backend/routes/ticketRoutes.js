@@ -1,3 +1,16 @@
+import express from "express";
+import Ticket from "../models/Ticket.js";
+import User from "../models/User.js";
+import Employee from "../models/Employee.js";
+import Branch from "../models/Branch.js";
+import upload from "../middleware/upload.js";
+import { authMiddleware } from "../middleware/auth.js";
+
+const router = new express.Router();
+
+// ===============================
+// CREATE TICKET (with multiple images)
+// ===============================
 router.post("/", authMiddleware, upload.array("ticketAttachment", 10), async (req, res) => {
   try {
     const { subject, concern, priority, reportedEmployeeId } = req.body;
