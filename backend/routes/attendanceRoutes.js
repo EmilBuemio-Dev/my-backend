@@ -38,6 +38,46 @@ function parseShiftTimeToDate(shiftStr) {
   return shiftDate;
 }
 
+// ===== NEW: CHECK IF CHECK-IN TIME IS WITHIN SHIFT BOUNDARIES =====
+function isWithinShiftBoundary(checkInTime, empShift) {
+  // Parse shift format: "1:00PM-1:00AM" -> extract end time (second time)
+  const timePattern = /(\d{1,2}):(\d{2})\s*([AP]M)/gi;
+  const matches = [...empShift.matchAll(timePattern)];
+
+  if (matches.length < 2) {
+    console.log("⚠️ Invalid shift format:", empShift);
+    return true; // Allow if format is invalid
+  }
+
+  // Get the SECOND time (end time)
+  const endTimeMatch = matches[1];
+  const endHour = parseInt(endTimeMatch[1], 10);
+  const endMinute = parseInt(endTimeMatch[2], 10);
+  const endPeriod = endTimeMatch[3].toUpperCase();
+
+  // Convert to 24-hour format
+  let endHour24 = endHour;
+  if (endPeriod === "PM" && endHour !== 12) endHour24 += 12;
+  if (endPeriod === "AM" && endHour === 12) endHour24 = 0;
+
+  const checkInHour = checkInTime.getHours();
+  const checkInMinute = checkInTime.getMinutes();
+  const checkInTimeInMinutes = checkInHour * 60 + checkInMinute;
+  const endTimeInMinutes = endHour24 * 60 + endMinute;
+
+  console.log(`🕐 Check-in time: ${checkInHour}:${checkInMinute.toString().padStart(2, "0")} (${checkInTimeInMinutes} mins)`);
+  console.log(`🕐 Shift end time: ${endHour24}:${endMinute.toString().padStart(2, "0")} (${endTimeInMinutes} mins)`);
+
+  // If check-in time is AFTER shift end time, they are out of bounds
+  if (checkInTimeInMinutes > endTimeInMinutes) {
+    console.log(`❌ Check-in is AFTER shift end time - OUT OF BOUNDS`);
+    return false;
+  }
+
+  console.log(`✅ Check-in is within shift boundaries`);
+  return true;
+}
+
 // ===== Middleware: Verify Token =====
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
@@ -134,7 +174,7 @@ router.post("/checkin", authenticateToken, upload.single("checkinImage"), async 
         detail: verifyResult.error,
         distance: verifyResult.distance,
         confidence: verifyResult.confidence,
-        requireRetake: true, // Signal frontend to force retake
+        requireRetake: true,
       });
     }
 
@@ -142,14 +182,14 @@ router.post("/checkin", authenticateToken, upload.single("checkinImage"), async 
 
     // ===== FACE VERIFICATION PASSED - PROCEED WITH ATTENDANCE =====
 
-    // ===== EXTRACT SHIFT START TIME =====
+    // ===== EXTRACT SHIFT START TIME FOR EARLY CHECK-IN VALIDATION =====
     const timePattern = /(\d{1,2}):(\d{2})\s*([AP]M)/i;
     const shiftMatch = empShift.match(timePattern);
 
     if (!shiftMatch) {
       return res.status(400).json({
         message: "Invalid shift format",
-        detail: `Expected format like "8:00AM-5:00PM". Got: ${empShift}`,
+        detail: `Expected format like "1:00PM-1:00AM". Got: ${empShift}`,
       });
     }
 
@@ -172,7 +212,61 @@ router.post("/checkin", authenticateToken, upload.single("checkinImage"), async 
       });
     }
 
-    // ===== DETERMINE STATUS =====
+    // ===== NEW: CHECK IF CHECK-IN TIME IS WITHIN SHIFT BOUNDARY =====
+    const isWithinBoundary = isWithinShiftBoundary(now, empShift);
+    
+    if (!isWithinBoundary) {
+      console.log(`⛔ Check-in time is OUTSIDE shift boundary - MARKING AS ABSENT`);
+      
+      const todayStart = new Date(now);
+      todayStart.setHours(0, 0, 0, 0);
+      const todayEnd = new Date(now);
+      todayEnd.setHours(23, 59, 59, 999);
+
+      // Mark as absent if already has a check-in today
+      const existing = await Attendance.findOne({
+        employeeId,
+        checkinTime: { $gte: todayStart, $lte: todayEnd },
+      });
+
+      if (existing) {
+        return res.status(400).json({
+          message: "You already checked in today.",
+          record: existing,
+        });
+      }
+
+      // Create absent record
+      const absentRecord = new Attendance({
+        employeeId,
+        employeeName,
+        badgeNo,
+        checkinTime: now,
+        checkoutTime: now,
+        shift: empShift,
+        status: "Absent",
+        timezone: "Asia/Manila",
+        faceVerified: true,
+        faceVerificationData: {
+          distance: verifyResult.distance,
+          confidence: verifyResult.confidence,
+          timestamp: new Date(),
+          reason: "Check-in outside shift boundary"
+        },
+      });
+
+      await absentRecord.save();
+
+      return res.status(400).json({
+        success: false,
+        message: "You are outside your shift hours. Marked as Absent.",
+        code: "OUTSIDE_SHIFT_BOUNDARY",
+        record: absentRecord,
+        requireRetake: false,
+      });
+    }
+
+    // ===== DETERMINE STATUS (ON-TIME OR LATE) =====
     let status = "On-Time";
     if (diffMinutes > 10) status = "Late";
 
@@ -203,13 +297,13 @@ router.post("/checkin", authenticateToken, upload.single("checkinImage"), async 
     const record = new Attendance({
       employeeId,
       employeeName,
-      badgeNo, // Store badge number for tracking
-      checkinTime: new Date(),
+      badgeNo,
+      checkinTime: now,
       checkinImageUrl,
       shift: empShift,
       status,
       timezone: "Asia/Manila",
-      faceVerified: true, // Mark as face-verified
+      faceVerified: true,
       faceVerificationData: {
         distance: verifyResult.distance,
         confidence: verifyResult.confidence,

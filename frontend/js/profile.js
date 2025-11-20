@@ -1,3 +1,11 @@
+
+// ===== SALARY FORMATTING UTILITIES =====
+function formatSalaryDisplay(value) {
+  if (!value || value === "N/A" || isNaN(value)) return "N/A";
+  const num = parseFloat(value);
+  return `₱${num.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   const editBtn = document.getElementById("editBtn");
   const compareBtn = document.getElementById("compareBtn");
@@ -39,163 +47,170 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function populateProfile(emp) {
-  const employeeData = emp.employeeData || {};
-  const basic = employeeData.basicInformation || {};
-  const personal = employeeData.personalData || {};
-  const education = employeeData.educationalBackground || [];
-  const creds = employeeData.credentials || {};
+    const employeeData = emp.employeeData || {};
+    const basic = employeeData.basicInformation || {};
+    const personal = employeeData.personalData || {};
+    const education = employeeData.educationalBackground || [];
+    const creds = employeeData.credentials || {};
 
-  const photoElement = document.getElementById("employeePhoto");
-  if (photoElement) {
-    photoElement.src = creds.profileImage
-      ? `https://www.mither3security.com${creds.profileImage}`
-      : "../defaultProfile/Default_pfp.jpg";
+    const photoElement = document.getElementById("employeePhoto");
+    if (photoElement) {
+      photoElement.src = creds.profileImage
+        ? `https://www.mither3security.com${creds.profileImage}`
+        : "../defaultProfile/Default_pfp.jpg";
+    }
+
+    const setText = (id, value, isDate = false) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (isDate && value) {
+        const d = new Date(value);
+        el.textContent = isNaN(d) ? "" : d.toLocaleDateString();
+      } else {
+        el.textContent = value ?? "";
+      }
+    };
+
+    const basicKeyMap = {
+      pslNo: "pslNo",
+      sssNo: "sssNo",
+      tinNo: "tinNo",
+      cellNo: "celNo",
+      shift: "shift",
+      status: "status",
+      expiryDate: "expiryDate",
+      badgeNo: "badgeNo",
+      branch: "branch",
+      salary: "salary"
+    };
+
+    Object.keys(basicKeyMap).forEach(f => {
+      const modelKey = basicKeyMap[f];
+      
+      // ✅ FORMAT SALARY WITH PESO SIGN
+      if (f === "salary") {
+        const salaryEl = document.getElementById(f);
+        if (salaryEl) {
+          salaryEl.textContent = formatSalaryDisplay(basic[modelKey]);
+        }
+      } else {
+        setText(f, basic[modelKey], f === "expiryDate");
+      }
+    });
+
+    const personalKeyMap = {
+      fullName: "name",
+      email: "email",
+      dob: "dateOfBirth",
+      presentAddress: "presentAddress",
+      birthPlace: "placeOfBirth",
+      previousAddress: "prevAddress",
+      citizenship: "citizenship",
+      weight: "weight",
+      language: "languageSpoken",
+      age: "age",
+      height: "height",
+      religion: "religion",
+      civilStatus: "civilStatus",
+      hairColor: "colorOfHair",
+      eyeColor: "colorOfEyes"
+    };
+
+    Object.keys(personalKeyMap).forEach(f => {
+      const modelKey = personalKeyMap[f];
+      const isDateField = (f === "dob");
+      setText(f, personal[modelKey], isDateField);
+    });
+
+    const tbody = document.querySelector("#educationTable tbody");
+    if (tbody) {
+      tbody.innerHTML = "";
+      if (!education.length) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No education records found</td></tr>`;
+      } else {
+        education.forEach(edu => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${edu.school || ""}</td>
+            <td>${edu.inclusiveDate || ""}</td>
+            <td>${edu.degree || ""}</td>
+            <td>${edu.dateGraduated || ""}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+
+    const credFields = [
+      "barangayClearance","policeClearance","diClearance","nbiClearance",
+      "personalHistory","residenceHistory","maritalStatus","physicalData",
+      "educationData","characterReference","employmentHistory",
+      "neighborhoodInvestigation","militaryRecord"
+    ];
+
+    credFields.forEach(f => {
+      const span = document.getElementById(f);
+      if (!span) return;
+      
+      const filePath = creds[f];
+      
+      console.log(`📄 Credential ${f}:`, filePath);
+      
+      let fileUrl = null;
+      if (filePath && filePath !== "N/A" && filePath !== "") {
+        if (filePath.startsWith("http")) {
+          fileUrl = filePath;
+        }
+        else if (filePath.startsWith("/uploads")) {
+          fileUrl = `https://www.mither3security.com${filePath}`;
+        }
+        else if (filePath.startsWith("uploads")) {
+          fileUrl = `https://www.mither3security.com/${filePath}`;
+        }
+        else {
+          fileUrl = `https://www.mither3security.com/uploads/${filePath}`;
+        }
+      }
+
+      span.innerHTML = "";
+      
+      if (fileUrl) {
+        const viewBtn = document.createElement("button");
+        viewBtn.className = "view-btn";
+        viewBtn.textContent = "View";
+        viewBtn.style.padding = "0.4rem 0.8rem";
+        viewBtn.style.background = "#2196F3";
+        viewBtn.style.color = "white";
+        viewBtn.style.border = "none";
+        viewBtn.style.borderRadius = "4px";
+        viewBtn.style.cursor = "pointer";
+        viewBtn.style.fontSize = "0.85rem";
+        viewBtn.onclick = () => {
+          console.log(`🔗 Opening file: ${fileUrl}`);
+          window.open(fileUrl, "_blank");
+        };
+        span.appendChild(viewBtn);
+      } else {
+        span.textContent = "No file";
+        span.style.color = "#999";
+        span.style.fontStyle = "italic";
+      }
+
+      // ✅ ONLY ADMIN CAN UPLOAD FILES (NOT HR)
+      if (isEditing && isAdmin) {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".pdf";
+        input.style.marginLeft = "10px";
+        input.style.fontSize = "0.85rem";
+        input.onchange = e => { 
+          fileInputs[f] = e.target.files[0];
+          console.log(`📎 File selected for ${f}:`, e.target.files[0].name);
+        };
+        span.appendChild(input);
+      }
+    });
   }
-
-  const setText = (id, value, isDate = false) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (isDate && value) {
-      const d = new Date(value);
-      el.textContent = isNaN(d) ? "" : d.toLocaleDateString();
-    } else {
-      el.textContent = value ?? "";
-    }
-  };
-
-  const basicKeyMap = {
-    pslNo: "pslNo",
-    sssNo: "sssNo",
-    tinNo: "tinNo",
-    cellNo: "celNo",
-    shift: "shift",
-    status: "status",
-    expiryDate: "expiryDate",
-    badgeNo: "badgeNo",
-    branch: "branch",
-    salary: "salary"
-  };
-
-  Object.keys(basicKeyMap).forEach(f => {
-    const modelKey = basicKeyMap[f];
-    setText(f, basic[modelKey], f === "expiryDate");
-  });
-
-  const personalKeyMap = {
-    fullName: "name",
-    email: "email",
-    dob: "dateOfBirth",
-    presentAddress: "presentAddress",
-    birthPlace: "placeOfBirth",
-    previousAddress: "prevAddress",
-    citizenship: "citizenship",
-    weight: "weight",
-    language: "languageSpoken",
-    age: "age",
-    height: "height",
-    religion: "religion",
-    civilStatus: "civilStatus",
-    hairColor: "colorOfHair",
-    eyeColor: "colorOfEyes"
-  };
-
- Object.keys(personalKeyMap).forEach(f => {
-  const modelKey = personalKeyMap[f];
-
-  const isDateField = (f === "dob");
-
-  setText(f, personal[modelKey], isDateField);
-});
-
-  const tbody = document.querySelector("#educationTable tbody");
-  if (tbody) {
-    tbody.innerHTML = "";
-    if (!education.length) {
-      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No education records found</td></tr>`;
-    } else {
-      education.forEach(edu => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${edu.school || ""}</td>
-          <td>${edu.inclusiveDate || ""}</td>
-          <td>${edu.degree || ""}</td>
-          <td>${edu.dateGraduated || ""}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-  }
-
-  const credFields = [
-    "barangayClearance","policeClearance","diClearance","nbiClearance",
-    "personalHistory","residenceHistory","maritalStatus","physicalData",
-    "educationData","characterReference","employmentHistory",
-    "neighborhoodInvestigation","militaryRecord"
-  ];
-
-  credFields.forEach(f => {
-    const span = document.getElementById(f);
-    if (!span) return;
-    
-    const filePath = creds[f];
-    
-    console.log(`📄 Credential ${f}:`, filePath);
-    
-    let fileUrl = null;
-    if (filePath && filePath !== "N/A" && filePath !== "") {
-      if (filePath.startsWith("http")) {
-        fileUrl = filePath;
-      }
-      else if (filePath.startsWith("/uploads")) {
-        fileUrl = `https://www.mither3security.com${filePath}`;
-      }
-      else if (filePath.startsWith("uploads")) {
-        fileUrl = `https://www.mither3security.com/${filePath}`;
-      }
-      else {
-        fileUrl = `https://www.mither3security.com/uploads/${filePath}`;
-      }
-    }
-
-    span.innerHTML = "";
-    
-    if (fileUrl) {
-      const viewBtn = document.createElement("button");
-      viewBtn.className = "view-btn";
-      viewBtn.textContent = "View";
-      viewBtn.style.padding = "0.4rem 0.8rem";
-      viewBtn.style.background = "#2196F3";
-      viewBtn.style.color = "white";
-      viewBtn.style.border = "none";
-      viewBtn.style.borderRadius = "4px";
-      viewBtn.style.cursor = "pointer";
-      viewBtn.style.fontSize = "0.85rem";
-      viewBtn.onclick = () => {
-        console.log(`🔗 Opening file: ${fileUrl}`);
-        window.open(fileUrl, "_blank");
-      };
-      span.appendChild(viewBtn);
-    } else {
-      span.textContent = "No file";
-      span.style.color = "#999";
-      span.style.fontStyle = "italic";
-    }
-
-    // ✅ ONLY ADMIN CAN UPLOAD FILES (NOT HR)
-    if (isEditing && isAdmin) {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = ".pdf";
-      input.style.marginLeft = "10px";
-      input.style.fontSize = "0.85rem";
-      input.onchange = e => { 
-        fileInputs[f] = e.target.files[0];
-        console.log(`📎 File selected for ${f}:`, e.target.files[0].name);
-      };
-      span.appendChild(input);
-    }
-  });
-}
 
   function handleBranchChange(selectedBranch) {
     const salaryEl = document.getElementById("salary");
@@ -204,6 +219,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const shiftEl = document.getElementById("shift");
 
     if (selectedBranch === "toBeSet" || selectedBranch === "") {
+      // ✅ FORMAT SALARY DISPLAY WITH PESO WHEN SHOWING N/A
       salaryEl.textContent = "N/A";
       expiryDateEl.textContent = "";
       statusEl.textContent = "Pending";
@@ -220,7 +236,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       const foundBranch = allBranches.find(b => b.branchData?.branch === selectedBranch);
       
       if (foundBranch) {
-        salaryEl.textContent = foundBranch.salary || "N/A";
+        // ✅ FORMAT SALARY WITH PESO SIGN
+        salaryEl.textContent = formatSalaryDisplay(foundBranch.salary);
         
         if (foundBranch.expirationDate) {
           const d = new Date(foundBranch.expirationDate);
@@ -426,7 +443,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         shiftSelect.id = "shift";
       }
 
-      // ✅ DO NOT MAKE OTHER FIELDS EDITABLE (HR & ADMIN CANNOT EDIT THEM)
       console.log("🔒 Personal and basic information fields are read-only for HR and Admin");
 
     } else {

@@ -30,7 +30,6 @@ function generateClientId() {
   return `C-${Math.floor(100000 + Math.random() * 900000)}`;
 }
 
-// ✅ UPDATED: Now accepts badgeNo and extracts digits for password
 function generatePassword(badgeNo) {
   const cleanBadgeNo = badgeNo ? badgeNo.replace(/[^0-9]/g, "") : Math.floor(100000 + Math.random() * 900000);
   return `employee${cleanBadgeNo}`;
@@ -52,6 +51,24 @@ function removeCachedClientId(tempId) {
   localStorage.setItem("clientIdCache", JSON.stringify(cache));
 }
 
+// ===== SALARY FORMATTING UTILITIES =====
+function formatSalaryDisplay(value) {
+  if (!value || value === "N/A" || isNaN(value)) return "N/A";
+  const num = parseFloat(value);
+  return `₱${num.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function parseSalaryInput(value) {
+  if (!value || value.trim() === "") return "";
+  return value.replace(/[₱,\s]/g, "").trim();
+}
+
+function formatSalaryInput(value) {
+  if (!value || isNaN(value)) return "";
+  const num = parseFloat(value);
+  return `₱${num.toLocaleString('en-PH')}`;
+}
+
 // ===== DOM Elements =====
 const branchList = document.getElementById("branchList");
 const clientSearchInput = document.getElementById("clientSearchInput");
@@ -59,7 +76,6 @@ const employeeTableBody = document.getElementById("employeeTableBody");
 const viewModal = document.getElementById("viewModal");
 const detailsContainer = document.getElementById("detailsContainer");
 
-// ===== CLIENT MANAGEMENT =====
 // ===== FUNCTION: Get Today's Date in YYYY-MM-DD Format =====
 function getTodayDate() {
   const today = new Date();
@@ -70,27 +86,29 @@ function getTodayDate() {
 }
 
 // ===== CLIENT MANAGEMENT =====
-let editMode = false; // ✅ track mode
+let editMode = false;
 
 const editBtn = document.getElementById("editBtn");
 editBtn?.addEventListener("click", async () => {
   if (!editMode) {
     editMode = true;
     editBtn.textContent = "Save";
-    const minDate = getTodayDate(); // Get today's date as minimum
+    const minDate = getTodayDate();
     
     Array.from(branchList.children).forEach(row => {
       const salaryCell = row.querySelector(".salary-cell");
       const expCell = row.querySelector(".exp-cell");
+      
       if (salaryCell) {
-        const val = salaryCell.textContent.trim() === "N/A" ? "" : salaryCell.textContent.trim();
-        salaryCell.innerHTML = `<input type="number" class="salary-input" value="${val}" min="0">`;
+        const rawValue = parseSalaryInput(salaryCell.textContent.trim());
+        salaryCell.innerHTML = `<input type="text" class="salary-input" value="${formatSalaryInput(rawValue)}" placeholder="₱0.00">`;
       }
+      
       if (expCell) {
         const val = expCell.textContent.trim() === "N/A" ? "" : expCell.textContent.trim();
-        // ✅ Add min attribute to disable past dates
         expCell.innerHTML = `<input type="date" class="exp-input" value="${val}" min="${minDate}">`;
       }
+      
       const actionCell = row.querySelector(".action-cell");
       if (actionCell) {
         actionCell.innerHTML = `<button class="remove-btn">Remove</button>`;
@@ -126,7 +144,10 @@ async function saveChanges() {
     const id = row.getAttribute("data-id");
     const salaryInput = row.querySelector(".salary-input");
     const expInput = row.querySelector(".exp-input");
-    const newSalary = parseFloat(salaryInput?.value) || null;
+    
+    const rawSalary = parseSalaryInput(salaryInput?.value);
+    const newSalary = rawSalary ? parseFloat(rawSalary) : null;
+    
     const newExpDate = expInput?.value ? new Date(expInput.value).toISOString() : null;
     updates.push({ id, salary: newSalary, expirationDate: newExpDate });
   });
@@ -160,7 +181,7 @@ async function loadClients() {
       const name = c.name || "N/A";
       const branch = c.branch || "N/A";
       const clientId = client.clientIdNumber || "N/A";
-      const salary = client.salary != null ? client.salary : "N/A";
+      const salary = client.salary != null ? formatSalaryDisplay(client.salary) : "N/A";
       const expDate = client.expirationDate ? new Date(client.expirationDate).toISOString().split("T")[0] : "N/A";
       const profileImg = client.credentials?.profileImage || "../defaultProfile/Default_pfp.jpg";
 
@@ -187,7 +208,6 @@ async function loadClients() {
 
 function showClientProfile(client) {
   const c = client.branchData || {};
-  // Guard shift fallback
   const shift = client.guardShift || c.guardShift || { day: "N/A", night: "N/A" };
   const credentials = c.credentials || {};
 
@@ -204,7 +224,6 @@ function showClientProfile(client) {
       ? `<button class="view-file-btn" data-url="${c.contract || client.contract}">View Contract</button>`
       : "N/A";
 
-  // Display both day and night shifts
   document.getElementById("clientProfileShift").innerHTML = `
     <p><strong>Day Shift:</strong> ${shift.day || "N/A"}</p>
     <p><strong>Night Shift:</strong> ${shift.night || "N/A"}</p>
@@ -329,19 +348,16 @@ const branchesTableBody = document.getElementById("branchesTableBody");
 const addBranchBtn = document.getElementById("addBranchBtn");
 const newBranchNameInput = document.getElementById("newBranchName");
 
-// Open modal
 manageBranchesBtn?.addEventListener("click", () => {
   branchesModal.classList.add("show");
   loadBranches();
 });
 
-// Close modal
 closeBranchesModal?.addEventListener("click", () => branchesModal.classList.remove("show"));
 branchesModal?.addEventListener("click", e => {
   if (e.target.id === "branchesModal") branchesModal.classList.remove("show");
 });
 
-// Load branches from new API
 async function loadBranches() {
   try {
     const res = await fetch("https://www.mither3security.com/api/branches-management");
@@ -367,7 +383,6 @@ async function loadBranches() {
   }
 }
 
-// Add new branch
 addBranchBtn?.addEventListener("click", async () => {
   const name = newBranchNameInput.value.trim();
   if (!name) return alert("Branch name cannot be empty.");
@@ -385,7 +400,6 @@ addBranchBtn?.addEventListener("click", async () => {
   }
 });
 
-// Remove branch
 async function removeBranch(id) {
   if (!confirm("Are you sure you want to remove this branch?")) return;
   try {
@@ -445,10 +459,8 @@ async function loadEmployees() {
         <td><button class="view-btn">View</button> <button class="approve-btn">Approve</button></td>
       `;
 
-      // ===== View Button =====
       row.querySelector(".view-btn").onclick = () => renderAccountDetails(acc);
 
-      // ===== APPROVE BUTTON LOGIC =====
       row.querySelector(".approve-btn").onclick = async () => {
         try {
           const token = localStorage.getItem("token")?.trim();
@@ -458,7 +470,6 @@ async function loadEmployees() {
           if (!accountRes.ok) throw new Error(await parseError(accountRes));
           const freshAccount = await accountRes.json();
 
-          // ===== EMPLOYEE APPROVAL =====
           if (freshAccount.role === "employee") {
             const empData = freshAccount.employeeData || {};
             const personal = empData.personalData || {};
@@ -473,7 +484,6 @@ async function loadEmployees() {
             const badgeNo = basic.badgeNo || null;
             const branch = basic.branch?.trim();
 
-            // ✅ PASS BADGE NUMBER TO PASSWORD GENERATOR
             const password = generatePassword(badgeNo);
             showPasswordModal(fullName, password);
 
@@ -549,7 +559,6 @@ async function loadEmployees() {
 
             alert(`✅ Employee ${fullName} approved successfully.`);
           } 
-          // ===== CLIENT APPROVAL =====
           else if (freshAccount.role === "client") {
             const c = freshAccount.clientData || freshAccount.branchData || {};
             const clientName = c.name || freshAccount.name || "Unnamed Client";
@@ -557,7 +566,6 @@ async function loadEmployees() {
             const clientEmail = c.email || "";
             const clientPassword = c.password || "";
 
-            // ✅ VALIDATE CLIENT PASSWORD EXISTS
             if (!clientPassword || clientPassword.trim() === "") {
               alert("⚠️ Client password is required. Please ensure the client has provided a password.");
               return;
@@ -652,7 +660,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ===== Requirement & Branch Modal =====
   const createRequirementBtn = document.getElementById("createRequirementBtn");
   const branchSelectionModal = document.getElementById("branchSelectionModal");
   const closeBranchModal = document.getElementById("closeBranchModal");
@@ -665,13 +672,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const reqSalary = document.getElementById("reqSalary");
   const requirementForm = document.getElementById("requirementForm");
 
-  // ===== Show Branch Selection Modal =====
   createRequirementBtn?.addEventListener("click", () => {
     loadRequirements();
     branchSelectionModal.classList.add("show");
   });
 
-  // ===== Close Branch Selection Modal =====
   closeBranchModal?.addEventListener("click", () => {
     branchSelectionModal.classList.remove("show");
   });
@@ -680,7 +685,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target.id === "branchSelectionModal") branchSelectionModal.classList.remove("show");
   });
 
-  // ===== Close Requirement Modal =====
   closeRequirementModal?.addEventListener("click", () => {
     requirementModal.classList.remove("show");
   });
@@ -689,7 +693,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target.id === "requirementModal") requirementModal.classList.remove("show");
   });
 
-  // ===== Load Branches for Requirement Modal =====
   async function loadBranchOptions() {
     try {
       const res = await fetch("https://www.mither3security.com/api/branches");
@@ -710,21 +713,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ===== When a Branch is selected =====
   reqBranchSelect?.addEventListener("change", (e) => {
     const selected = e.target.options[e.target.selectedIndex];
     reqClientName.value = selected.dataset.clientName || "";
     reqSalary.value = selected.dataset.salary || "";
   });
 
-  // ===== Open Requirement Modal & Load Branches =====
   addRequirementBtn?.addEventListener("click", async () => {
     branchSelectionModal.classList.remove("show");
     requirementModal.classList.add("show");
     await loadBranchOptions();
   });
 
-  // ===== Requirement Form Submission =====
   requirementForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const payload = {
@@ -751,7 +751,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ===== Render Requirements in Branch Selection Modal =====
   async function loadRequirements() {
     try {
       const res = await fetch("https://www.mither3security.com/api/requirements");
@@ -777,7 +776,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ===== Event Delegation for Delete Buttons =====
   document.getElementById("branchTableBody")?.addEventListener("click", async (e) => {
     if (e.target.classList.contains("remove-btn")) {
       const tr = e.target.closest("tr");

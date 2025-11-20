@@ -13,43 +13,6 @@ if (logoutBtn) {
   });
 }
 
-// ===== HELPER FUNCTIONS FOR NESTED TABLES =====
-function createDetailedNestedTable(dataArray) {
-  if (!dataArray || dataArray.length === 0) return '<div>N/A</div>';
-  
-  let html = '<table class="nested-table"><tbody>';
-  dataArray.forEach((item) => {
-    html += '<tr><td>';
-    if (typeof item === 'object') {
-      html += Object.values(item).join(' | ');
-    } else {
-      html += item;
-    }
-    html += '</td></tr>';
-  });
-  html += '</tbody></table>';
-  return html;
-}
-
-function createArrayNestedTable(items) {
-  if (!items || items.length === 0) return '<div>N/A</div>';
-  
-  let html = '<table class="nested-table"><tbody>';
-  items.forEach((item) => {
-    html += '<tr>';
-    if (typeof item === 'object') {
-      Object.values(item).forEach(value => {
-        html += `<td>${value || 'N/A'}</td>`;
-      });
-    } else {
-      html += `<td>${item}</td>`;
-    }
-    html += '</tr>';
-  });
-  html += '</tbody></table>';
-  return html;
-}
-
 // ===== DISPOSITION REPORT STATE =====
 let allBranchRows = [];
 let filteredBranchRows = [];
@@ -96,10 +59,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const branches = await branchesRes.json();
     const employees = await employeesRes.json();
-    let allTickets = [];
+    let ticketsList = [];
 
     if (ticketsRes.ok) {
-      allTickets = await ticketsRes.json();
+      ticketsList = await ticketsRes.json();
     }
 
     // ===== UPDATE STATS =====
@@ -111,7 +74,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const currentYear = now.getFullYear();
     const currentMonthNum = now.getMonth();
 
-    const monthlyTickets = allTickets.filter(ticket => {
+    const monthlyTickets = ticketsList.filter(ticket => {
       const ticketDate = new Date(ticket.createdAt);
       return ticketDate.getFullYear() === currentYear && ticketDate.getMonth() === currentMonthNum;
     });
@@ -121,7 +84,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("resolvedTickets").textContent = monthlyTickets.filter(t => t.status === "Resolved").length;
     document.getElementById("monthlyTicketCount").textContent = monthlyTickets.length;
 
-    // ===== BUILD DISPOSITION ROWS =====
+    // ===== BUILD DISPOSITION ROWS WITH SUB-ROWS =====
     let branchIndex = 1;
     allBranchRows = branches.map(branch => {
       const branchName = branch.branchData?.branch || "N/A";
@@ -133,74 +96,59 @@ document.addEventListener("DOMContentLoaded", async () => {
         return {
           branchName,
           guardCount: 0,
-          html: `<tr>
+          html: `<tr class="branch-row">
             <td><strong>${branchIndex++}. ${branchName}</strong></td>
             <td colspan="5" style="text-align:center;">No guards assigned</td>
           </tr>`
         };
       }
 
-      const guardNames = guards.map((g) => {
-        const fullName = g.employeeData?.personalData?.name || "";
-        if (fullName && fullName.trim()) return fullName;
-        const family = g.employeeData?.personalData?.familyName || "";
-        const first = g.employeeData?.personalData?.firstName || "";
-        const middle = g.employeeData?.personalData?.middleName || "";
-        return `${family}, ${first} ${middle}`.trim() || "N/A";
-      });
-      const guardListHTML = createDetailedNestedTable(guardNames);
-
-      const educationData = guards.map(g => {
-        const degree = g.employeeData?.educationalBackground?.[0]?.degree;
-        const school = g.employeeData?.educationalBackground?.[0]?.school;
-        return degree || school || "N/A";
-      });
-      const educationListHTML = createDetailedNestedTable(educationData);
-
-      const licenseData = guards.map(g => {
-        const license = g.employeeData?.basicInformation?.pslNo || "N/A";
-        const expiry = g.employeeData?.basicInformation?.expiryDate
-          ? new Date(g.employeeData.basicInformation.expiryDate).toLocaleDateString()
+      // Build sub-rows for each guard
+      let subRowsHtml = '';
+      guards.forEach((guard, idx) => {
+        const fullName = guard.employeeData?.personalData?.name || "";
+        const guardName = fullName && fullName.trim() ? fullName : 
+          `${guard.employeeData?.personalData?.familyName || ""}, ${guard.employeeData?.personalData?.firstName || ""} ${guard.employeeData?.personalData?.middleName || ""}`.trim() || "N/A";
+        
+        const degree = guard.employeeData?.educationalBackground?.[0]?.degree;
+        const school = guard.employeeData?.educationalBackground?.[0]?.school;
+        const education = degree || school || "N/A";
+        
+        const license = guard.employeeData?.basicInformation?.pslNo || "N/A";
+        const expiry = guard.employeeData?.basicInformation?.expiryDate
+          ? new Date(guard.employeeData.basicInformation.expiryDate).toLocaleDateString()
           : "N/A";
-        return { license, expiry };
-      });
-      const licenseListHTML = createArrayNestedTable(licenseData);
-
-      const badgeData = guards.map(g =>
-        g.employeeData?.basicInformation?.badgeNo || "N/A"
-      );
-      const badgeListHTML = createDetailedNestedTable(badgeData);
-
-      const firearmsList = guards.map(g => {
-        if (g.employeeData?.firearmsIssued?.length) {
-          return g.employeeData.firearmsIssued.map(f => ({
-            kind: f.kind || "N/A",
-            make: f.make || "N/A",
-            sn: f.sn || "N/A"
-          }));
+        
+        const badgeNo = guard.employeeData?.basicInformation?.badgeNo || "N/A";
+        
+        let firearms = "N/A";
+        if (guard.employeeData?.firearmsIssued?.length) {
+          firearms = guard.employeeData.firearmsIssued
+            .map(f => `${f.kind || "N/A"} | ${f.make || "N/A"} | ${f.sn || "N/A"}`)
+            .join(", ");
         }
-        return [{ kind: "N/A", make: "N/A", sn: "N/A" }];
-      }).flat();
-      const firearmListHTML = createArrayNestedTable(firearmsList);
+        
+        subRowsHtml += `<tr class="sub-row">
+          <td style="padding-left: 2rem; font-size: 0.9rem;">${idx === 0 ? `<strong>${branchIndex}. ${branchName}</strong>` : ''}</td>
+          <td>${guardName}</td>
+          <td>${education}</td>
+          <td>${license}<br><small style="color: #666;">${expiry}</small></td>
+          <td>${badgeNo}</td>
+          <td>${firearms}</td>
+        </tr>`;
+      });
 
+      branchIndex++;
       return {
         branchName,
         guardCount: guards.length,
-        html: `<tr>
-          <td><strong>${branchIndex++}. ${branchName}</strong></td>
-          <td>${guardListHTML}</td>
-          <td>${educationListHTML}</td>
-          <td>${licenseListHTML}</td>
-          <td>${badgeListHTML}</td>
-          <td>${firearmListHTML}</td>
-        </tr>`
+        html: subRowsHtml
       };
     });
 
     filteredBranchRows = allBranchRows;
 
     // ===== BUILD TICKET ROWS =====
-    const ticketsBody = document.getElementById("ticketReportBody");
     allTickets = monthlyTickets.map((ticket, idx) => ({
       ...ticket,
       index: idx + 1,
@@ -305,27 +253,41 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ===== DOWNLOAD DISPOSITION PDF =====
   document.getElementById("downloadDispositionBtn").addEventListener("click", () => {
     const element = document.getElementById("dispositionContent");
+    const clonedElement = element.cloneNode(true);
+    
+    // Show all rows in PDF
+    const tbody = clonedElement.querySelector("#reportBody");
+    tbody.innerHTML = filteredBranchRows.map(row => row.html).join("");
+    
     const opt = {
-      margin: 0.5,
-      filename: `Monthly_Disposition_Report_${now.toLocaleDateString()}.pdf`,
+      margin: [10, 10, 10, 10],
+      filename: `Monthly_Disposition_Report_${now.toLocaleDateString().replace(/\//g, '-')}.pdf`,
       image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: "in", format: "a4", orientation: "landscape" }
+      html2canvas: { scale: 2, logging: false },
+      jsPDF: { unit: "mm", format: "a4", orientation: "landscape" }
     };
-    html2pdf().from(element).set(opt).save();
+    
+    html2pdf().set(opt).from(clonedElement).save();
   });
 
   // ===== DOWNLOAD TICKET REPORT PDF =====
   document.getElementById("downloadTicketReportBtn").addEventListener("click", () => {
     const element = document.getElementById("ticketReportContent");
+    const clonedElement = element.cloneNode(true);
+    
+    // Show all tickets in PDF
+    const tbody = clonedElement.querySelector("#ticketReportBody");
+    tbody.innerHTML = filteredTickets.map(ticket => ticket.html).join("");
+    
     const opt = {
-      margin: 0.5,
-      filename: `Monthly_Ticket_Report_${now.toLocaleDateString()}.pdf`,
+      margin: [10, 10, 10, 10],
+      filename: `Monthly_Ticket_Report_${now.toLocaleDateString().replace(/\//g, '-')}.pdf`,
       image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: "in", format: "a4", orientation: "landscape" }
+      html2canvas: { scale: 2, logging: false },
+      jsPDF: { unit: "mm", format: "a4", orientation: "landscape" }
     };
-    html2pdf().from(element).set(opt).save();
+    
+    html2pdf().set(opt).from(clonedElement).save();
   });
 });
 
