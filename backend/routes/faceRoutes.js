@@ -1,33 +1,61 @@
 import express from "express";
 import multer from "multer";
-import { loadModels, registerFace, recognizeFace } from "../services/faceService.js";
+import { loadModels, enrollFace, verifyFace, getAllFaceDescriptors } from "../services/faceService.js";
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 
-// Load models once at server start
-loadModels().then(() => console.log("Face-api models loaded"));
+// Load models when server starts
+loadModels().then(() => console.log("Face models loaded"));
 
-// Register face
-router.post("/register", upload.single("image"), async (req, res) => {
+/**
+ * ENROLL FACE (REGISTER)
+ * expects:
+ *   - image (base64 string)
+ *   - badgeNo
+ *   - email
+ */
+router.post("/register", async (req, res) => {
   try {
-    const { name } = req.body;
-    const filePath = req.file.path;
-    const result = await registerFace(name, filePath);
-    res.json({ message: "Face registered", result });
+    const { imageBase64, badgeNo, email } = req.body;
+
+    const result = await enrollFace(imageBase64, badgeNo, email);
+
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    res.json({ message: "Face enrolled", result });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 
-// Recognize face
-router.post("/recognize", upload.single("image"), async (req, res) => {
+/**
+ * VERIFY FACE (LOGIN)
+ * expects:
+ *   - imageBase64
+ *   - registeredDescriptor (array)
+ */
+router.post("/recognize", async (req, res) => {
   try {
-    const filePath = req.file.path;
-    const result = await recognizeFace(filePath);
-    res.json({ result: result || "No match found" });
+    const { imageBase64, registeredDescriptor } = req.body;
+
+    const result = await verifyFace(imageBase64, registeredDescriptor);
+
+    res.json(result);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/** OPTIONAL: VIEW STORED DESCRIPTORS */
+router.get("/descriptors", async (req, res) => {
+  try {
+    const result = await getAllFaceDescriptors();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

@@ -1,7 +1,7 @@
 import express from "express";
 import Register from "../models/Register.js";
 import Archive from "../models/Archive.js";
-import { enrollFace, verifyFace } from "../utils/faceService.js";
+import { enrollFace, verifyFace } from "../services/faceService.js";
 
 const router = express.Router();
 
