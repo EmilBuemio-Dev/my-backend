@@ -101,8 +101,7 @@ app.use('/', leaveRoutes);
 app.use("/remarks", remarksRoutes);
 app.use("/ticket-chats", ticketChatRoutes);
 app.use("/api/face", faceRoutes);
-app.use("/models", express.static(path.join(__dirname, "backend/models-api")));
-
+app.use("/models", express.static(path.join(__dirname, "models-api")));
 // ===== Health Check Endpoint =====
 app.get("/api/health", (req, res) => {
   res.json({

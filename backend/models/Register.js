@@ -28,8 +28,6 @@ const registerSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Index for faster queries
-registerSchema.index({ badgeNo: 1 });
 registerSchema.index({ email: 1 });
 registerSchema.index({ faceEnrollmentId: 1 });
 

@@ -10,7 +10,7 @@ faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const MODEL_PATH = path.join(__dirname, "../backend/models-api");
+const MODEL_PATH = path.join(__dirname, "../models-api");
 
 let modelsLoaded = false;
 
