@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 import fs from "fs";
 import connectDB from "./config/db.js";
 import resend from "./config/email.js";
+import { loadModels } from "./services/faceService.js";
 
 // Routes
 import archiveRoutes from "./routes/archiveRoutes.js";
@@ -24,6 +25,7 @@ import branchManagementRoutes from "./routes/branchManagementRoutes.js";
 import leaveRoutes from './routes/leaveRoutes.js';
 import remarksRoutes from "./routes/remarksRoutes.js";
 import ticketChatRoutes from "./routes/ticketChatRoutes.js";
+import faceRoutes from "./routes/faceRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -98,6 +100,8 @@ app.use("/api/branches-management", branchManagementRoutes);
 app.use('/', leaveRoutes);
 app.use("/remarks", remarksRoutes);
 app.use("/ticket-chats", ticketChatRoutes);
+app.use("/api/face", faceRoutes);
+app.use("/models", express.static(path.join(__dirname, "backend/models-api")));
 
 // ===== Health Check Endpoint =====
 app.get("/api/health", (req, res) => {
@@ -161,6 +165,34 @@ app.use((req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-});
+// ===== SERVER INITIALIZATION WITH FACE-API =====
+async function initializeServer() {
+  try {
+    console.log("\n🚀 Initializing MITHER3 Server...");
+    
+    // Connect MongoDB
+    await connectDB();
+    console.log("✅ MongoDB connected");
+    
+    // Load face-api models
+    console.log("📦 Loading Face-API models...");
+    await loadModels();
+    console.log("✅ Face-API models loaded successfully");
+    
+    // Start Express server
+    app.listen(PORT, () => {
+      console.log("\n" + "=".repeat(50));
+      console.log("✅ Server running on port " + PORT);
+      console.log("📍 Face-API models ready for biometric enrollment");
+      console.log("📧 Email service configured:", process.env.RESEND_API_KEY ? "✅" : "⚠️");
+      console.log("=".repeat(50) + "\n");
+    });
+  } catch (err) {
+    console.error("\n❌ Server initialization failed:");
+    console.error(err.message);
+    process.exit(1);
+  }
+}
+
+// Start server
+initializeServer();

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login Selection</title>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <script async defer src="https://cdn.faceio.net/faceio.js"></script>
   <style>
     :root {
       --clr-light: #f5f7fa;
@@ -18,9 +19,6 @@
       --clr-success: #1abc9c;
       --clr-danger: #e74c3c;
       --clr-warning: #f39c12;
-      --card-padding: 0.8rem;
-      --card-border-radius: 12px;
-      --card-box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
     }
 
     * {
@@ -172,14 +170,8 @@
     }
 
     @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .modal-content h2 {
@@ -418,7 +410,7 @@
       margin-left: 0.2rem;
     }
 
-    .form-group input {
+    .form-group input, .form-group select {
       padding: 0.85rem 0.95rem;
       font-size: 0.95rem;
     }
@@ -445,94 +437,141 @@
       display: block;
     }
 
-    /* Email Validation Tooltip - Right Side */
-    .email-validation-tooltip {
-      position: fixed;
-      right: 20px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: white;
+    .face-section {
+      background: rgba(26, 188, 156, 0.1);
+      border: 2px dashed var(--clr-success);
       border-radius: 12px;
-      padding: 1.2rem;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-      max-width: 280px;
-      font-size: 0.9rem;
-      display: none;
-      z-index: 1500;
-      animation: slideInRight 0.3s ease;
-      border-left: 4px solid var(--clr-primary);
+      padding: 1.5rem;
+      margin: 1.2rem 0;
+      text-align: center;
     }
 
-    .email-validation-tooltip.show {
-      display: block;
+    .face-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
     }
 
-    .email-validation-tooltip.error {
-      border-left-color: var(--clr-danger);
-    }
-
-    .email-validation-tooltip.success {
-      border-left-color: var(--clr-success);
-    }
-
-    .email-validation-tooltip p {
-      margin: 0;
-      color: var(--clr-primary);
-      font-weight: 600;
-    }
-
-    .email-validation-tooltip.error p {
-      color: var(--clr-danger);
-    }
-
-    .email-validation-tooltip.success p {
+    .face-header .material-symbols-outlined {
+      font-size: 2rem;
       color: var(--clr-success);
     }
 
-    @keyframes slideInRight {
-      from {
-        opacity: 0;
-        transform: translateY(-50%) translateX(50px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(-50%) translateX(0);
-      }
+    .face-header div {
+      text-align: left;
+    }
+
+    .face-header-title {
+      font-weight: 600;
+      color: var(--clr-primary);
+      font-size: 0.95rem;
+    }
+
+    .face-header-subtitle {
+      font-size: 0.85rem;
+      color: #666;
+    }
+
+    .face-status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      margin-top: 1rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .face-status.verified {
+      color: var(--clr-success);
+    }
+
+    .face-status.pending {
+      color: var(--clr-warning);
+    }
+
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .status-dot.success {
+      background: var(--clr-success);
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot.warning {
+      background: var(--clr-warning);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.2rem;
+    }
+
+    .button-group button {
+      flex: 1;
+    }
+
+    .secondary-btn {
+      background: linear-gradient(135deg, #7d8da1 0%, #5a6b7d 100%);
+    }
+
+    .secondary-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #5a6b7d 0%, #3d4a5c 100%);
+    }
+
+    .message {
+      padding: 0.8rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      display: none;
+      text-align: center;
+    }
+
+    .message.show {
+      display: block;
+    }
+
+    .message.error {
+      background: rgba(231, 76, 60, 0.1);
+      color: var(--clr-danger);
+      border: 1px solid var(--clr-danger);
+    }
+
+    .message.success {
+      background: rgba(26, 188, 156, 0.1);
+      color: var(--clr-success);
+      border: 1px solid var(--clr-success);
+    }
+
+    .message.info {
+      background: rgba(52, 152, 219, 0.1);
+      color: #3498db;
+      border: 1px solid #3498db;
     }
 
     @media (max-width: 600px) {
-      .top-bar {
-        padding: 1rem 1.5rem;
-      }
-
-      .system-name {
-        font-size: 1.2rem;
-      }
-
-      .modal-content {
-        width: 90%;
-        padding: 2rem 1.5rem;
-      }
-
-      .modal-content h2 {
-        font-size: 1.5rem;
-        margin-bottom: 1.5rem;
-      }
-
-      .role-btn {
-        padding: 0.9rem 1.2rem;
-        font-size: 0.95rem;
-      }
-
-      .email-validation-tooltip {
-        position: fixed;
-        right: 10px;
-        left: 10px;
-        top: auto;
-        bottom: 20px;
-        transform: none;
-        max-width: none;
-      }
+      .top-bar { padding: 1rem 1.5rem; }
+      .system-name { font-size: 1.2rem; }
+      .modal-content { width: 90%; padding: 2rem 1.5rem; }
+      .modal-content h2 { font-size: 1.5rem; margin-bottom: 1.5rem; }
+      .role-btn { padding: 0.9rem 1.2rem; font-size: 0.95rem; }
+      .button-group { flex-direction: column; }
+      .face-header { flex-direction: column; gap: 0.5rem; }
+      .face-header div { text-align: center; }
     }
   </style>
 </head>
@@ -545,14 +584,10 @@
     <button class="login-btn" id="loginBtn">Log In</button>
   </header>
 
-  <!-- Email Validation Tooltip -->
-  <div class="email-validation-tooltip" id="emailValidationTooltip"></div>
-
   <div class="modal" id="loginModal">
     <div class="modal-content">
       <span class="close" id="closeModal">&times;</span>
 
-      <!-- Role Selection View -->
       <div id="roleSelection">
         <h2>Log in</h2>
         <div class="role-buttons">
@@ -567,7 +602,6 @@
         </div>
       </div>
 
-      <!-- Admin Login Form -->
       <div id="adminForm" class="login-form">
         <div class="role-header">
           <button type="button" id="backBtn">←</button>
@@ -586,7 +620,6 @@
         <p id="adminSuccess" class="success"></p>
       </div>
 
-      <!-- Unified User Login Form (HR, Employee, Client) -->
       <div id="userForm" class="login-form">
         <div class="role-header">
           <button type="button" class="backBtn">←</button>
@@ -601,11 +634,9 @@
           </select>
 
           <input type="email" id="userEmail" placeholder="Email" required>
-          
           <input type="text" id="hrIdNumber" class="dynamic-input" placeholder="HR ID Number" required>
           <input type="text" id="employeeBadgeNumber" class="dynamic-input" placeholder="SSS NR (00-0000000-0)" required maxlength="12">
           <input type="text" id="clientIdNumber" class="dynamic-input" placeholder="Client ID Number" required>
-          
           <input type="password" id="userPassword" placeholder="Password" required>
           <div class="otp-row">
             <input type="text" id="userOtp" placeholder="Enter OTP" disabled required>
@@ -622,11 +653,12 @@
     </div>
   </div>
 
-  <!-- Employee Registration Modal -->
   <div class="modal" id="registerModal">
     <div class="modal-content">
       <span class="close" id="closeRegister">&times;</span>
       <h2>Employee Registration</h2>
+
+      <div id="registrationMessage" class="message"></div>
 
       <form id="registerForm">
         <div class="form-group">
@@ -652,15 +684,33 @@
 
         <div class="form-group">
           <label for="registerEmail">Email <span class="required">*</span></label>
-          <input type="email" id="registerEmail" placeholder="Email" required>
+          <input type="email" id="registerEmail" placeholder="Enter your email" required>
+          <div id="emailFeedback" class="feedback"></div>
         </div>
 
-        <button type="submit" id="registerSubmitBtn" disabled>Register</button>
+        <div class="face-section">
+          <div class="face-header">
+            <span class="material-symbols-outlined">face</span>
+            <div>
+              <div class="face-header-title">Face Recognition</div>
+              <div class="face-header-subtitle">Secure biometric enrollment</div>
+            </div>
+          </div>
+          <button type="button" id="enrollFaceBtn" class="secondary-btn">Enroll Face</button>
+          <div id="faceStatus" class="face-status pending" style="display: none;">
+            <span class="status-dot warning"></span>
+            <span id="faceStatusText">Pending face enrollment</span>
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button type="button" id="cancelRegisterBtn" class="secondary-btn">Cancel</button>
+          <button type="submit" id="registerSubmitBtn" disabled>Complete Registration</button>
+        </div>
       </form>
     </div>
   </div>
 
-  <!-- Change Password Modal -->
   <div class="modal" id="changePasswordModal">
     <div class="modal-content">
       <h2>Change Password</h2>
@@ -674,7 +724,6 @@
     </div>
   </div>
 
-  <!-- Client Registration Modal -->
   <div class="modal" id="clientRegisterModal">
     <div class="modal-content" style="max-width: 500px;">
       <span class="close" id="closeClientRegister">&times;</span>
@@ -685,7 +734,6 @@
         <input type="email" id="clientEmail" placeholder="Email" required />
         <input type="password" id="clientPassword" placeholder="Password" required />
         <input type="password" id="clientPasswordConfirm" placeholder="Confirm Password" required />
-        
         <select id="clientBranch" required>
           <option value="">Select a branch</option>
         </select>
@@ -694,7 +742,6 @@
           Contract (PDF):
         </label>
         <input type="file" id="contractFile" accept=".pdf" required />
-
         <button type="submit">Submit Registration</button>
       </form>
       <p id="clientRegisterError" class="error"></p>
@@ -702,15 +749,27 @@
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/face-api.js/0.22.2/face-api.min.js"></script>
   <script>
+    // ===== GLOBAL VARIABLES =====
     const API_URL = "https://www.mither3security.com/api/users";
+    const REGISTERS_API_URL = "https://www.mither3security.com/api/registers";
+    const ARCHIVE_API_URL = "https://www.mither3security.com/archive/search";
+    
+    let faceDescriptor = null;
+    let videoStream = null;
+    let isCameraActive = false;
 
-    // Password validation function
+    // ===== HELPER FUNCTIONS =====
+    function showRegistrationMessage(message, type = 'info') {
+      const box = document.getElementById('registrationMessage');
+      box.textContent = message;
+      box.className = `message show ${type}`;
+      if (type !== 'error') setTimeout(() => box.classList.remove('show'), 3000);
+    }
+
     function validatePassword(password) {
-      const hasUpperCase = /[A-Z]/.test(password);
-      const hasNumber = /[0-9]/.test(password);
-      const isLengthValid = password.length >= 8;
-      return hasUpperCase && hasNumber && isLengthValid;
+      return /[A-Z]/.test(password) && /[0-9]/.test(password) && password.length >= 8;
     }
 
     function getPasswordErrors(password) {
@@ -721,7 +780,100 @@
       return errors;
     }
 
+    function formatSSS(value) {
+      return value.replace(/[^0-9]/g, "").replace(/(\d{2})(\d{1,7})(\d{0,1}).*/, (_, p1, p2, p3) => p3 ? `${p1}-${p2}-${p3}` : p2 ? `${p1}-${p2}` : p1);
+    }
+
+    // ===== FACE API FUNCTIONS =====
+    async function startCamera() {
+      try {
+        const video = document.createElement('video');
+        video.id = 'faceVideo';
+        video.width = 320;
+        video.height = 240;
+        video.autoplay = true;
+        
+        videoStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 320, height: 240, facingMode: 'user' }
+        });
+        
+        video.srcObject = videoStream;
+        isCameraActive = true;
+        
+        await new Promise(resolve => {
+          video.onloadedmetadata = () => {
+            video.play();
+            resolve();
+          };
+        });
+        
+        console.log('✅ Camera started');
+        return video;
+      } catch (err) {
+        console.error('❌ Camera error:', err);
+        showRegistrationMessage('Camera access denied or unavailable', 'error');
+        return null;
+      }
+    }
+
+    async function captureAndDetectFace(video) {
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        console.log('🔍 Detecting face...');
+        
+        const detection = await faceapi
+          .detectSingleFace(canvas)
+          .withFaceLandmarks()
+          .withFaceDescriptor();
+
+        if (!detection) {
+          return {
+            success: false,
+            error: 'No face detected. Please position your face in the camera.',
+          };
+        }
+
+        if (detection.detection.score < 0.7) {
+          return {
+            success: false,
+            error: 'Face confidence too low. Please ensure good lighting.',
+          };
+        }
+
+        const imageBase64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+
+        console.log('✅ Face detected successfully');
+
+        return {
+          success: true,
+          descriptor: detection.descriptor,
+          imageBase64,
+        };
+      } catch (err) {
+        console.error('❌ Face detection error:', err);
+        return {
+          success: false,
+          error: `Face detection failed: ${err.message}`,
+        };
+      }
+    }
+
+    function stopCamera() {
+      if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        isCameraActive = false;
+      }
+    }
+
+    // ===== MAIN DOM CONTENT LOADED =====
     document.addEventListener("DOMContentLoaded", () => {
+      // Get DOM elements
       const loginBtn = document.getElementById("loginBtn");
       const modal = document.getElementById("loginModal");
       const closeModal = document.getElementById("closeModal");
@@ -736,55 +888,92 @@
       const clientIdNumberInput = document.getElementById("clientIdNumber");
       const registerTextContainer = document.getElementById("registerTextContainer");
 
+      const adminForm = document.getElementById("loginFormAdmin");
+      const adminGetOtpBtn = document.getElementById("adminGetOtpBtn");
+      const adminOtpInput = document.getElementById("adminOtp");
+      const adminEmailInput = document.getElementById("adminEmail");
+      const adminPasswordInput = document.getElementById("adminPassword");
+      const adminErrorP = document.getElementById("adminError");
+      const adminSuccessP = document.getElementById("adminSuccess");
+
+      const userForm = document.getElementById("loginFormUser");
+      const userGetOtpBtn = document.getElementById("userGetOtpBtn");
+      const userOtpInput = document.getElementById("userOtp");
+      const userEmailInput = document.getElementById("userEmail");
+      const userPasswordInput = document.getElementById("userPassword");
+      const userErrorP = document.getElementById("userError");
+      const userSuccessP = document.getElementById("userSuccess");
+
+      const changePasswordModal = document.getElementById("changePasswordModal");
+      const changePasswordForm = document.getElementById("changePasswordForm");
+      const changePasswordErrorP = document.getElementById("changePasswordError");
+      const changePasswordSuccessP = document.getElementById("changePasswordSuccess");
+
+      const registerModal = document.getElementById("registerModal");
+      const closeRegister = document.getElementById("closeRegister");
+      const userRegisterLink = document.getElementById("userRegisterLink");
+      const registerForm = document.getElementById("registerForm");
+      const badgeNoInput = document.getElementById("badgeNo");
+      const familyNameInput = document.getElementById("familyName");
+      const firstNameInput = document.getElementById("firstName");
+      const middleNameInput = document.getElementById("middleName");
+      const registerEmailInput = document.getElementById("registerEmail");
+      const badgeNoFeedback = document.getElementById("badgeNoFeedback");
+      const emailFeedback = document.getElementById("emailFeedback");
+      const registerSubmitBtn = document.getElementById("registerSubmitBtn");
+      const enrollFaceBtn = document.getElementById("enrollFaceBtn");
+      const cancelRegisterBtn = document.getElementById("cancelRegisterBtn");
+      const faceStatus = document.getElementById("faceStatus");
+      const faceStatusText = document.getElementById("faceStatusText");
+
+      const clientRegisterModal = document.getElementById("clientRegisterModal");
+      const closeClientRegister = document.getElementById("closeClientRegister");
+      const clientRegisterForm = document.getElementById("clientRegisterForm");
+      const clientBranchSelect = document.getElementById("clientBranch");
+      const clientRegisterErrorP = document.getElementById("clientRegisterError");
+      const clientRegisterSuccessP = document.getElementById("clientRegisterSuccess");
+
+      // ===== MODAL & NAVIGATION =====
       loginBtn.addEventListener("click", () => {
         modal.classList.add("show");
-        showRoleSelection();
+        roleSelection.style.display = "block";
+        document.querySelectorAll(".login-form").forEach(f => f.classList.remove("show"));
       });
 
-      closeModal.addEventListener("click", () => {
-        modal.classList.remove("show");
-      });
-
+      closeModal.addEventListener("click", () => modal.classList.remove("show"));
       window.addEventListener("click", (e) => {
         if (e.target === modal) modal.classList.remove("show");
       });
 
-      function showRoleSelection() {
-        document.querySelectorAll(".login-form").forEach(f => f.classList.remove("show"));
-        roleSelection.style.display = "block";
-      }
-
-      function showForm(role) {
-        roleSelection.style.display = "none";
-        document.querySelectorAll(".login-form").forEach(f => f.classList.remove("show"));
-        const formId = `${role}Form`;
-        document.getElementById(formId).classList.add("show");
-      }
-
       roleButtons.forEach(btn => {
         btn.addEventListener("click", () => {
-          const role = btn.dataset.role;
-          showForm(role);
+          roleSelection.style.display = "none";
+          document.querySelectorAll(".login-form").forEach(f => f.classList.remove("show"));
+          document.getElementById(`${btn.dataset.role}Form`).classList.add("show");
         });
       });
 
-      backBtn.addEventListener("click", showRoleSelection);
-      backBtns.forEach(btn => {
-        btn.addEventListener("click", showRoleSelection);
+      backBtn.addEventListener("click", () => {
+        roleSelection.style.display = "block";
+        document.querySelectorAll(".login-form").forEach(f => f.classList.remove("show"));
       });
 
+      backBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+          roleSelection.style.display = "block";
+          document.querySelectorAll(".login-form").forEach(f => f.classList.remove("show"));
+        });
+      });
+
+      // ===== USER TYPE SELECTION =====
       userTypeSelect.addEventListener("change", (e) => {
         const userType = e.target.value;
-        
-        hrIdNumberInput.classList.remove("show");
-        employeeBadgeNumberInput.classList.remove("show");
-        clientIdNumberInput.classList.remove("show");
+        [hrIdNumberInput, employeeBadgeNumberInput, clientIdNumberInput].forEach(el => {
+          el.classList.remove("show");
+          el.removeAttribute("required");
+        });
         registerTextContainer.style.display = "none";
-        
-        hrIdNumberInput.removeAttribute("required");
-        employeeBadgeNumberInput.removeAttribute("required");
-        clientIdNumberInput.removeAttribute("required");
-        
+
         if (userType === "hr") {
           hrIdNumberInput.classList.add("show");
           hrIdNumberInput.setAttribute("required", "required");
@@ -799,27 +988,15 @@
         }
       });
 
-      [employeeBadgeNumberInput, document.getElementById("badgeNo")].forEach(input => {
+      [employeeBadgeNumberInput, badgeNoInput].forEach(input => {
         if (input) {
           input.addEventListener("input", function() {
-            this.value = this.value
-              .replace(/[^0-9]/g, "")
-              .replace(/(\d{2})(\d{1,7})(\d{0,1}).*/, function(_, p1, p2, p3) {
-                return p3 ? `${p1}-${p2}-${p3}` : p2 ? `${p1}-${p2}` : p1;
-              });
+            this.value = formatSSS(this.value);
           });
         }
       });
 
-      // ==================== ADMIN LOGIN ====================
-      const adminForm = document.getElementById("loginFormAdmin");
-      const adminGetOtpBtn = document.getElementById("adminGetOtpBtn");
-      const adminOtpInput = document.getElementById("adminOtp");
-      const adminEmailInput = document.getElementById("adminEmail");
-      const adminPasswordInput = document.getElementById("adminPassword");
-      const adminErrorP = document.getElementById("adminError");
-      const adminSuccessP = document.getElementById("adminSuccess");
-
+      // ===== ADMIN LOGIN =====
       adminGetOtpBtn.addEventListener("click", async () => {
         adminErrorP.textContent = "";
         adminSuccessP.textContent = "";
@@ -848,7 +1025,7 @@
           adminOtpInput.focus();
           adminSuccessP.textContent = "OTP sent to your email.";
         } catch (err) {
-          console.error("Admin OTP request error:", err);
+          console.error("Admin OTP error:", err);
           adminErrorP.textContent = "Server error while requesting OTP.";
         }
       });
@@ -894,24 +1071,12 @@
           localStorage.setItem("role", data.role);
           window.location.href = "dashboard.html";
         } catch (err) {
-          console.error("Admin OTP verification error:", err);
+          console.error("Admin verification error:", err);
           adminErrorP.textContent = "Server error during login.";
         }
       });
 
-      // ==================== UNIFIED USER LOGIN ====================
-      const userForm = document.getElementById("loginFormUser");
-      const userGetOtpBtn = document.getElementById("userGetOtpBtn");
-      const userOtpInput = document.getElementById("userOtp");
-      const userEmailInput = document.getElementById("userEmail");
-      const userPasswordInput = document.getElementById("userPassword");
-      const userErrorP = document.getElementById("userError");
-      const userSuccessP = document.getElementById("userSuccess");
-      const changePasswordModal = document.getElementById("changePasswordModal");
-      const changePasswordForm = document.getElementById("changePasswordForm");
-      const changePasswordErrorP = document.getElementById("changePasswordError");
-      const changePasswordSuccessP = document.getElementById("changePasswordSuccess");
-
+      // ===== USER LOGIN =====
       userGetOtpBtn.addEventListener("click", async () => {
         userErrorP.textContent = "";
         userSuccessP.textContent = "";
@@ -963,7 +1128,6 @@
           });
 
           const data = await res.json();
-          console.log("User login response:", data);
 
           if (!res.ok) {
             userErrorP.textContent = data.msg || "Failed to send OTP.";
@@ -975,7 +1139,7 @@
           userOtpInput.focus();
           userSuccessP.textContent = "OTP sent to your email.";
         } catch (err) {
-          console.error("User OTP request error:", err);
+          console.error("User OTP error:", err);
           userErrorP.textContent = "Server error while requesting OTP.";
         }
       });
@@ -1012,7 +1176,6 @@
           });
 
           const data = await res.json();
-          console.log("User OTP verification response:", data);
 
           if (!res.ok) {
             userErrorP.textContent = data.msg || "OTP verification failed.";
@@ -1030,12 +1193,10 @@
 
           if (userType === "employee") {
             localStorage.setItem("employeeId", data.employeeId || "N/A");
-
             if (data.requirePasswordChange) {
               changePasswordModal.classList.add("show");
               return;
             }
-
             window.location.href = "guardduty.html";
           } else if (userType === "hr") {
             window.location.href = "dashboard.html";
@@ -1054,12 +1215,12 @@
             window.location.href = "client_portal.html";
           }
         } catch (err) {
-          console.error("User OTP verification error:", err);
+          console.error("User verification error:", err);
           userErrorP.textContent = "Server error during login.";
         }
       });
 
-      // ===== Change Password on First Login =====
+      // ===== CHANGE PASSWORD =====
       changePasswordForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         changePasswordErrorP.textContent = "";
@@ -1110,20 +1271,7 @@
         }
       });
 
-      // ===== EMPLOYEE REGISTRATION WITH 3-LAYER VALIDATION =====
-      const registerModal = document.getElementById("registerModal");
-      const closeRegister = document.getElementById("closeRegister");
-      const userRegisterLink = document.getElementById("userRegisterLink");
-      const registerForm = document.getElementById("registerForm");
-      const badgeNoInput = document.getElementById("badgeNo");
-      const familyNameInput = document.getElementById("familyName");
-      const firstNameInput = document.getElementById("firstName");
-      const middleNameInput = document.getElementById("middleName");
-      const registerEmailInput = document.getElementById("registerEmail");
-      const badgeNoFeedback = document.getElementById("badgeNoFeedback");
-      const registerSubmitBtn = document.getElementById("registerSubmitBtn");
-      const emailValidationTooltip = document.getElementById("emailValidationTooltip");
-
+      // ===== EMPLOYEE REGISTRATION =====
       badgeNoInput.addEventListener("blur", async () => {
         badgeNoFeedback.textContent = "";
         badgeNoFeedback.className = "feedback";
@@ -1141,210 +1289,231 @@
         }
 
         try {
-          console.log("🔍 Starting 3-layer validation for badge number:", badgeNo);
-          
-          const checkDuplicateRes = await fetch(
-            `https://www.mither3security.com/api/registers?badgeNo=${encodeURIComponent(badgeNo)}`
-          );
+          const checkDuplicateRes = await fetch(`${REGISTERS_API_URL}?badgeNo=${encodeURIComponent(badgeNo)}`);
           const duplicateData = await checkDuplicateRes.json();
 
           if (checkDuplicateRes.ok && Array.isArray(duplicateData) && duplicateData.length > 0) {
-            badgeNoFeedback.textContent = "❌ This SSS number is already registered. You cannot register again.";
+            badgeNoFeedback.textContent = "❌ This SSS number is already registered.";
             badgeNoFeedback.className = "feedback error";
-            registerSubmitBtn.disabled = true;
-            console.log("❌ LAYER 1 FAILED: Badge already registered");
             return;
           }
-          console.log("✅ LAYER 1 PASSED: Badge not in Register collection");
 
-          const archiveRes = await fetch(
-            `https://www.mither3security.com/archive/search?badgeNo=${encodeURIComponent(badgeNo)}`
-          );
+          const archiveRes = await fetch(`${ARCHIVE_API_URL}?badgeNo=${encodeURIComponent(badgeNo)}`);
           const archiveData = await archiveRes.json();
 
-          console.log("Archive search response:", archiveData, "Status:", archiveRes.status);
-
           if (!archiveRes.ok || !archiveData || archiveData.length === 0) {
-            badgeNoFeedback.textContent = "❌ SSS number not found in employee records. Cannot register.";
+            badgeNoFeedback.textContent = "❌ SSS number not found in employee records.";
             badgeNoFeedback.className = "feedback error";
-            registerSubmitBtn.disabled = true;
-            console.log("❌ LAYER 2 FAILED: Badge not found in Archive");
             return;
           }
-          console.log("✅ LAYER 2 PASSED: Badge found in Archive");
 
-          console.log("LAYER 3: Badge validation successful, filling employee details...");
           const archive = Array.isArray(archiveData) ? archiveData[0] : archiveData;
-          
           familyNameInput.value = archive.familyName || "";
           firstNameInput.value = archive.firstName || "";
           middleNameInput.value = archive.middleName || "";
 
-          badgeNoFeedback.textContent = "✅ SSS number verified! Fill in your email to complete registration.";
+          badgeNoFeedback.textContent = "✅ SSS number verified! Fill in your email to continue.";
           badgeNoFeedback.className = "feedback success";
           registerSubmitBtn.disabled = false;
           registerEmailInput.focus();
-          console.log("✅ LAYER 3 PASSED: All validations successful");
         } catch (err) {
           console.error("Badge lookup error:", err);
-          badgeNoFeedback.textContent = "⚠️ Error verifying badge number. Please try again.";
+          badgeNoFeedback.textContent = "⚠️ Error verifying badge number.";
           badgeNoFeedback.className = "feedback error";
-          registerSubmitBtn.disabled = true;
         }
       });
 
-      // Email blur event - CHECK IF EMAIL EXISTS (RIGHT SIDE TOOLTIP)
       registerEmailInput.addEventListener("blur", async () => {
         const email = registerEmailInput.value.trim();
+        emailFeedback.textContent = "";
+        emailFeedback.className = "feedback";
 
-        emailValidationTooltip.classList.remove("show", "error", "success");
-
-        if (!email) {
-          return;
-        }
+        if (!email) return;
 
         try {
-          console.log("📧 Checking if email already exists in Register collection...");
-          
-          const checkEmailRes = await fetch(
-            `https://www.mither3security.com/api/registers?email=${encodeURIComponent(email)}`
-          );
+          const checkEmailRes = await fetch(`${REGISTERS_API_URL}?email=${encodeURIComponent(email)}`);
           const emailData = await checkEmailRes.json();
 
           if (checkEmailRes.ok && Array.isArray(emailData) && emailData.length > 0) {
-            console.log("❌ EMAIL VALIDATION FAILED: Email already registered");
-            emailValidationTooltip.innerHTML = "<p>❌ This email is already registered. Please use a different email.</p>";
-            emailValidationTooltip.classList.add("show", "error");
+            emailFeedback.textContent = "❌ This email is already registered.";
+            emailFeedback.className = "feedback error";
             registerSubmitBtn.disabled = true;
             return;
           }
 
-          console.log("✅ EMAIL VALIDATION PASSED: Email not registered yet");
-          emailValidationTooltip.innerHTML = "<p>✅ Email is available.</p>";
-          emailValidationTooltip.classList.add("show", "success");
-          registerSubmitBtn.disabled = false;
+          emailFeedback.textContent = "✅ Email is available.";
+          emailFeedback.className = "feedback success";
+          if (badgeNoInput.value.trim()) registerSubmitBtn.disabled = false;
         } catch (err) {
           console.error("Email validation error:", err);
-          emailValidationTooltip.innerHTML = "<p>⚠️ Error validating email. Please try again.</p>";
-          emailValidationTooltip.classList.add("show", "error");
         }
       });
 
+      // ===== ENROLL FACE BUTTON =====
+      enrollFaceBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+
+        try {
+          enrollFaceBtn.disabled = true;
+          showRegistrationMessage("📷 Starting face capture. Look at your camera.", "info");
+
+          const video = await startCamera();
+          if (!video) {
+            enrollFaceBtn.disabled = false;
+            return;
+          }
+
+          await new Promise(r => setTimeout(r, 2000));
+
+          const captureResult = await captureAndDetectFace(video);
+          stopCamera();
+
+          if (!captureResult.success) {
+            showRegistrationMessage(captureResult.error, 'error');
+            faceStatus.style.display = 'flex';
+            faceStatus.className = 'face-status pending';
+            faceStatusText.textContent = '❌ ' + captureResult.error;
+            enrollFaceBtn.disabled = false;
+            return;
+          }
+
+          faceDescriptor = captureResult;
+
+          faceStatus.style.display = 'flex';
+          faceStatus.className = 'face-status verified';
+          faceStatusText.textContent = '✅ Face captured successfully!';
+
+          showRegistrationMessage('✅ Face enrollment complete! You can now submit your registration.', 'success');
+          registerSubmitBtn.disabled = false;
+          enrollFaceBtn.textContent = 'Retake Photo';
+
+        } catch (err) {
+          console.error('Face enrollment error:', err);
+          stopCamera();
+          showRegistrationMessage(`Face enrollment failed: ${err.message}`, 'error');
+          enrollFaceBtn.disabled = false;
+        }
+      });
+
+      // ===== REGISTER FORM SUBMIT =====
+      registerForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        if (!faceDescriptor) {
+          showRegistrationMessage("Please enroll your face first.", "error");
+          return;
+        }
+
+        const familyName = familyNameInput.value.trim();
+        const firstName = firstNameInput.value.trim();
+        const middleName = middleNameInput.value.trim();
+        const email = registerEmailInput.value.trim();
+        const badgeNo = badgeNoInput.value.trim();
+
+        if (!familyName || !firstName || !email || !badgeNo) {
+          showRegistrationMessage("Please fill in all required fields.", "error");
+          return;
+        }
+
+        try {
+          registerSubmitBtn.disabled = true;
+          showRegistrationMessage("📤 Submitting registration with face data...", "info");
+
+          const registrationData = {
+            familyName,
+            firstName,
+            middleName,
+            email,
+            badgeNo,
+            faceImageBase64: faceDescriptor.imageBase64,
+          };
+
+          const res = await fetch(REGISTERS_API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(registrationData),
+          });
+
+          const result = await res.json();
+
+          if (!res.ok) {
+            showRegistrationMessage(result.msg || "Registration failed!", "error");
+            registerSubmitBtn.disabled = false;
+            return;
+          }
+
+          showRegistrationMessage("✅ Registration successful! Check your email for activation details.", "success");
+
+          setTimeout(() => {
+            registerModal.classList.remove("show");
+            registerForm.reset();
+            faceDescriptor = null;
+            faceStatus.style.display = "none";
+            enrollFaceBtn.textContent = "Enroll Face";
+          }, 2000);
+        } catch (err) {
+          console.error("Registration error:", err);
+          showRegistrationMessage("Server error during registration. Please try again.", "error");
+          registerSubmitBtn.disabled = false;
+        }
+      });
+
+      // ===== CANCEL REGISTRATION =====
+      cancelRegisterBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        stopCamera();
+        registerForm.reset();
+        faceDescriptor = null;
+        faceStatus.style.display = "none";
+        registerSubmitBtn.disabled = true;
+        enrollFaceBtn.textContent = "Enroll Face";
+        registerModal.classList.remove("show");
+      });
+
+      // ===== CLOSE REGISTER MODAL =====
+      if (closeRegister) {
+        closeRegister.addEventListener("click", () => {
+          stopCamera();
+          registerModal.classList.remove("show");
+          registerForm.reset();
+          faceDescriptor = null;
+          faceStatus.style.display = "none";
+          enrollFaceBtn.textContent = "Enroll Face";
+        });
+      }
+
+      // ===== REGISTER LINK =====
       if (userRegisterLink) {
         userRegisterLink.addEventListener("click", (e) => {
           e.preventDefault();
           const userType = userTypeSelect.value;
-          
+
           if (userType === "employee") {
             registerModal.classList.add("show");
             registerForm.reset();
+            faceDescriptor = null;
+            faceStatus.style.display = "none";
+            enrollFaceBtn.textContent = "Enroll Face";
             badgeNoInput.focus();
-            badgeNoFeedback.textContent = "";
-            badgeNoFeedback.className = "feedback";
-            registerSubmitBtn.disabled = true;
           } else if (userType === "client") {
             clientRegisterModal.classList.add("show");
           }
         });
       }
 
-      if (closeRegister) {
-        closeRegister.addEventListener("click", () => {
-          registerModal.classList.remove("show");
-          emailValidationTooltip.classList.remove("show");
-        });
-      }
-
+      // ===== WINDOW CLICK OUTSIDE MODAL =====
       window.addEventListener("click", (e) => {
         if (e.target === registerModal) {
+          stopCamera();
           registerModal.classList.remove("show");
-          emailValidationTooltip.classList.remove("show");
+          registerForm.reset();
+          faceDescriptor = null;
+          faceStatus.style.display = "none";
+          enrollFaceBtn.textContent = "Enroll Face";
         }
       });
 
-      if (registerForm) {
-        registerForm.addEventListener("submit", async (e) => {
-          e.preventDefault();
-
-          const familyName = familyNameInput.value.trim();
-          const firstName = firstNameInput.value.trim();
-          const middleName = middleNameInput.value.trim();
-          const email = registerEmailInput.value.trim();
-          const badgeNo = badgeNoInput.value.trim();
-
-          if (!familyName || !firstName || !email || !badgeNo) {
-            alert("Please fill in all required fields.");
-            return;
-          }
-
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          if (!emailRegex.test(email)) {
-            alert("Please enter a valid email address.");
-            return;
-          }
-
-          const registrationData = { familyName, firstName, middleName, email, badgeNo };
-
-          try {
-            console.log("📤 Submitting registration:", registrationData);
-            
-            const res = await fetch("https://www.mither3security.com/api/registers", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(registrationData),
-            });
-
-            const result = await res.json();
-            console.log("Response status:", res.status);
-            console.log("Response body:", result);
-
-            if (!res.ok) {
-              let errorMsg = result.msg || "Registration failed!";
-              
-              if (res.status === 409) {
-                if (result.code === "BADGE_ALREADY_REGISTERED") {
-                  errorMsg = "This SSS number is already registered.";
-                } else if (result.code === "EMAIL_ALREADY_REGISTERED") {
-                  errorMsg = "This email is already registered.";
-                }
-              } else if (res.status === 404) {
-                if (result.code === "BADGE_NOT_IN_ARCHIVE") {
-                  errorMsg = "SSS number not found in employee records.";
-                }
-              } else if (res.status === 400) {
-                if (result.code === "NAME_MISMATCH") {
-                  errorMsg = "The name provided does not match the employee record.";
-                }
-              }
-
-              alert("❌ " + errorMsg);
-              registerSubmitBtn.disabled = true;
-              return;
-            }
-
-            alert("✅ Registration successful! Check your email for account activation details.");
-            registerForm.reset();
-            registerSubmitBtn.disabled = true;
-            
-            setTimeout(() => {
-              registerModal.classList.remove("show");
-              emailValidationTooltip.classList.remove("show");
-            }, 2000);
-          } catch (err) {
-            console.error("Register error:", err);
-            alert("❌ Server error during registration. Please try again.");
-          }
-        });
-      }
-
-      // ==================== CLIENT REGISTRATION ====================
-      const clientRegisterModal = document.getElementById("clientRegisterModal");
-      const closeClientRegister = document.getElementById("closeClientRegister");
-      const clientRegisterForm = document.getElementById("clientRegisterForm");
-      const clientBranchSelect = document.getElementById("clientBranch");
-      const clientRegisterErrorP = document.getElementById("clientRegisterError");
-      const clientRegisterSuccessP = document.getElementById("clientRegisterSuccess");
-
+      // ===== CLIENT REGISTRATION =====
       async function loadClientBranches() {
         try {
           const res = await fetch("https://www.mither3security.com/api/branches-management");
@@ -1357,7 +1526,7 @@
           });
         } catch (err) {
           console.error("Failed to load branches:", err);
-          clientRegisterErrorP.textContent = "Failed to load branch list. Please try again later.";
+          clientRegisterErrorP.textContent = "Failed to load branch list.";
         }
       }
 
@@ -1379,7 +1548,7 @@
           const passwordConfirm = document.getElementById("clientPasswordConfirm").value.trim();
 
           if (password !== passwordConfirm) {
-            clientRegisterErrorP.textContent = "Passwords do not match. Please try again.";
+            clientRegisterErrorP.textContent = "Passwords do not match.";
             return;
           }
 
@@ -1411,12 +1580,12 @@
 
             clientRegisterSuccessP.textContent = "Client request submitted. Waiting for admin approval.";
             clientRegisterForm.reset();
-            
+
             setTimeout(() => {
               clientRegisterModal.classList.remove("show");
             }, 2000);
           } catch (err) {
-            console.error("Error creating client:", err);
+            console.error("Client registration error:", err);
             clientRegisterErrorP.textContent = "Server error: " + err.message;
           }
         });
