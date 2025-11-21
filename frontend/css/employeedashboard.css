@@ -481,7 +481,12 @@ main h1 {
 
 .status.late {
   background: #ffebee;
-  color: #c62828;
+  color: orange;
+}
+
+.status.absent {
+  background: #ffebee;
+  color: red;
 }
 
 /* ===== BUTTONS ===== */
